@@ -146,18 +146,33 @@ sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
 
 ## 7. OpenClaw Skill
 
-已经创建项目专用 skill：
+已经创建项目专用 skill。
 
+### 原始工作区位置
 - `C:\Users\intel1230\skills\ersatztv-source-build`
+
+### 项目内镜像位置（推荐给后续工具优先读取）
+- `D:\project\ErsatzTV\openclaw-skills\ersatztv-source-build`
+
+### 项目内打包 skill
+- `D:\project\ErsatzTV\openclaw-skills\dist\ersatztv-source-build.skill`
+
+### 额外一并镜像到项目中的相关 skill
+- `D:\project\ErsatzTV\openclaw-skills\ersatztv-hls-copy-prep`
+- `D:\project\ErsatzTV\openclaw-skills\dist\ersatztv-hls-copy-prep.skill`
 
 用途：
 
 - 当后续 agent 遇到 `D:\project\ErsatzTV` 相关任务时
-- 可以按这个 skill 提供的上下文、脚本、流程来继续维护
+- 可以直接从项目目录学习本地维护方式，而不必先知道工作区根目录的 skill 位置
+- 这样更利于其它工具、子代理或后续自动化流程直接在项目内取材
 
-如果需要分发/复用，可直接使用已打包的 skill 文件：
+说明：
 
-- `C:\Users\intel1230\skills\dist\ersatztv-source-build.skill`
+- 当前做的是**复制镜像**，不是移动原始 `C:\Users\intel1230\skills`
+- 这样既保留了 OpenClaw 当前工作区的既有使用方式，也让项目目录自带可学习资料
+- 如需后续刷新项目内镜像，可运行：
+  - `D:\project\ErsatzTV\scripts\sync-openclaw-skills.ps1`
 
 ---
 
