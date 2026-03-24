@@ -12,6 +12,8 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -47,6 +49,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
+        IConfigElementRepository configElementRepository,
+        IDbContextFactory<TvContext> dbContextFactory,
         ILogger<MusicVideoFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -55,6 +59,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         imageCache,
         ffmpegPngService,
         tempFilePool,
+        configElementRepository,
+        dbContextFactory,
         logger)
     {
         _scannerProxy = scannerProxy;
@@ -367,6 +373,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 Either<BaseError, MediaItemScanResult<MusicVideo>> maybeMusicVideo = await _musicVideoRepository
                     .GetOrAdd(artist, libraryPath, knownFolder, file)
                     .BindT(musicVideo => UpdateStatistics(musicVideo, ffmpegPath, ffprobePath))
+                    .BindT(musicVideo => QueueCopyPrepIfNeeded(musicVideo, cancellationToken))
                     .BindT(video => UpdateLibraryFolderId(video, knownFolder))
                     .BindT(UpdateMetadata)
                     .BindT(result => UpdateThumbnail(result, cancellationToken))

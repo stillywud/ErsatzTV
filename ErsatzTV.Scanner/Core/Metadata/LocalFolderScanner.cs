@@ -2,7 +2,9 @@
 using System.IO.Abstractions;
 using CliWrap;
 using ErsatzTV.Core;
+using ErsatzTV.Core.CopyPrep;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.CopyPrep;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -10,7 +12,9 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -54,6 +58,8 @@ public abstract class LocalFolderScanner
         "yml"
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
+    private readonly IConfigElementRepository? _configElementRepository;
+    private readonly IDbContextFactory<TvContext>? _dbContextFactory;
     private readonly IFFmpegPngService _ffmpegPngService;
 
     private readonly IImageCache _imageCache;
@@ -74,6 +80,31 @@ public abstract class LocalFolderScanner
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         ILogger logger)
+        : this(
+            fileSystem,
+            localStatisticsProvider,
+            metadataRepository,
+            mediaItemRepository,
+            imageCache,
+            ffmpegPngService,
+            tempFilePool,
+            null,
+            null,
+            logger)
+    {
+    }
+
+    protected LocalFolderScanner(
+        IFileSystem fileSystem,
+        ILocalStatisticsProvider localStatisticsProvider,
+        IMetadataRepository metadataRepository,
+        IMediaItemRepository mediaItemRepository,
+        IImageCache imageCache,
+        IFFmpegPngService ffmpegPngService,
+        ITempFilePool tempFilePool,
+        IConfigElementRepository? configElementRepository,
+        IDbContextFactory<TvContext>? dbContextFactory,
+        ILogger logger)
     {
         _fileSystem = fileSystem;
         _localStatisticsProvider = localStatisticsProvider;
@@ -82,6 +113,8 @@ public abstract class LocalFolderScanner
         _imageCache = imageCache;
         _ffmpegPngService = ffmpegPngService;
         _tempFilePool = tempFilePool;
+        _configElementRepository = configElementRepository;
+        _dbContextFactory = dbContextFactory;
         _logger = logger;
     }
 
@@ -293,6 +326,106 @@ public abstract class LocalFolderScanner
                 await _mediaItemRepository.FlagNormal(mediaItem);
                 result.IsUpdated = true;
             }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    protected async Task<Either<BaseError, MediaItemScanResult<T>>> QueueCopyPrepIfNeeded<T>(
+        MediaItemScanResult<T> result,
+        CancellationToken cancellationToken)
+        where T : MediaItem
+    {
+        try
+        {
+            if (_configElementRepository is null || _dbContextFactory is null)
+            {
+                return result;
+            }
+
+            bool enabled = await _configElementRepository
+                .GetValue<bool>(ConfigElementKey.FFmpegCopyPrepEnabled, cancellationToken)
+                .IfNoneAsync(false);
+
+            if (!enabled)
+            {
+                return result;
+            }
+
+            MediaVersion version = result.Item.GetHeadVersion();
+            if (version.MediaFiles is null || version.MediaFiles.Count == 0)
+            {
+                return result;
+            }
+
+            MediaFile file = version.MediaFiles[0];
+            if (string.IsNullOrWhiteSpace(file.Path))
+            {
+                return result;
+            }
+
+            if (!_fileSystem.File.Exists(file.Path))
+            {
+                return result;
+            }
+
+            CopyPrepDecision decision = CopyPrepAnalyzer.Analyze(version, file.Path);
+            if (!decision.ShouldQueue)
+            {
+                return result;
+            }
+
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            bool queueItemExists = await dbContext.CopyPrepQueueItems.AnyAsync(
+                item => item.MediaItemId == result.Item.Id &&
+                        item.Status != CopyPrepStatus.Failed &&
+                        item.Status != CopyPrepStatus.Canceled &&
+                        item.Status != CopyPrepStatus.Skipped,
+                cancellationToken);
+
+            if (queueItemExists)
+            {
+                return result;
+            }
+
+            DateTime now = DateTime.UtcNow;
+            var queueItem = new CopyPrepQueueItem
+            {
+                MediaItemId = result.Item.Id,
+                MediaVersionId = version.Id,
+                MediaFileId = file.Id,
+                Status = CopyPrepStatus.Queued,
+                Reason = decision.Summary,
+                SourcePath = file.Path,
+                CreatedAt = now,
+                UpdatedAt = now,
+                QueuedAt = now,
+                LogEntries = []
+            };
+
+            dbContext.CopyPrepQueueItems.Add(queueItem);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            dbContext.CopyPrepQueueLogEntries.Add(new CopyPrepQueueLogEntry
+            {
+                CopyPrepQueueItemId = queueItem.Id,
+                CreatedAt = now,
+                Level = "Information",
+                Event = "queued_from_scan",
+                Message = $"Queued from scanner because the source is not copy-friendly: {decision.Summary}",
+                Details = string.Join(Environment.NewLine, decision.Reasons)
+            });
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Queued media item {MediaItemId} for background copy prep: {Reason}",
+                result.Item.Id,
+                decision.Summary);
 
             return result;
         }

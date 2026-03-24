@@ -13,6 +13,8 @@ using ErsatzTV.Core.Streaming;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -44,6 +46,8 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
+        IConfigElementRepository configElementRepository,
+        IDbContextFactory<TvContext> dbContextFactory,
         ILogger<RemoteStreamFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -52,6 +56,8 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         imageCache,
         ffmpegPngService,
         tempFilePool,
+        configElementRepository,
+        dbContextFactory,
         logger)
     {
         _scannerProxy = scannerProxy;

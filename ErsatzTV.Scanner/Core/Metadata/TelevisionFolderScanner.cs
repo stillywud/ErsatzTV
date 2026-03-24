@@ -12,6 +12,8 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -47,6 +49,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        IConfigElementRepository configElementRepository,
+        IDbContextFactory<TvContext> dbContextFactory,
         ILogger<TelevisionFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -55,6 +59,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         imageCache,
         ffmpegPngService,
         tempFilePool,
+        configElementRepository,
+        dbContextFactory,
         logger)
     {
         _scannerProxy = scannerProxy;
@@ -333,6 +339,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 .GetOrAddEpisode(season, libraryPath, seasonFolder, file, cancellationToken)
                 .BindT(episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffmpegPath, ffprobePath)
                     .MapT(_ => episode))
+                .BindT(episode => QueueCopyPrepIfNeeded(new MediaItemScanResult<Episode>(episode), cancellationToken)
+                    .MapT(result => result.Item))
                 .BindT(video => UpdateLibraryFolderId(video, seasonFolder))
                 .BindT(UpdateMetadata)
                 .BindT(e => UpdateThumbnail(e, cancellationToken))

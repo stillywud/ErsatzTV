@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Abstractions;
 using Dapper;
 using ErsatzTV.Core;
@@ -44,6 +45,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IO;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
@@ -81,6 +83,17 @@ public class Program
         }
     }
 
+    private static ServerVersion ResolveMySqlServerVersion(IConfiguration configuration, string mySqlConnectionString)
+    {
+        string configuredServerVersion = configuration.GetValue<string>("MySql:ServerVersion") ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(configuredServerVersion))
+        {
+            return new MySqlServerVersion(Version.Parse(configuredServerVersion));
+        }
+
+        return ServerVersion.AutoDetect(mySqlConnectionString);
+    }
+
     private static IHostBuilder CreateHostBuilder(string[] args)
     {
         Settings.UiPort = SystemEnvironment.UiPort;
@@ -113,7 +126,7 @@ public class Program
                         {
                             options.UseMySql(
                                 mySqlConnectionString,
-                                ServerVersion.AutoDetect(mySqlConnectionString),
+                                ResolveMySqlServerVersion(context.Configuration, mySqlConnectionString),
                                 o =>
                                 {
                                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
@@ -142,7 +155,7 @@ public class Program
                     {
                         options.UseMySql(
                             mySqlConnectionString,
-                            ServerVersion.AutoDetect(mySqlConnectionString),
+                            ResolveMySqlServerVersion(context.Configuration, mySqlConnectionString),
                             o =>
                             {
                                 o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);

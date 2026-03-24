@@ -17,6 +17,10 @@ public class FFmpegSettingsViewModel
     public int HlsSegmenterIdleTimeout { get; set; }
     public int WorkAheadSegmenterLimit { get; set; }
     public int InitialSegmentCount { get; set; }
+    public bool CopyPrepEnabled { get; set; }
+    public int CopyPrepCpuTargetPercent { get; set; }
+    public int CopyPrepMaxConcurrentJobs { get; set; }
+    public int CopyPrepThreads { get; set; }
     public OutputFormatKind HlsDirectOutputFormat { get; set; }
     public string DefaultMpegTsScript { get; set; }
 }

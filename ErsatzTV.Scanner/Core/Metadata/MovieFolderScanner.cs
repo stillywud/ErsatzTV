@@ -12,6 +12,8 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Seq = LanguageExt.Seq;
 
@@ -55,6 +57,49 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             imageCache,
             ffmpegPngService,
             tempFilePool,
+            logger)
+    {
+        _scannerProxy = scannerProxy;
+        _fileSystem = fileSystem;
+        _localFileSystem = localFileSystem;
+        _movieRepository = movieRepository;
+        _localSubtitlesProvider = localSubtitlesProvider;
+        _localChaptersProvider = localChaptersProvider;
+        _localMetadataProvider = localMetadataProvider;
+        _metadataRepository = metadataRepository;
+        _libraryRepository = libraryRepository;
+        _mediaItemRepository = mediaItemRepository;
+        _logger = logger;
+    }
+
+    public MovieFolderScanner(
+        IScannerProxy scannerProxy,
+        IFileSystem fileSystem,
+        ILocalFileSystem localFileSystem,
+        IMovieRepository movieRepository,
+        ILocalStatisticsProvider localStatisticsProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
+        ILocalChaptersProvider localChaptersProvider,
+        ILocalMetadataProvider localMetadataProvider,
+        IMetadataRepository metadataRepository,
+        IImageCache imageCache,
+        ILibraryRepository libraryRepository,
+        IMediaItemRepository mediaItemRepository,
+        IFFmpegPngService ffmpegPngService,
+        ITempFilePool tempFilePool,
+        IConfigElementRepository configElementRepository,
+        IDbContextFactory<TvContext> dbContextFactory,
+        ILogger<MovieFolderScanner> logger)
+        : base(
+            fileSystem,
+            localStatisticsProvider,
+            metadataRepository,
+            mediaItemRepository,
+            imageCache,
+            ffmpegPngService,
+            tempFilePool,
+            configElementRepository,
+            dbContextFactory,
             logger)
     {
         _scannerProxy = scannerProxy;
@@ -180,6 +225,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     Either<BaseError, MediaItemScanResult<Movie>> maybeMovie = await _movieRepository
                         .GetOrAdd(libraryPath, knownFolder, file, cancellationToken)
                         .BindT(movie => UpdateStatistics(movie, ffmpegPath, ffprobePath))
+                        .BindT(movie => QueueCopyPrepIfNeeded(movie, cancellationToken))
                         .BindT(video => UpdateLibraryFolderId(video, knownFolder))
                         .BindT(UpdateMetadata)
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))

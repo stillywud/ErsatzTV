@@ -122,6 +122,33 @@
                 </div>
                 <MudTextField @bind-Value="_ffmpegSettings.InitialSegmentCount" Validation="@(new Func<int, string>(ValidateInitialSegmentCount))" Required="true" RequiredError="HLS Segmenter initial segment count is required!" HelperText="Delays stream start until the specified number of (4-second) segments have been transcoded; a larger number will mean slower initial playback, but potentially less buffering"/>
             </MudStack>
+            <MudText Typo="Typo.h5" Class="mb-2 mt-10">Background Copy Prep</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex flex-column">
+                    <MudText>Enable Background Copy Prep</MudText>
+                    <MudText Typo="Typo.caption">Queue local video files that are poor candidates for HLS copy playback and preprocess them in the background</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_ffmpegSettings.CopyPrepEnabled" Dense="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Copy Prep CPU Target</MudText>
+                </div>
+                <MudTextField @bind-Value="_ffmpegSettings.CopyPrepCpuTargetPercent" Validation="@(new Func<int, string>(ValidateCopyPrepCpuTargetPercent))" Required="true" RequiredError="Copy prep CPU target is required!" Adornment="Adornment.End" AdornmentText="%" HelperText="Approximate global CPU target for background copy-prep jobs; implemented via job/thread throttling rather than exact CPU sampling"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Copy Prep Max Concurrent Jobs</MudText>
+                </div>
+                <MudTextField @bind-Value="_ffmpegSettings.CopyPrepMaxConcurrentJobs" Validation="@(new Func<int, string>(ValidateCopyPrepMaxConcurrentJobs))" Required="true" RequiredError="Copy prep max concurrent jobs is required!" HelperText="Maximum number of background copy-prep jobs that may run at the same time"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Copy Prep Threads Per Job</MudText>
+                </div>
+                <MudTextField @bind-Value="_ffmpegSettings.CopyPrepThreads" Validation="@(new Func<int, string>(ValidateCopyPrepThreads))" Required="true" RequiredError="Copy prep thread count is required!" HelperText="Set to 0 to auto-derive FFmpeg thread count from the CPU target and job concurrency"/>
+            </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
                     <MudText>HLS Direct Output Format</MudText>
@@ -226,6 +253,14 @@
 
     private static string ValidateInitialSegmentCount(int count) => count < 1 ? "HLS Segmenter initial segment count must be greater than or equal to 1" : null;
 
+    private static string ValidateCopyPrepCpuTargetPercent(int percent) =>
+        percent is < 10 or > 100 ? "Copy prep CPU target must be between 10 and 100" : null;
+
+    private static string ValidateCopyPrepMaxConcurrentJobs(int count) =>
+        count is < 1 or > 8 ? "Copy prep max concurrent jobs must be between 1 and 8" : null;
+
+    private static string ValidateCopyPrepThreads(int count) =>
+        count < 0 ? "Copy prep threads per job must be greater than or equal to 0" : null;
 
     private async Task SaveFFmpegSettings()
     {

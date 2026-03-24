@@ -12,6 +12,8 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -40,6 +42,8 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
+        IConfigElementRepository configElementRepository,
+        IDbContextFactory<TvContext> dbContextFactory,
         ILogger<ImageFolderScanner> logger) : base(
         fileSystem,
         localStatisticsProvider,
@@ -48,6 +52,8 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         imageCache,
         ffmpegPngService,
         tempFilePool,
+        configElementRepository,
+        dbContextFactory,
         logger)
     {
         _scannerProxy = scannerProxy;

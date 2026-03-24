@@ -98,6 +98,7 @@ using Microsoft.OpenApi;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Refit;
 using Scalar.AspNetCore;
 using Serilog;
@@ -412,7 +413,7 @@ public class Startup
 
                     options.UseMySql(
                         mySqlConnectionString,
-                        ServerVersion.AutoDetect(mySqlConnectionString),
+                        ResolveMySqlServerVersion(mySqlConnectionString),
                         o =>
                         {
                             o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
@@ -441,7 +442,7 @@ public class Startup
             {
                 options.UseMySql(
                     mySqlConnectionString,
-                    ServerVersion.AutoDetect(mySqlConnectionString),
+                    ResolveMySqlServerVersion(mySqlConnectionString),
                     o =>
                     {
                         o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
@@ -877,7 +878,19 @@ public class Startup
         services.AddHostedService<WorkerService>();
         services.AddHostedService<SchedulerService>();
         services.AddHostedService<FFmpegWorkerService>();
+        services.AddHostedService<CopyPrepService>();
         services.AddHostedService<SearchIndexService>();
+    }
+
+    private ServerVersion ResolveMySqlServerVersion(string mySqlConnectionString)
+    {
+        string configuredServerVersion = Configuration.GetValue<string>("MySql:ServerVersion") ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(configuredServerVersion))
+        {
+            return new MySqlServerVersion(Version.Parse(configuredServerVersion));
+        }
+
+        return ServerVersion.AutoDetect(mySqlConnectionString);
     }
 
     private static void AddChannel<TMessageType>(IServiceCollection services)

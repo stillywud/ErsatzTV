@@ -514,6 +514,135 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("ConfigElement", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.CopyPrep.CopyPrepQueueItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ArchivePath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CanceledAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("FailedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastCommand")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("LastExitCode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastLogPath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MediaFileId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MediaItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MediaVersionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("QueuedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReplacedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SourcePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetPath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WorkingPath")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MediaFileId");
+
+                    b.HasIndex("MediaItemId")
+                        .IsUnique();
+
+                    b.HasIndex("MediaVersionId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("CopyPrepQueueItem", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.CopyPrep.CopyPrepQueueLogEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CopyPrepQueueItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CopyPrepQueueItemId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.ToTable("CopyPrepQueueLogEntry", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.DecoGraphicsElement", b =>
                 {
                     b.Property<int>("DecoId")
@@ -4405,6 +4534,44 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MediaItem");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.CopyPrep.CopyPrepQueueItem", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaFile", "MediaFile")
+                        .WithMany()
+                        .HasForeignKey("MediaFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", "MediaItem")
+                        .WithMany()
+                        .HasForeignKey("MediaItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.MediaVersion", "MediaVersion")
+                        .WithMany()
+                        .HasForeignKey("MediaVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MediaFile");
+
+                    b.Navigation("MediaItem");
+
+                    b.Navigation("MediaVersion");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.CopyPrep.CopyPrepQueueLogEntry", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.CopyPrep.CopyPrepQueueItem", "CopyPrepQueueItem")
+                        .WithMany("LogEntries")
+                        .HasForeignKey("CopyPrepQueueItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CopyPrepQueueItem");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.DecoGraphicsElement", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Scheduling.Deco", "Deco")
@@ -6404,6 +6571,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("CollectionItems");
 
                     b.Navigation("MultiCollectionItems");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.CopyPrep.CopyPrepQueueItem", b =>
+                {
+                    b.Navigation("LogEntries");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.EpisodeMetadata", b =>

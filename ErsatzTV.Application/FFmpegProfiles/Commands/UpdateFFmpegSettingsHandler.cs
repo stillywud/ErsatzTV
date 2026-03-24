@@ -157,6 +157,26 @@ public class UpdateFFmpegSettingsHandler(
             request.Settings.InitialSegmentCount,
             cancellationToken);
 
+        await configElementRepository.Upsert(
+            ConfigElementKey.FFmpegCopyPrepEnabled,
+            request.Settings.CopyPrepEnabled,
+            cancellationToken);
+
+        await configElementRepository.Upsert(
+            ConfigElementKey.FFmpegCopyPrepCpuTargetPercent,
+            Math.Clamp(request.Settings.CopyPrepCpuTargetPercent, 10, 100),
+            cancellationToken);
+
+        await configElementRepository.Upsert(
+            ConfigElementKey.FFmpegCopyPrepMaxConcurrentJobs,
+            Math.Clamp(request.Settings.CopyPrepMaxConcurrentJobs, 1, 8),
+            cancellationToken);
+
+        await configElementRepository.Upsert(
+            ConfigElementKey.FFmpegCopyPrepThreads,
+            Math.Max(0, request.Settings.CopyPrepThreads),
+            cancellationToken);
+
         await workerChannel.WriteAsync(new RefreshFFmpegCapabilities(), cancellationToken);
 
         return Unit.Default;

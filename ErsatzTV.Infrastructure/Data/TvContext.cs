@@ -1,5 +1,6 @@
 using System.Data;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.CopyPrep;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
 using Microsoft.EntityFrameworkCore;
@@ -127,6 +128,8 @@ public class TvContext : DbContext
     public DbSet<FillerPreset> FillerPresets { get; set; }
     public DbSet<Subtitle> Subtitles { get; set; }
     public DbSet<GraphicsElement> GraphicsElements { get; set; }
+    public DbSet<CopyPrepQueueItem> CopyPrepQueueItems { get; set; }
+    public DbSet<CopyPrepQueueLogEntry> CopyPrepQueueLogEntries { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

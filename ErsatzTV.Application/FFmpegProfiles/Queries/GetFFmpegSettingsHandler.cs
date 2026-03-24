@@ -49,6 +49,14 @@ public class GetFFmpegSettingsHandler(IConfigElementRepository configElementRepo
             await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters, cancellationToken);
         Option<int> initialSegmentCount =
             await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount, cancellationToken);
+        Option<bool> copyPrepEnabled =
+            await configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegCopyPrepEnabled, cancellationToken);
+        Option<int> copyPrepCpuTargetPercent =
+            await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegCopyPrepCpuTargetPercent, cancellationToken);
+        Option<int> copyPrepMaxConcurrentJobs =
+            await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegCopyPrepMaxConcurrentJobs, cancellationToken);
+        Option<int> copyPrepThreads =
+            await configElementRepository.GetValue<int>(ConfigElementKey.FFmpegCopyPrepThreads, cancellationToken);
         Option<OutputFormatKind> outputFormatKind =
             await configElementRepository.GetValue<OutputFormatKind>(
                 ConfigElementKey.FFmpegHlsDirectOutputFormat,
@@ -71,6 +79,10 @@ public class GetFFmpegSettingsHandler(IConfigElementRepository configElementRepo
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
             InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1),
+            CopyPrepEnabled = await copyPrepEnabled.IfNoneAsync(false),
+            CopyPrepCpuTargetPercent = await copyPrepCpuTargetPercent.IfNoneAsync(50),
+            CopyPrepMaxConcurrentJobs = await copyPrepMaxConcurrentJobs.IfNoneAsync(1),
+            CopyPrepThreads = await copyPrepThreads.IfNoneAsync(0),
             HlsDirectOutputFormat = await outputFormatKind.IfNoneAsync(OutputFormatKind.MpegTs),
             DefaultMpegTsScript = await defaultMpegTsScript.IfNoneAsync("Default"),
         };
