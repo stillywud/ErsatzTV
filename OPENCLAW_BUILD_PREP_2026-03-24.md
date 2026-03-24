@@ -97,13 +97,15 @@
 
 - **需要 .NET SDK 10.0.x**
 - 不是 .NET 8 / .NET 9
-- 当前机器上还 **没有检测到 `dotnet`**
 
-当前检测结果：
+### 当前状态更新（2026-03-24 夜间）
 
-- `dotnet`: **NOT FOUND**
-
-这是目前本机开始编译的**第一阻塞项**。
+- **.NET SDK 10.0.201 已成功安装**
+- 安装后的 `dotnet --info` 已验证通过
+- 详细离线安装记录见：
+  - `D:\project\ErsatzTV\OPENCLAW_DOTNET10_INSTALL_2026-03-24.md`
+- 离线安装包、哈希和日志保存在：
+  - `D:\project\ErsatzTV\build-deps\dotnet-sdk`
 
 ### 2. 目标框架
 关键项目文件显示：
@@ -218,21 +220,18 @@ Windows 发布逻辑大致是：
 
 ## 七、当前真正阻塞点
 
-### 阻塞点 1：本机没有 dotnet
-当前执行：
+### 阻塞点 1：.NET SDK 已安装，当前主要待验证的是 NuGet restore
+当前执行结果：
 
-- `dotnet --info`
+- `.NET SDK 10.0.201` 已安装完成
+- `dotnet --info` 已验证成功
 
-结果：
+所以原来的首阻塞项已经解除。
 
-- `DOTNET_NOT_FOUND`
+### 当前剩余主要风险：NuGet restore 是否可联网成功
+即使装好了 .NET SDK，如果机器不能访问 NuGet，`dotnet restore` 仍然会失败。
 
-这是现在最明确的阻塞点。
-
-### 阻塞点 2：后面可能需要网络恢复 NuGet 包
-即使装好了 .NET SDK，如果机器不能访问 NuGet，`dotnet restore` 也会失败。
-
-所以还需要确认：
+所以当前下一步需要确认：
 
 - 本机是否允许联网拉取 NuGet 依赖
 
@@ -285,6 +284,4 @@ Windows 发布逻辑大致是：
 
 ## 十、当前结论（一句话版）
 
-**源码仓库本身结构没看到明显致命问题，当前真正缺的是：本机没有 .NET 10 SDK。**
-
-只要先补上 `.NET 10 SDK 10.0.x`，我就可以开始把这套 Win10 本地源码编译环境真正跑起来。
+**源码仓库本身结构目前没看到明显致命问题，`.NET 10 SDK` 已经安装到位，下一步关键就是验证 `dotnet restore / build / test` 是否能在这台 Win10 机器上顺利跑通。**
