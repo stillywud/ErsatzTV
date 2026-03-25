@@ -284,6 +284,11 @@ Each attempt gets its own FFmpeg/log transcript under a copy-prep logs folder.
 The queue item stores the latest log path for inspection via API/UI later.
 The queue item should also store the final rendered FFmpeg command line so the web/API layer can expose the exact command that was launched.
 
+### Output validation and reuse
+Before treating a prepared asset as usable, the integrated worker should validate it with ffprobe-derived metadata (duration sanity plus expected copy-prep output shape such as H.264/AAC, yuv420p, and SAR 1:1).
+
+If the target file already exists and passes that validation, the worker should reuse it instead of rerunning FFmpeg, then archive the original source and switch the active library path. That keeps recovery behavior aligned with the mature external tool instead of doing unnecessary repeat work.
+
 ### Centralized transcode profile
 The mature copy-prep FFmpeg defaults should live in a single in-source profile/helper instead of being redefined ad hoc inside the worker. That keeps the validated external-tool behavior aligned with the integrated implementation and makes later tuning/UI exposure safer.
 

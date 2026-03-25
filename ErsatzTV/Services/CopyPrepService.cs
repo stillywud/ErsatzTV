@@ -223,9 +223,66 @@ public class CopyPrepService(
                 FileSystemLayout.CopyPrepLogsFolder,
                 $"copy-prep-{queueItem.Id:D8}-attempt-{queueItem.AttemptCount + 1:D2}.log");
 
+            queueItem.WorkingPath = workingPath;
+            queueItem.TargetPath = targetPath;
+            queueItem.ArchivePath = archivePath;
+            queueItem.AttemptCount += 1;
+
             if (!string.Equals(sourcePath, targetPath, StringComparison.OrdinalIgnoreCase) && File.Exists(targetPath))
             {
-                throw new IOException($"Target path already exists: {targetPath}");
+                CopyPrepOutputValidationResult existingTargetValidation = await ValidatePreparedOutput(
+                    localStatisticsProvider,
+                    ffprobePath,
+                    queueItem.MediaVersion,
+                    targetPath);
+
+                if (existingTargetValidation.IsValid)
+                {
+                    queueItem.LastCommand = null;
+                    queueItem.LastLogPath = null;
+                    queueItem.LastExitCode = null;
+                    queueItem.LastError = null;
+                    queueItem.CompletedAt = DateTime.UtcNow;
+                    queueItem.UpdatedAt = queueItem.CompletedAt.Value;
+                    await dbContext.SaveChangesAsync(cancellationToken);
+
+                    await AddLogEntry(
+                        dbContext,
+                        queueItem.Id,
+                        "Information",
+                        "existing_target_validated",
+                        "Existing prepared target passed validation and will be reused",
+                        cancellationToken,
+                        existingTargetValidation.Summary);
+
+                    ArchiveSourceFile(sourcePath, archivePath);
+
+                    await FinalizePreparedTarget(
+                        dbContext,
+                        localStatisticsProvider,
+                        ffmpegPath,
+                        ffprobePath,
+                        queueItem,
+                        "existing_target_reused",
+                        "Validated prepared target already existed; skipped FFmpeg preprocessing",
+                        cancellationToken);
+
+                    logger.LogInformation(
+                        "Reused existing prepared target for media item {MediaItemId}; archived source {SourcePath} and kept target {TargetPath}",
+                        queueItem.MediaItemId,
+                        sourcePath,
+                        targetPath);
+                    return;
+                }
+
+                await AddLogEntry(
+                    dbContext,
+                    queueItem.Id,
+                    "Warning",
+                    "existing_target_invalid",
+                    "Existing prepared target failed validation and will be replaced",
+                    cancellationToken,
+                    existingTargetValidation.Summary);
             }
 
             if (File.Exists(workingPath))
@@ -233,12 +290,7 @@ public class CopyPrepService(
                 File.Delete(workingPath);
             }
 
-            queueItem.WorkingPath = workingPath;
-            queueItem.TargetPath = targetPath;
-            queueItem.ArchivePath = archivePath;
             queueItem.LastLogPath = logPath;
-            queueItem.AttemptCount += 1;
-
             bool hasAudioStream = queueItem.MediaVersion?.Streams?.Any(s => s.MediaStreamKind == MediaStreamKind.Audio) ?? true;
             string[] ffmpegArguments = CopyPrepTranscodeProfile.BuildArguments(
                 sourcePath,
@@ -251,7 +303,14 @@ public class CopyPrepService(
             await dbContext.SaveChangesAsync(cancellationToken);
 
             logger.LogDebug("Copy prep ffmpeg command line {CommandLine}", queueItem.LastCommand);
-            await AddLogEntry(dbContext, queueItem.Id, "Information", "ffmpeg_started", "Started FFmpeg preprocessing", cancellationToken);
+            await AddLogEntry(
+                dbContext,
+                queueItem.Id,
+                "Information",
+                "ffmpeg_started",
+                "Started FFmpeg preprocessing",
+                cancellationToken,
+                queueItem.LastCommand);
 
             int exitCode = await RunFfmpeg(ffmpegPath, ffmpegArguments, logPath, cancellationToken);
             queueItem.LastExitCode = exitCode;
@@ -268,6 +327,33 @@ public class CopyPrepService(
                 throw new FileNotFoundException("FFmpeg finished without creating the prepared output", workingPath);
             }
 
+            CopyPrepOutputValidationResult preparedOutputValidation = await ValidatePreparedOutput(
+                localStatisticsProvider,
+                ffprobePath,
+                queueItem.MediaVersion,
+                workingPath);
+            if (!preparedOutputValidation.IsValid)
+            {
+                await AddLogEntry(
+                    dbContext,
+                    queueItem.Id,
+                    "Error",
+                    "prepared_output_invalid",
+                    "Prepared output failed validation",
+                    cancellationToken,
+                    preparedOutputValidation.Summary);
+                throw new InvalidOperationException($"Prepared output validation failed: {preparedOutputValidation.Summary}");
+            }
+
+            await AddLogEntry(
+                dbContext,
+                queueItem.Id,
+                "Information",
+                "prepared_output_validated",
+                "Prepared output passed validation",
+                cancellationToken,
+                preparedOutputValidation.Summary);
+
             queueItem.Status = CopyPrepStatus.Prepared;
             queueItem.CompletedAt = DateTime.UtcNow;
             queueItem.UpdatedAt = queueItem.CompletedAt.Value;
@@ -276,36 +362,15 @@ public class CopyPrepService(
 
             ReplacePaths(sourcePath, targetPath, workingPath, archivePath);
 
-            MediaItem mediaItem = await LoadMediaItemForUpdate(dbContext, queueItem.MediaItemId, cancellationToken)
-                ?? throw new InvalidOperationException($"Unable to reload media item {queueItem.MediaItemId} for copy-prep replacement");
-
-            MediaFile mediaFile = mediaItem.GetHeadVersion().MediaFiles.Head();
-            mediaFile.Path = targetPath;
-            mediaFile.PathHash = PathUtils.GetPathHash(targetPath);
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            Either<BaseError, bool> refreshResult = await localStatisticsProvider.RefreshStatistics(
+            await FinalizePreparedTarget(
+                dbContext,
+                localStatisticsProvider,
                 ffmpegPath,
                 ffprobePath,
-                mediaItem);
-
-            foreach (BaseError error in refreshResult.LeftToSeq())
-            {
-                queueItem.LastError = $"Statistics refresh warning: {error.Value}";
-                await AddLogEntry(
-                    dbContext,
-                    queueItem.Id,
-                    "Warning",
-                    "statistics_refresh_warning",
-                    error.Value,
-                    cancellationToken);
-            }
-
-            queueItem.Status = CopyPrepStatus.Replaced;
-            queueItem.ReplacedAt = DateTime.UtcNow;
-            queueItem.UpdatedAt = queueItem.ReplacedAt.Value;
-            await dbContext.SaveChangesAsync(cancellationToken);
-            await AddLogEntry(dbContext, queueItem.Id, "Information", "replacement_completed", "Prepared media replaced the active library file", cancellationToken);
+                queueItem,
+                "replacement_completed",
+                "Prepared media replaced the active library file",
+                cancellationToken);
 
             logger.LogInformation(
                 "Completed copy prep for media item {MediaItemId}; source {SourcePath} prepared to {TargetPath}",
@@ -331,6 +396,65 @@ public class CopyPrepService(
         string directory = Path.GetDirectoryName(sourcePath) ?? string.Empty;
         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourcePath);
         return Path.Combine(directory, fileNameWithoutExtension + ".mp4");
+    }
+
+    private static async Task<CopyPrepOutputValidationResult> ValidatePreparedOutput(
+        ILocalStatisticsProvider localStatisticsProvider,
+        string ffprobePath,
+        MediaVersion sourceVersion,
+        string targetPath)
+    {
+        if (!File.Exists(targetPath))
+        {
+            return CopyPrepOutputValidationResult.Failure($"prepared output does not exist: {targetPath}");
+        }
+
+        Either<BaseError, MediaVersion> targetStatistics = await localStatisticsProvider.GetStatistics(ffprobePath, targetPath);
+        return targetStatistics.Match(
+            targetVersion => CopyPrepOutputValidator.Validate(sourceVersion, targetVersion),
+            error => CopyPrepOutputValidationResult.Failure($"ffprobe could not read prepared output: {error.Value}"));
+    }
+
+    private static async Task FinalizePreparedTarget(
+        TvContext dbContext,
+        ILocalStatisticsProvider localStatisticsProvider,
+        string ffmpegPath,
+        string ffprobePath,
+        CopyPrepQueueItem queueItem,
+        string eventName,
+        string message,
+        CancellationToken cancellationToken)
+    {
+        MediaItem mediaItem = await LoadMediaItemForUpdate(dbContext, queueItem.MediaItemId, cancellationToken)
+            ?? throw new InvalidOperationException($"Unable to reload media item {queueItem.MediaItemId} for copy-prep replacement");
+
+        MediaFile mediaFile = mediaItem.GetHeadVersion().MediaFiles.Head();
+        mediaFile.Path = queueItem.TargetPath;
+        mediaFile.PathHash = PathUtils.GetPathHash(queueItem.TargetPath);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        Either<BaseError, bool> refreshResult = await localStatisticsProvider.RefreshStatistics(
+            ffmpegPath,
+            ffprobePath,
+            mediaItem);
+
+        foreach (BaseError error in refreshResult.LeftToSeq())
+        {
+            queueItem.LastError = $"Statistics refresh warning: {error.Value}";
+            await AddLogEntry(
+                dbContext,
+                queueItem.Id,
+                "Warning",
+                "statistics_refresh_warning",
+                error.Value,
+                cancellationToken);
+        }
+
+        queueItem.Status = CopyPrepStatus.Replaced;
+        queueItem.ReplacedAt = DateTime.UtcNow;
+        queueItem.UpdatedAt = queueItem.ReplacedAt.Value;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await AddLogEntry(dbContext, queueItem.Id, "Information", eventName, message, cancellationToken);
     }
 
     private static async Task<int> RunFfmpeg(
@@ -411,7 +535,7 @@ public class CopyPrepService(
         return process.ExitCode;
     }
 
-    private static void ReplacePaths(string sourcePath, string targetPath, string workingPath, string archivePath)
+    private static void ArchiveSourceFile(string sourcePath, string archivePath)
     {
         if (File.Exists(archivePath))
         {
@@ -419,6 +543,11 @@ public class CopyPrepService(
         }
 
         File.Move(sourcePath, archivePath);
+    }
+
+    private static void ReplacePaths(string sourcePath, string targetPath, string workingPath, string archivePath)
+    {
+        ArchiveSourceFile(sourcePath, archivePath);
 
         try
         {
@@ -468,7 +597,8 @@ public class CopyPrepService(
         string level,
         string eventName,
         string message,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string details = null)
     {
         dbContext.CopyPrepQueueLogEntries.Add(new CopyPrepQueueLogEntry
         {
@@ -476,7 +606,8 @@ public class CopyPrepService(
             CreatedAt = DateTime.UtcNow,
             Level = level,
             Event = eventName,
-            Message = message
+            Message = message,
+            Details = details
         });
         await dbContext.SaveChangesAsync(cancellationToken);
     }

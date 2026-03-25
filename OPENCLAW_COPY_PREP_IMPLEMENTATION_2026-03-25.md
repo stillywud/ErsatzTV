@@ -40,7 +40,10 @@ Current worker behavior:
 - waits for DB readiness
 - reads copy-prep config from FFmpeg settings
 - claims queued jobs from DB
-- preprocesses with FFmpeg to a managed working file
+- validates any already-existing prepared target before deciding whether FFmpeg needs to run
+- reuses an already-valid prepared target instead of rerunning FFmpeg, while archiving the original source and switching the active media path
+- preprocesses with FFmpeg to a managed working file when reuse is not possible
+- validates the freshly prepared output before replacement/final success
 - archives the original file under app data
 - replaces the active media file with the prepared result
 - updates `MediaFile.Path` / `PathHash`
@@ -127,6 +130,12 @@ The build flow still temporarily removes the `ErsatzTV.Scanner` project referenc
 - smarter retry/backoff policy
 - remote media-server copy-prep support
 - more sophisticated prepared-asset mapping model
+
+## Feature 2 notes
+
+- Prepared outputs are now validated against practical copy-prep expectations before they are treated as success.
+- If a prepared target already exists and validates successfully, the worker reuses it instead of rerunning FFmpeg.
+- Validation/reuse outcomes are recorded through queue log events so the existing API surface can show what happened without adding a new UI yet.
 
 ## Good next steps
 
