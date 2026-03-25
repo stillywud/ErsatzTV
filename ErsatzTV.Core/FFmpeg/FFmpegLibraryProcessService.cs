@@ -1243,6 +1243,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             _logger.LogDebug("FFmpeg environment variables {EnvVars}", environmentVariables);
         }
 
+        string commandLine = FFmpegCommandLine.Format(ffmpegPath, arguments);
+        _logger.LogDebug("FFmpeg command line {CommandLine}", commandLine);
+
         return Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)

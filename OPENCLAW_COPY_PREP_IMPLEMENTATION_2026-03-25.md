@@ -46,6 +46,8 @@ Current worker behavior:
 - updates `MediaFile.Path` / `PathHash`
 - refreshes statistics from the prepared file
 - writes DB lifecycle log entries and per-attempt disk logs
+- stores the final rendered FFmpeg command on the queue item for API/UI inspection
+- uses a centralized in-source copy-prep transcode profile so the validated external-script defaults are no longer duplicated in the worker
 
 ### Config / UI
 Extended FFmpeg settings with:
@@ -67,6 +69,8 @@ Defaults currently returned by query handler:
 Added a minimal controller:
 - `GET /api/copy-prep`
 - `POST /api/copy-prep/{id}/retry`
+
+The queue list now includes `LastCommand`, making the final copy-prep FFmpeg command visible through the existing API surface.
 
 ## Operational notes
 

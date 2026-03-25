@@ -19,6 +19,7 @@ public record CopyPrepQueueItemViewModel(
     string TargetPath,
     string ArchivePath,
     string LastLogPath,
+    string LastCommand,
     string LastError,
     int? LastExitCode,
     int AttemptCount,

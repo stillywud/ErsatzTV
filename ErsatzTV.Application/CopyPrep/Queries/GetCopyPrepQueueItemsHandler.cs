@@ -35,6 +35,7 @@ public class GetCopyPrepQueueItemsHandler(IDbContextFactory<TvContext> dbContext
             item.TargetPath,
             item.ArchivePath,
             item.LastLogPath,
+            item.LastCommand,
             item.LastError,
             item.LastExitCode,
             item.AttemptCount,

@@ -282,6 +282,10 @@ Short structured entries like:
 Each attempt gets its own FFmpeg/log transcript under a copy-prep logs folder.
 
 The queue item stores the latest log path for inspection via API/UI later.
+The queue item should also store the final rendered FFmpeg command line so the web/API layer can expose the exact command that was launched.
+
+### Centralized transcode profile
+The mature copy-prep FFmpeg defaults should live in a single in-source profile/helper instead of being redefined ad hoc inside the worker. That keeps the validated external-tool behavior aligned with the integrated implementation and makes later tuning/UI exposure safer.
 
 ---
 

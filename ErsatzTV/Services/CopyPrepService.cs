@@ -3,8 +3,10 @@ using System.Globalization;
 using System.Text;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.CopyPrep;
 using ErsatzTV.Core.Domain.CopyPrep;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
@@ -237,11 +239,18 @@ public class CopyPrepService(
             queueItem.LastLogPath = logPath;
             queueItem.AttemptCount += 1;
 
-            string[] ffmpegArguments = BuildArguments(queueItem, sourcePath, workingPath, settings.ThreadsPerJob);
-            queueItem.LastCommand = BuildCommandLine(ffmpegPath, ffmpegArguments);
+            bool hasAudioStream = queueItem.MediaVersion?.Streams?.Any(s => s.MediaStreamKind == MediaStreamKind.Audio) ?? true;
+            string[] ffmpegArguments = CopyPrepTranscodeProfile.BuildArguments(
+                sourcePath,
+                workingPath,
+                queueItem.MediaVersion?.RFrameRate,
+                hasAudioStream,
+                settings.ThreadsPerJob);
+            queueItem.LastCommand = FFmpegCommandLine.Format(ffmpegPath, ffmpegArguments);
             queueItem.UpdatedAt = DateTime.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
 
+            logger.LogDebug("Copy prep ffmpeg command line {CommandLine}", queueItem.LastCommand);
             await AddLogEntry(dbContext, queueItem.Id, "Information", "ffmpeg_started", "Started FFmpeg preprocessing", cancellationToken);
 
             int exitCode = await RunFfmpeg(ffmpegPath, ffmpegArguments, logPath, cancellationToken);
@@ -322,104 +331,6 @@ public class CopyPrepService(
         string directory = Path.GetDirectoryName(sourcePath) ?? string.Empty;
         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sourcePath);
         return Path.Combine(directory, fileNameWithoutExtension + ".mp4");
-    }
-
-    private static string[] BuildArguments(
-        CopyPrepQueueItem queueItem,
-        string sourcePath,
-        string workingPath,
-        int threadsPerJob)
-    {
-        string fps = NormalizeFrameRate(queueItem.MediaVersion?.RFrameRate);
-        int gop = Math.Clamp((int)Math.Round(ParseFrameRate(fps), MidpointRounding.AwayFromZero), 1, 240);
-
-        string filter = $"scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1,fps={fps}";
-
-        var arguments = new List<string>
-        {
-            "-y",
-            "-hide_banner",
-            "-progress", "pipe:1",
-            "-nostats",
-            "-i", sourcePath,
-            "-map", "0:v:0",
-            "-map", "0:a:0?",
-            "-vf", filter,
-            "-c:v", "libx264",
-            "-preset", "medium",
-            "-crf", "18",
-            "-pix_fmt", "yuv420p",
-            "-profile:v", "high",
-            "-level", "4.1",
-            "-g", gop.ToString(CultureInfo.InvariantCulture),
-            "-keyint_min", gop.ToString(CultureInfo.InvariantCulture),
-            "-sc_threshold", "0",
-            "-bf", "0",
-            "-force_key_frames", "expr:gte(t,n_forced*1)",
-            "-c:a", "aac",
-            "-b:a", "192k",
-            "-ar", "48000",
-            "-ac", "2",
-            "-movflags", "+faststart",
-            "-threads", threadsPerJob.ToString(CultureInfo.InvariantCulture),
-            workingPath
-        };
-
-        return arguments.ToArray();
-    }
-
-    private static string NormalizeFrameRate(string frameRate) =>
-        string.IsNullOrWhiteSpace(frameRate) || frameRate == "0/0"
-            ? "25"
-            : frameRate;
-
-    private static double ParseFrameRate(string frameRate)
-    {
-        if (string.IsNullOrWhiteSpace(frameRate))
-        {
-            return 25;
-        }
-
-        if (frameRate.Contains('/'))
-        {
-            string[] parts = frameRate.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (parts.Length == 2 &&
-                double.TryParse(parts[0], NumberStyles.Number, CultureInfo.InvariantCulture, out double numerator) &&
-                double.TryParse(parts[1], NumberStyles.Number, CultureInfo.InvariantCulture, out double denominator) &&
-                denominator > 0)
-            {
-                return numerator / denominator;
-            }
-        }
-
-        return double.TryParse(frameRate, NumberStyles.Number, CultureInfo.InvariantCulture, out double parsed)
-            ? parsed
-            : 25;
-    }
-
-    private static string BuildCommandLine(string executable, IEnumerable<string> arguments)
-    {
-        var builder = new StringBuilder();
-        builder.Append(Quote(executable));
-        foreach (string argument in arguments)
-        {
-            builder.Append(' ');
-            builder.Append(Quote(argument));
-        }
-
-        return builder.ToString();
-    }
-
-    private static string Quote(string value)
-    {
-        if (string.IsNullOrEmpty(value))
-        {
-            return "\"\"";
-        }
-
-        return value.IndexOfAny([' ', '\t', '\n', '\r', '"']) >= 0
-            ? $"\"{value.Replace("\"", "\\\"")}\""
-            : value;
     }
 
     private static async Task<int> RunFfmpeg(
