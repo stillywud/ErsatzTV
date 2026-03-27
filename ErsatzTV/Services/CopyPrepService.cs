@@ -433,28 +433,36 @@ public class CopyPrepService(
         mediaFile.PathHash = PathUtils.GetPathHash(queueItem.TargetPath);
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        // RefreshStatistics mutates mediaItem.MediaVersions with entities loaded from a different DbContext.
+        // Detach the current graph first so EF Core in this context does not try to track duplicate MediaVersion instances.
+        dbContext.ChangeTracker.Clear();
+
         Either<BaseError, bool> refreshResult = await localStatisticsProvider.RefreshStatistics(
             ffmpegPath,
             ffprobePath,
             mediaItem);
 
+        CopyPrepQueueItem trackedQueueItem = await dbContext.CopyPrepQueueItems
+            .FirstOrDefaultAsync(item => item.Id == queueItem.Id, cancellationToken)
+            ?? throw new InvalidOperationException($"Unable to reload copy-prep queue item {queueItem.Id} for finalization");
+
         foreach (BaseError error in refreshResult.LeftToSeq())
         {
-            queueItem.LastError = $"Statistics refresh warning: {error.Value}";
+            trackedQueueItem.LastError = $"Statistics refresh warning: {error.Value}";
             await AddLogEntry(
                 dbContext,
-                queueItem.Id,
+                trackedQueueItem.Id,
                 "Warning",
                 "statistics_refresh_warning",
                 error.Value,
                 cancellationToken);
         }
 
-        queueItem.Status = CopyPrepStatus.Replaced;
-        queueItem.ReplacedAt = DateTime.UtcNow;
-        queueItem.UpdatedAt = queueItem.ReplacedAt.Value;
+        trackedQueueItem.Status = CopyPrepStatus.Replaced;
+        trackedQueueItem.ReplacedAt = DateTime.UtcNow;
+        trackedQueueItem.UpdatedAt = trackedQueueItem.ReplacedAt.Value;
         await dbContext.SaveChangesAsync(cancellationToken);
-        await AddLogEntry(dbContext, queueItem.Id, "Information", eventName, message, cancellationToken);
+        await AddLogEntry(dbContext, trackedQueueItem.Id, "Information", eventName, message, cancellationToken);
     }
 
     private static async Task<int> RunFfmpeg(
