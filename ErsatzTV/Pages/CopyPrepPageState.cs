@@ -1,9 +1,90 @@
+using ErsatzTV.Application.CopyPrep;
 using ErsatzTV.Core.Domain.CopyPrep;
 
 namespace ErsatzTV.Pages;
 
+public record CopyPrepSummaryViewModel(
+    int Queued,
+    int Running,
+    int Failed,
+    int CompletedToday,
+    TimeSpan? AverageDuration);
+
 public static class CopyPrepPageState
 {
+    public static IEnumerable<CopyPrepQueueItemViewModel> ApplyFilters(
+        IEnumerable<CopyPrepQueueItemViewModel> items,
+        string search,
+        CopyPrepStatus? status,
+        string library)
+    {
+        IEnumerable<CopyPrepQueueItemViewModel> result = items;
+
+        string normalizedSearch = search?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        {
+            result = result.Where(item =>
+                item.DisplayName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase) ||
+                item.SourcePath.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (status.HasValue)
+        {
+            result = result.Where(item => item.Status == status.Value);
+        }
+
+        string normalizedLibrary = library?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(normalizedLibrary))
+        {
+            result = result.Where(item =>
+                string.Equals(item.LibraryName, normalizedLibrary, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return result.OrderByDescending(item => item.UpdatedAt);
+    }
+
+    public static CopyPrepSummaryViewModel BuildSummary(IEnumerable<CopyPrepQueueItemViewModel> items, DateTime now)
+    {
+        CopyPrepQueueItemViewModel[] materializedItems = items.ToArray();
+
+        TimeSpan[] durations = materializedItems
+            .Where(item => item.StartedAt.HasValue)
+            .Select(item =>
+            {
+                DateTime? endedAt = item.CompletedAt ?? item.ReplacedAt;
+                return endedAt.HasValue ? endedAt.Value - item.StartedAt!.Value : (TimeSpan?)null;
+            })
+            .Where(duration => duration.HasValue)
+            .Select(duration => duration!.Value)
+            .ToArray();
+
+        TimeSpan? averageDuration = durations.Length == 0
+            ? null
+            : TimeSpan.FromTicks(durations.Sum(duration => duration.Ticks) / durations.Length);
+
+        return new CopyPrepSummaryViewModel(
+            Queued: materializedItems.Count(item => item.Status == CopyPrepStatus.Queued),
+            Running: materializedItems.Count(item => item.Status == CopyPrepStatus.Processing),
+            Failed: materializedItems.Count(item => item.Status == CopyPrepStatus.Failed),
+            CompletedToday: materializedItems.Count(item => (item.CompletedAt ?? item.ReplacedAt)?.Date == now.Date),
+            AverageDuration: averageDuration);
+    }
+
+    public static bool CanRetry(CopyPrepStatus status) =>
+        status is CopyPrepStatus.Failed or CopyPrepStatus.Canceled or CopyPrepStatus.Skipped;
+
     public static bool CanCancel(CopyPrepStatus status) =>
         status is CopyPrepStatus.Queued or CopyPrepStatus.Processing;
+
+    public static int GetPseudoProgressPercent(CopyPrepStatus status) => status switch
+    {
+        CopyPrepStatus.Queued => 5,
+        CopyPrepStatus.Processing => 50,
+        CopyPrepStatus.Prepared => 80,
+        CopyPrepStatus.Replaced => 100,
+        CopyPrepStatus.Failed => 100,
+        CopyPrepStatus.Canceled => 100,
+        CopyPrepStatus.Skipped => 100,
+        _ => 0
+    };
 }

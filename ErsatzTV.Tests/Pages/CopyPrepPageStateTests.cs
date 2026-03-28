@@ -1,3 +1,4 @@
+using ErsatzTV.Application.CopyPrep;
 using ErsatzTV.Application.CopyPrep.Queries;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.CopyPrep;
@@ -48,12 +49,158 @@ public class CopyPrepPageStateTests
         result.LibraryName.ShouldBe("Unknown");
     }
 
+    [Test]
+    public void Should_filter_by_search_status_and_library()
+    {
+        List<CopyPrepQueueItemViewModel> items =
+        [
+            MakeItem(
+                id: 1,
+                displayName: "Episode 1",
+                sourcePath: @"D:\media\shows\episode-1.mkv",
+                libraryName: "TV",
+                status: CopyPrepStatus.Queued,
+                updatedAt: new DateTime(2026, 3, 28, 8, 0, 0, DateTimeKind.Utc)),
+            MakeItem(
+                id: 2,
+                displayName: "Episode 2",
+                sourcePath: @"D:\media\shows\episode-2.mkv",
+                libraryName: "TV",
+                status: CopyPrepStatus.Processing,
+                updatedAt: new DateTime(2026, 3, 28, 9, 0, 0, DateTimeKind.Utc)),
+            MakeItem(
+                id: 3,
+                displayName: "Movie Night",
+                sourcePath: @"D:\media\movies\movie-night.mkv",
+                libraryName: "Movies",
+                status: CopyPrepStatus.Processing,
+                updatedAt: new DateTime(2026, 3, 28, 10, 0, 0, DateTimeKind.Utc)),
+            MakeItem(
+                id: 4,
+                displayName: "Bonus Clip",
+                sourcePath: @"D:\media\tv\special-feature.mp4",
+                libraryName: "tv",
+                status: CopyPrepStatus.Processing,
+                updatedAt: new DateTime(2026, 3, 28, 11, 0, 0, DateTimeKind.Utc))
+        ];
+
+        List<CopyPrepQueueItemViewModel> result = CopyPrepPageState
+            .ApplyFilters(items, "  special  ", CopyPrepStatus.Processing, "TV")
+            .ToList();
+
+        result.Select(item => item.Id).ShouldBe([4]);
+    }
+
+    [Test]
+    public void Should_build_summary_counts_and_average_duration()
+    {
+        DateTime now = new(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc);
+
+        List<CopyPrepQueueItemViewModel> items =
+        [
+            MakeItem(
+                id: 1,
+                status: CopyPrepStatus.Queued,
+                updatedAt: now.AddMinutes(-1)),
+            MakeItem(
+                id: 2,
+                status: CopyPrepStatus.Processing,
+                updatedAt: now.AddMinutes(-2),
+                startedAt: now.AddMinutes(-15)),
+            MakeItem(
+                id: 3,
+                status: CopyPrepStatus.Failed,
+                updatedAt: now.AddMinutes(-3),
+                startedAt: now.AddMinutes(-30)),
+            MakeItem(
+                id: 4,
+                status: CopyPrepStatus.Replaced,
+                updatedAt: now.AddMinutes(-4),
+                startedAt: now.AddMinutes(-40),
+                completedAt: now.AddMinutes(-20)),
+            MakeItem(
+                id: 5,
+                status: CopyPrepStatus.Replaced,
+                updatedAt: now.AddMinutes(-5),
+                startedAt: now.AddMinutes(-70),
+                replacedAt: now.AddMinutes(-40)),
+            MakeItem(
+                id: 6,
+                status: CopyPrepStatus.Replaced,
+                updatedAt: now.AddDays(-1),
+                startedAt: now.AddDays(-1).AddMinutes(-50),
+                completedAt: now.AddDays(-1).AddMinutes(-20))
+        ];
+
+        var result = CopyPrepPageState.BuildSummary(items, now);
+
+        result.ShouldBe(new ErsatzTV.Pages.CopyPrepSummaryViewModel(
+            Queued: 1,
+            Running: 1,
+            Failed: 1,
+            CompletedToday: 2,
+            AverageDuration: TimeSpan.FromMinutes(30)));
+    }
+
     [TestCase(CopyPrepStatus.Queued, true)]
     [TestCase(CopyPrepStatus.Processing, true)]
     [TestCase(CopyPrepStatus.Failed, false)]
     [TestCase(CopyPrepStatus.Replaced, false)]
     public void Should_indicate_when_queue_item_can_be_canceled(CopyPrepStatus status, bool expected) =>
         CopyPrepPageState.CanCancel(status).ShouldBe(expected);
+
+    [TestCase(CopyPrepStatus.Failed, true)]
+    [TestCase(CopyPrepStatus.Canceled, true)]
+    [TestCase(CopyPrepStatus.Skipped, true)]
+    [TestCase(CopyPrepStatus.Queued, false)]
+    [TestCase(CopyPrepStatus.Processing, false)]
+    public void Should_indicate_when_queue_item_can_be_retried(CopyPrepStatus status, bool expected) =>
+        CopyPrepPageState.CanRetry(status).ShouldBe(expected);
+
+    [TestCase(CopyPrepStatus.Queued, 5)]
+    [TestCase(CopyPrepStatus.Processing, 50)]
+    [TestCase(CopyPrepStatus.Prepared, 80)]
+    [TestCase(CopyPrepStatus.Replaced, 100)]
+    [TestCase(CopyPrepStatus.Failed, 100)]
+    [TestCase(CopyPrepStatus.Canceled, 100)]
+    [TestCase(CopyPrepStatus.Skipped, 100)]
+    public void Should_map_status_to_pseudo_progress_percent(CopyPrepStatus status, int expected) =>
+        CopyPrepPageState.GetPseudoProgressPercent(status).ShouldBe(expected);
+
+    private static CopyPrepQueueItemViewModel MakeItem(
+        int id,
+        string displayName = "Episode",
+        string sourcePath = @"D:\media\shows\episode.mkv",
+        string libraryName = "Library",
+        CopyPrepStatus status = CopyPrepStatus.Queued,
+        DateTime? updatedAt = null,
+        DateTime? startedAt = null,
+        DateTime? completedAt = null,
+        DateTime? replacedAt = null) =>
+        new(
+            Id: id,
+            MediaItemId: id,
+            Status: status,
+            Reason: "Needs prep",
+            DisplayName: displayName,
+            LibraryName: libraryName,
+            SourcePath: sourcePath,
+            TargetPath: @"D:\copy-prep\target.mp4",
+            ArchivePath: @"D:\copy-prep\archive\target.mkv",
+            LastLogPath: @"D:\copy-prep\logs\target.log",
+            LastCommand: "ffmpeg -i input",
+            LastError: string.Empty,
+            LastExitCode: null,
+            AttemptCount: 0,
+            CreatedAt: new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc),
+            UpdatedAt: updatedAt ?? new DateTime(2026, 3, 28, 12, 1, 0, DateTimeKind.Utc),
+            QueuedAt: new DateTime(2026, 3, 28, 12, 0, 0, DateTimeKind.Utc),
+            StartedAt: startedAt,
+            CompletedAt: completedAt,
+            FailedAt: null,
+            CanceledAt: null,
+            ReplacedAt: replacedAt,
+            LogEntries: []);
 
     private static CopyPrepQueueItem BuildQueueItem(
         string sourcePath,
