@@ -11,31 +11,36 @@ public class CancelCopyPrepQueueItemHandler(IDbContextFactory<TvContext> dbConte
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        CopyPrepQueueItem queueItem = await dbContext.CopyPrepQueueItems
-            .FirstOrDefaultAsync(item => item.Id == request.Id, cancellationToken);
+        CopyPrepStatus? currentStatus = await dbContext.CopyPrepQueueItems
+            .Where(item => item.Id == request.Id)
+            .Select(item => (CopyPrepStatus?)item.Status)
+            .SingleOrDefaultAsync(cancellationToken);
 
-        if (queueItem is null)
+        if (currentStatus is null)
         {
             return false;
         }
 
-        if (queueItem.Status is CopyPrepStatus.Prepared
-            or CopyPrepStatus.Replaced
-            or CopyPrepStatus.Failed
-            or CopyPrepStatus.Canceled)
+        if (IsNonCancelable(currentStatus.Value))
         {
             return true;
         }
 
         DateTime now = DateTime.UtcNow;
-        queueItem.Status = CopyPrepStatus.Canceled;
-        queueItem.CanceledAt = now;
-        queueItem.UpdatedAt = now;
-        await dbContext.SaveChangesAsync(cancellationToken);
+        bool canceled = await TryCancel(dbContext, request.Id, now, cancellationToken);
+        if (!canceled)
+        {
+            CopyPrepStatus? refreshedStatus = await dbContext.CopyPrepQueueItems
+                .Where(item => item.Id == request.Id)
+                .Select(item => (CopyPrepStatus?)item.Status)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            return refreshedStatus is not null;
+        }
 
         dbContext.CopyPrepQueueLogEntries.Add(new CopyPrepQueueLogEntry
         {
-            CopyPrepQueueItemId = queueItem.Id,
+            CopyPrepQueueItemId = request.Id,
             CreatedAt = now,
             Level = "Information",
             Event = "manual_cancel",
@@ -45,4 +50,23 @@ public class CancelCopyPrepQueueItemHandler(IDbContextFactory<TvContext> dbConte
 
         return true;
     }
+
+    internal static async Task<bool> TryCancel(TvContext dbContext, int queueItemId, DateTime now, CancellationToken cancellationToken)
+    {
+        int rowsAffected = await dbContext.CopyPrepQueueItems
+            .Where(item => item.Id == queueItemId && (item.Status == CopyPrepStatus.Queued || item.Status == CopyPrepStatus.Processing))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(item => item.Status, CopyPrepStatus.Canceled)
+                    .SetProperty(item => item.CanceledAt, now)
+                    .SetProperty(item => item.UpdatedAt, now),
+                cancellationToken);
+
+        return rowsAffected > 0;
+    }
+
+    private static bool IsNonCancelable(CopyPrepStatus status) => status is CopyPrepStatus.Prepared
+        or CopyPrepStatus.Replaced
+        or CopyPrepStatus.Failed
+        or CopyPrepStatus.Canceled;
 }

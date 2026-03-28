@@ -242,9 +242,11 @@ public class CopyPrepService(
                     queueItem.LastLogPath = null;
                     queueItem.LastExitCode = null;
                     queueItem.LastError = null;
-                    queueItem.CompletedAt = DateTime.UtcNow;
-                    queueItem.UpdatedAt = queueItem.CompletedAt.Value;
-                    await dbContext.SaveChangesAsync(cancellationToken);
+
+                    if (!await TryMarkPrepared(dbContext, queueItem, logger, cancellationToken))
+                    {
+                        return;
+                    }
 
                     await AddLogEntry(
                         dbContext,
@@ -254,16 +256,6 @@ public class CopyPrepService(
                         "Existing prepared target passed validation and will be reused",
                         cancellationToken,
                         existingTargetValidation.Summary);
-
-                    if (await AbortIfCanceled(
-                            dbContext,
-                            queueItem,
-                            logger,
-                            "existing target reuse finalization",
-                            cancellationToken))
-                    {
-                        return;
-                    }
 
                     ArchiveSourceFile(sourcePath, archivePath);
 

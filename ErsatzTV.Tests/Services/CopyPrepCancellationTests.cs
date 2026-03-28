@@ -73,6 +73,65 @@ public class CopyPrepCancellationTests
     }
 
     [Test]
+    public async Task Cancel_handler_should_be_no_op_after_prepared_boundary()
+    {
+        await using var factory = await TestDbContextFactory.Create();
+        int queueItemId = await factory.SeedQueueItem(CopyPrepStatus.Processing);
+
+        await using (TvContext prepareContext = await factory.CreateDbContextAsync(CancellationToken.None))
+        {
+            CopyPrepQueueItem queueItem = await prepareContext.CopyPrepQueueItems
+                .SingleAsync(item => item.Id == queueItemId, CancellationToken.None);
+
+            bool prepared = await CopyPrepService.TryMarkPrepared(
+                prepareContext,
+                queueItem,
+                NullLogger.Instance,
+                CancellationToken.None);
+
+            prepared.ShouldBeTrue();
+        }
+
+        var sut = new CancelCopyPrepQueueItemHandler(factory);
+        bool result = await sut.Handle(new CancelCopyPrepQueueItem(queueItemId), CancellationToken.None);
+
+        result.ShouldBeTrue();
+
+        await using TvContext verificationContext = await factory.CreateDbContextAsync(CancellationToken.None);
+        CopyPrepQueueItem persisted = await verificationContext.CopyPrepQueueItems
+            .Include(item => item.LogEntries)
+            .SingleAsync(item => item.Id == queueItemId, CancellationToken.None);
+
+        persisted.Status.ShouldBe(CopyPrepStatus.Prepared);
+        persisted.CanceledAt.ShouldBeNull();
+        persisted.LogEntries.ShouldNotContain(logEntry => logEntry.Event == "manual_cancel");
+    }
+
+    [Test]
+    public async Task Try_cancel_should_not_overwrite_replaced_item()
+    {
+        await using var factory = await TestDbContextFactory.Create();
+        int queueItemId = await factory.SeedQueueItem(CopyPrepStatus.Replaced);
+
+        await using TvContext dbContext = await factory.CreateDbContextAsync(CancellationToken.None);
+
+        bool result = await CancelCopyPrepQueueItemHandler.TryCancel(
+            dbContext,
+            queueItemId,
+            DateTime.UtcNow,
+            CancellationToken.None);
+
+        result.ShouldBeFalse();
+
+        await using TvContext verificationContext = await factory.CreateDbContextAsync(CancellationToken.None);
+        CopyPrepQueueItem persisted = await verificationContext.CopyPrepQueueItems
+            .SingleAsync(item => item.Id == queueItemId, CancellationToken.None);
+
+        persisted.Status.ShouldBe(CopyPrepStatus.Replaced);
+        persisted.CanceledAt.ShouldBeNull();
+    }
+
+    [Test]
     public async Task Try_mark_prepared_should_not_overwrite_canceled_item()
     {
         await using var factory = await TestDbContextFactory.Create();
@@ -248,11 +307,11 @@ public class CopyPrepCancellationTests
                 CreatedAt = now,
                 UpdatedAt = now,
                 QueuedAt = now,
-                StartedAt = status == CopyPrepStatus.Processing ? now : null,
+                StartedAt = status is CopyPrepStatus.Processing or CopyPrepStatus.Prepared or CopyPrepStatus.Replaced ? now : null,
                 FailedAt = status == CopyPrepStatus.Failed ? now : null,
                 CanceledAt = status == CopyPrepStatus.Canceled ? now : null,
-                CompletedAt = null,
-                ReplacedAt = null,
+                CompletedAt = status is CopyPrepStatus.Prepared or CopyPrepStatus.Replaced ? now : null,
+                ReplacedAt = status == CopyPrepStatus.Replaced ? now : null,
                 LogEntries = []
             };
 
