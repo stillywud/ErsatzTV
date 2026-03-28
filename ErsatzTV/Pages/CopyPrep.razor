@@ -306,14 +306,7 @@
         _summary = CopyPrepPageState.BuildSummary(_allItems, DateTime.UtcNow);
 
         int? desiredId = selectedId ?? _selectedItem?.Id;
-        _selectedItem = desiredId.HasValue
-            ? _allItems.FirstOrDefault(item => item.Id == desiredId.Value)
-            : _filteredItems.FirstOrDefault();
-
-        if (_selectedItem is not null && _filteredItems.All(item => item.Id != _selectedItem.Id))
-        {
-            _selectedItem = _allItems.FirstOrDefault(item => item.Id == _selectedItem.Id) ?? _filteredItems.FirstOrDefault();
-        }
+        _selectedItem = CopyPrepPageState.ResolveSelectedItem(_filteredItems, desiredId);
     }
 
     private Task OnSelectedItemChanged(CopyPrepQueueItemViewModel item)

@@ -65,6 +65,16 @@ public static class CopyPrepPageState
             AverageDuration: averageDuration);
     }
 
+    public static CopyPrepQueueItemViewModel ResolveSelectedItem(
+        IEnumerable<CopyPrepQueueItemViewModel> filteredItems,
+        int? selectedId)
+    {
+        CopyPrepQueueItemViewModel[] materializedItems = filteredItems.ToArray();
+        return selectedId.HasValue
+            ? materializedItems.FirstOrDefault(item => item.Id == selectedId.Value) ?? materializedItems.FirstOrDefault()
+            : materializedItems.FirstOrDefault();
+    }
+
     public static bool CanRetry(CopyPrepStatus status) =>
         status is CopyPrepStatus.Failed or CopyPrepStatus.Canceled or CopyPrepStatus.Skipped;
 

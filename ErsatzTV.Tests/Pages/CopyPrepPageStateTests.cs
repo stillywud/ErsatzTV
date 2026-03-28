@@ -194,6 +194,44 @@ public class CopyPrepPageStateTests
         CopyPrepPageState.GetPseudoProgressPercent(status).ShouldBe(expected);
 
     [Test]
+    public void Should_preserve_selected_item_when_it_remains_visible_after_filtering()
+    {
+        List<CopyPrepQueueItemViewModel> filteredItems =
+        [
+            MakeItem(id: 2, displayName: "Episode 2", updatedAt: new DateTime(2026, 3, 28, 9, 0, 0, DateTimeKind.Utc)),
+            MakeItem(id: 1, displayName: "Episode 1", updatedAt: new DateTime(2026, 3, 28, 8, 0, 0, DateTimeKind.Utc))
+        ];
+
+        CopyPrepQueueItemViewModel selectedItem = CopyPrepPageState.ResolveSelectedItem(filteredItems, 1);
+
+        selectedItem.ShouldNotBeNull();
+        selectedItem.Id.ShouldBe(1);
+    }
+
+    [Test]
+    public void Should_fall_back_to_first_visible_item_when_selected_item_is_filtered_out()
+    {
+        List<CopyPrepQueueItemViewModel> filteredItems =
+        [
+            MakeItem(id: 2, displayName: "Episode 2", updatedAt: new DateTime(2026, 3, 28, 9, 0, 0, DateTimeKind.Utc)),
+            MakeItem(id: 1, displayName: "Episode 1", updatedAt: new DateTime(2026, 3, 28, 8, 0, 0, DateTimeKind.Utc))
+        ];
+
+        CopyPrepQueueItemViewModel selectedItem = CopyPrepPageState.ResolveSelectedItem(filteredItems, 99);
+
+        selectedItem.ShouldNotBeNull();
+        selectedItem.Id.ShouldBe(2);
+    }
+
+    [Test]
+    public void Should_clear_selected_item_when_filtering_has_no_visible_results()
+    {
+        CopyPrepQueueItemViewModel selectedItem = CopyPrepPageState.ResolveSelectedItem([], 99);
+
+        selectedItem.ShouldBeNull();
+    }
+
+    [Test]
     public void Should_format_row_duration_using_terminal_timestamp_priority()
     {
         var item = MakeItem(
