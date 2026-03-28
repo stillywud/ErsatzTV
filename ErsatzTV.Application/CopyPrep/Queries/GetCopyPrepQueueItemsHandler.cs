@@ -18,6 +18,9 @@ public class GetCopyPrepQueueItemsHandler(IDbContextFactory<TvContext> dbContext
         List<CopyPrepQueueItem> items = await dbContext.CopyPrepQueueItems
             .AsNoTracking()
             .Include(item => item.LogEntries)
+            .Include(item => item.MediaItem)
+                .ThenInclude(mediaItem => mediaItem.LibraryPath)
+                .ThenInclude(libraryPath => libraryPath.Library)
             .OrderByDescending(item => item.UpdatedAt)
             .Take(limit)
             .ToListAsync(cancellationToken);
@@ -25,12 +28,14 @@ public class GetCopyPrepQueueItemsHandler(IDbContextFactory<TvContext> dbContext
         return items.Select(Project).ToList();
     }
 
-    private static CopyPrepQueueItemViewModel Project(CopyPrepQueueItem item) =>
+    internal static CopyPrepQueueItemViewModel Project(CopyPrepQueueItem item) =>
         new(
             item.Id,
             item.MediaItemId,
             item.Status,
             item.Reason,
+            Path.GetFileNameWithoutExtension(item.SourcePath),
+            item.MediaItem?.LibraryPath?.Library?.Name ?? "Unknown",
             item.SourcePath,
             item.TargetPath,
             item.ArchivePath,
@@ -45,6 +50,7 @@ public class GetCopyPrepQueueItemsHandler(IDbContextFactory<TvContext> dbContext
             item.StartedAt,
             item.CompletedAt,
             item.FailedAt,
+            item.CanceledAt,
             item.ReplacedAt,
             (item.LogEntries ?? [])
             .OrderByDescending(logEntry => logEntry.CreatedAt)
