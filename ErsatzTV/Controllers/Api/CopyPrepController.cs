@@ -22,4 +22,12 @@ public class CopyPrepController(IMediator mediator)
         await mediator.Send(new RetryCopyPrepQueueItem(id))
             ? new OkResult()
             : new NotFoundResult();
+
+    [HttpPost("/api/copy-prep/{id:int}/cancel")]
+    [Tags("CopyPrep")]
+    [EndpointSummary("Cancel a copy-prep queue item")]
+    public async Task<IActionResult> CancelQueueItem(int id) =>
+        await mediator.Send(new CancelCopyPrepQueueItem(id))
+            ? new OkResult()
+            : new NotFoundResult();
 }

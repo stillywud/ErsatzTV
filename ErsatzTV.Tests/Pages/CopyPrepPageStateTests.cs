@@ -1,6 +1,7 @@
 using ErsatzTV.Application.CopyPrep.Queries;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.CopyPrep;
+using CopyPrepPageState = ErsatzTV.Pages.CopyPrepPageState;
 using NUnit.Framework;
 using Shouldly;
 
@@ -46,6 +47,13 @@ public class CopyPrepPageStateTests
 
         result.LibraryName.ShouldBe("Unknown");
     }
+
+    [TestCase(CopyPrepStatus.Queued, true)]
+    [TestCase(CopyPrepStatus.Processing, true)]
+    [TestCase(CopyPrepStatus.Failed, false)]
+    [TestCase(CopyPrepStatus.Replaced, false)]
+    public void Should_indicate_when_queue_item_can_be_canceled(CopyPrepStatus status, bool expected) =>
+        CopyPrepPageState.CanCancel(status).ShouldBe(expected);
 
     private static CopyPrepQueueItem BuildQueueItem(
         string sourcePath,
