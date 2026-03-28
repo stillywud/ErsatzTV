@@ -15,6 +15,8 @@ public record CopyPrepQueueItemViewModel(
     int MediaItemId,
     CopyPrepStatus Status,
     string Reason,
+    string DisplayName,
+    string LibraryName,
     string SourcePath,
     string TargetPath,
     string ArchivePath,
@@ -29,5 +31,6 @@ public record CopyPrepQueueItemViewModel(
     DateTime? StartedAt,
     DateTime? CompletedAt,
     DateTime? FailedAt,
+    DateTime? CanceledAt,
     DateTime? ReplacedAt,
     List<CopyPrepQueueLogEntryViewModel> LogEntries);
