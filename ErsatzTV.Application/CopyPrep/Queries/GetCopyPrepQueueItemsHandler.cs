@@ -28,7 +28,7 @@ public class GetCopyPrepQueueItemsHandler(IDbContextFactory<TvContext> dbContext
         return items.Select(Project).ToList();
     }
 
-    private static CopyPrepQueueItemViewModel Project(CopyPrepQueueItem item) =>
+    internal static CopyPrepQueueItemViewModel Project(CopyPrepQueueItem item) =>
         new(
             item.Id,
             item.MediaItemId,
