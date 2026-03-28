@@ -47,19 +47,8 @@ public static class CopyPrepPageState
     {
         CopyPrepQueueItemViewModel[] materializedItems = items.ToArray();
 
-        DateTime? GetTerminalTimestamp(CopyPrepQueueItemViewModel item) => item.Status switch
-        {
-            CopyPrepStatus.Replaced => item.ReplacedAt ?? item.CompletedAt,
-            _ => item.CompletedAt ?? item.ReplacedAt
-        };
-
         TimeSpan[] durations = materializedItems
-            .Where(item => item.StartedAt.HasValue)
-            .Select(item =>
-            {
-                DateTime? endedAt = GetTerminalTimestamp(item);
-                return endedAt.HasValue ? endedAt.Value - item.StartedAt!.Value : (TimeSpan?)null;
-            })
+            .Select(GetDuration)
             .Where(duration => duration.HasValue)
             .Select(duration => duration!.Value)
             .ToArray();
@@ -92,5 +81,45 @@ public static class CopyPrepPageState
         CopyPrepStatus.Canceled => 100,
         CopyPrepStatus.Skipped => 100,
         _ => 0
+    };
+
+    public static TimeSpan? GetDuration(CopyPrepQueueItemViewModel item)
+    {
+        if (!item.StartedAt.HasValue)
+        {
+            return null;
+        }
+
+        DateTime? endedAt = GetTerminalTimestamp(item);
+        return endedAt.HasValue ? endedAt.Value - item.StartedAt.Value : null;
+    }
+
+    public static string FormatDuration(CopyPrepQueueItemViewModel item) => FormatDuration(GetDuration(item));
+
+    public static string FormatDuration(TimeSpan? duration)
+    {
+        if (!duration.HasValue)
+        {
+            return "—";
+        }
+
+        TimeSpan value = duration.Value;
+        if (value.TotalHours >= 1)
+        {
+            return $"{(int)value.TotalHours}h {value.Minutes}m";
+        }
+
+        if (value.TotalMinutes >= 1)
+        {
+            return $"{Math.Max(1, (int)value.TotalMinutes)}m";
+        }
+
+        return $"{Math.Max(0, (int)value.TotalSeconds)}s";
+    }
+
+    public static DateTime? GetTerminalTimestamp(CopyPrepQueueItemViewModel item) => item.Status switch
+    {
+        CopyPrepStatus.Replaced => item.ReplacedAt ?? item.CompletedAt,
+        _ => item.CompletedAt ?? item.ReplacedAt
     };
 }

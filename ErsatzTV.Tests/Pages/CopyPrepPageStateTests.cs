@@ -193,6 +193,23 @@ public class CopyPrepPageStateTests
     public void Should_map_status_to_pseudo_progress_percent(CopyPrepStatus status, int expected) =>
         CopyPrepPageState.GetPseudoProgressPercent(status).ShouldBe(expected);
 
+    [Test]
+    public void Should_format_row_duration_using_terminal_timestamp_priority()
+    {
+        var item = MakeItem(
+            id: 1,
+            status: CopyPrepStatus.Replaced,
+            startedAt: new DateTime(2026, 3, 28, 10, 0, 0, DateTimeKind.Utc),
+            completedAt: new DateTime(2026, 3, 28, 10, 20, 0, DateTimeKind.Utc),
+            replacedAt: new DateTime(2026, 3, 28, 10, 30, 0, DateTimeKind.Utc));
+
+        CopyPrepPageState.FormatDuration(item).ShouldBe("30m");
+    }
+
+    [Test]
+    public void Should_format_missing_average_duration_as_dash() =>
+        CopyPrepPageState.FormatDuration((TimeSpan?)null).ShouldBe("—");
+
     private static CopyPrepQueueItemViewModel MakeItem(
         int id,
         string displayName = "Episode",
