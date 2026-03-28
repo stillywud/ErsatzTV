@@ -47,11 +47,17 @@ public static class CopyPrepPageState
     {
         CopyPrepQueueItemViewModel[] materializedItems = items.ToArray();
 
+        DateTime? GetTerminalTimestamp(CopyPrepQueueItemViewModel item) => item.Status switch
+        {
+            CopyPrepStatus.Replaced => item.ReplacedAt ?? item.CompletedAt,
+            _ => item.CompletedAt ?? item.ReplacedAt
+        };
+
         TimeSpan[] durations = materializedItems
             .Where(item => item.StartedAt.HasValue)
             .Select(item =>
             {
-                DateTime? endedAt = item.CompletedAt ?? item.ReplacedAt;
+                DateTime? endedAt = GetTerminalTimestamp(item);
                 return endedAt.HasValue ? endedAt.Value - item.StartedAt!.Value : (TimeSpan?)null;
             })
             .Where(duration => duration.HasValue)
@@ -66,7 +72,7 @@ public static class CopyPrepPageState
             Queued: materializedItems.Count(item => item.Status == CopyPrepStatus.Queued),
             Running: materializedItems.Count(item => item.Status == CopyPrepStatus.Processing),
             Failed: materializedItems.Count(item => item.Status == CopyPrepStatus.Failed),
-            CompletedToday: materializedItems.Count(item => (item.CompletedAt ?? item.ReplacedAt)?.Date == now.Date),
+            CompletedToday: materializedItems.Count(item => GetTerminalTimestamp(item)?.Date == now.Date),
             AverageDuration: averageDuration);
     }
 

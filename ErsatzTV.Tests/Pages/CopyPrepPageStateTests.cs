@@ -142,6 +142,32 @@ public class CopyPrepPageStateTests
             AverageDuration: TimeSpan.FromMinutes(30)));
     }
 
+    [Test]
+    public void Should_use_replaced_at_for_replaced_item_summary_when_both_terminal_timestamps_exist()
+    {
+        DateTime now = new(2026, 3, 29, 12, 0, 0, DateTimeKind.Utc);
+
+        List<CopyPrepQueueItemViewModel> items =
+        [
+            MakeItem(
+                id: 1,
+                status: CopyPrepStatus.Replaced,
+                updatedAt: now,
+                startedAt: new DateTime(2026, 3, 28, 23, 30, 0, DateTimeKind.Utc),
+                completedAt: new DateTime(2026, 3, 28, 23, 50, 0, DateTimeKind.Utc),
+                replacedAt: new DateTime(2026, 3, 29, 0, 10, 0, DateTimeKind.Utc))
+        ];
+
+        var result = CopyPrepPageState.BuildSummary(items, now);
+
+        result.ShouldBe(new ErsatzTV.Pages.CopyPrepSummaryViewModel(
+            Queued: 0,
+            Running: 0,
+            Failed: 0,
+            CompletedToday: 1,
+            AverageDuration: TimeSpan.FromMinutes(40)));
+    }
+
     [TestCase(CopyPrepStatus.Queued, true)]
     [TestCase(CopyPrepStatus.Processing, true)]
     [TestCase(CopyPrepStatus.Failed, false)]
