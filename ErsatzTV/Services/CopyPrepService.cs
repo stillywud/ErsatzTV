@@ -255,6 +255,16 @@ public class CopyPrepService(
                         cancellationToken,
                         existingTargetValidation.Summary);
 
+                    if (await AbortIfCanceled(
+                            dbContext,
+                            queueItem,
+                            logger,
+                            "existing target reuse finalization",
+                            cancellationToken))
+                    {
+                        return;
+                    }
+
                     ArchiveSourceFile(sourcePath, archivePath);
 
                     await FinalizePreparedTarget(
@@ -265,6 +275,7 @@ public class CopyPrepService(
                         queueItem,
                         "existing_target_reused",
                         "Validated prepared target already existed; skipped FFmpeg preprocessing",
+                        logger,
                         cancellationToken);
 
                     logger.LogInformation(
@@ -354,11 +365,22 @@ public class CopyPrepService(
                 cancellationToken,
                 preparedOutputValidation.Summary);
 
-            queueItem.Status = CopyPrepStatus.Prepared;
-            queueItem.CompletedAt = DateTime.UtcNow;
-            queueItem.UpdatedAt = queueItem.CompletedAt.Value;
-            await dbContext.SaveChangesAsync(cancellationToken);
+            if (!await TryMarkPrepared(dbContext, queueItem, logger, cancellationToken))
+            {
+                return;
+            }
+
             await AddLogEntry(dbContext, queueItem.Id, "Information", "ffmpeg_completed", "Prepared output created successfully", cancellationToken);
+
+            if (await AbortIfCanceled(
+                    dbContext,
+                    queueItem,
+                    logger,
+                    "prepared target replacement/finalization",
+                    cancellationToken))
+            {
+                return;
+            }
 
             ReplacePaths(sourcePath, targetPath, workingPath, archivePath);
 
@@ -370,6 +392,7 @@ public class CopyPrepService(
                 queueItem,
                 "replacement_completed",
                 "Prepared media replaced the active library file",
+                logger,
                 cancellationToken);
 
             logger.LogInformation(
@@ -380,8 +403,11 @@ public class CopyPrepService(
         }
         catch (Exception ex) when (ex is not (TaskCanceledException or OperationCanceledException))
         {
-            await MarkFailed(queueItemId, ex, cancellationToken);
-            logger.LogWarning(ex, "Copy prep failed for queue item {QueueItemId}", queueItemId);
+            bool markedFailed = await MarkFailed(queueItemId, ex, cancellationToken);
+            if (markedFailed)
+            {
+                logger.LogWarning(ex, "Copy prep failed for queue item {QueueItemId}", queueItemId);
+            }
         }
     }
 
@@ -415,7 +441,7 @@ public class CopyPrepService(
             error => CopyPrepOutputValidationResult.Failure($"ffprobe could not read prepared output: {error.Value}"));
     }
 
-    private static async Task FinalizePreparedTarget(
+    internal static async Task FinalizePreparedTarget(
         TvContext dbContext,
         ILocalStatisticsProvider localStatisticsProvider,
         string ffmpegPath,
@@ -423,8 +449,14 @@ public class CopyPrepService(
         CopyPrepQueueItem queueItem,
         string eventName,
         string message,
+        ILogger logger,
         CancellationToken cancellationToken)
     {
+        if (await AbortIfCanceled(dbContext, queueItem, logger, "prepared target finalization", cancellationToken))
+        {
+            return;
+        }
+
         MediaItem mediaItem = await LoadMediaItemForUpdate(dbContext, queueItem.MediaItemId, cancellationToken)
             ?? throw new InvalidOperationException($"Unable to reload media item {queueItem.MediaItemId} for copy-prep replacement");
 
@@ -445,6 +477,12 @@ public class CopyPrepService(
         CopyPrepQueueItem trackedQueueItem = await dbContext.CopyPrepQueueItems
             .FirstOrDefaultAsync(item => item.Id == queueItem.Id, cancellationToken)
             ?? throw new InvalidOperationException($"Unable to reload copy-prep queue item {queueItem.Id} for finalization");
+
+        if (trackedQueueItem.Status == CopyPrepStatus.Canceled)
+        {
+            await AddCancellationObservedLog(dbContext, trackedQueueItem.Id, logger, "prepared target finalization", cancellationToken);
+            return;
+        }
 
         foreach (BaseError error in refreshResult.LeftToSeq())
         {
@@ -620,18 +658,52 @@ public class CopyPrepService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task MarkFailed(int queueItemId, Exception ex, CancellationToken cancellationToken)
+    private async Task<bool> MarkFailed(int queueItemId, Exception ex, CancellationToken cancellationToken)
     {
         using IServiceScope scope = serviceScopeFactory.CreateScope();
         IDbContextFactory<TvContext> dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<TvContext>>();
 
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await TryMarkFailed(dbContext, queueItemId, ex, logger, cancellationToken);
+    }
+
+    internal static async Task<bool> TryMarkPrepared(
+        TvContext dbContext,
+        CopyPrepQueueItem queueItem,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        if (await AbortIfCanceled(dbContext, queueItem, logger, "prepared state transition", cancellationToken))
+        {
+            return false;
+        }
+
+        queueItem.Status = CopyPrepStatus.Prepared;
+        queueItem.CompletedAt = DateTime.UtcNow;
+        queueItem.UpdatedAt = queueItem.CompletedAt.Value;
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    internal static async Task<bool> TryMarkFailed(
+        TvContext dbContext,
+        int queueItemId,
+        Exception ex,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
         CopyPrepQueueItem queueItem = await dbContext.CopyPrepQueueItems
             .FirstOrDefaultAsync(item => item.Id == queueItemId, cancellationToken);
 
         if (queueItem is null)
         {
-            return;
+            return false;
+        }
+
+        if (queueItem.Status == CopyPrepStatus.Canceled)
+        {
+            await AddCancellationObservedLog(dbContext, queueItem.Id, logger, "failure handling", cancellationToken);
+            return false;
         }
 
         queueItem.Status = CopyPrepStatus.Failed;
@@ -650,6 +722,45 @@ public class CopyPrepService(
             Details = ex.ToString()
         });
         await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    private static async Task<bool> AbortIfCanceled(
+        TvContext dbContext,
+        CopyPrepQueueItem queueItem,
+        ILogger logger,
+        string followUpStage,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Entry(queueItem).ReloadAsync(cancellationToken);
+        if (queueItem.Status != CopyPrepStatus.Canceled)
+        {
+            return false;
+        }
+
+        await AddCancellationObservedLog(dbContext, queueItem.Id, logger, followUpStage, cancellationToken);
+        return true;
+    }
+
+    private static async Task AddCancellationObservedLog(
+        TvContext dbContext,
+        int queueItemId,
+        ILogger logger,
+        string followUpStage,
+        CancellationToken cancellationToken)
+    {
+        logger.LogInformation(
+            "Copy prep queue item {QueueItemId} was manually canceled; aborting {FollowUpStage}",
+            queueItemId,
+            followUpStage);
+
+        await AddLogEntry(
+            dbContext,
+            queueItemId,
+            "Information",
+            "processing_canceled",
+            $"Processing observed manual cancellation and aborted {followUpStage}",
+            cancellationToken);
     }
 
     private sealed record CopyPrepSettings(bool Enabled, int CpuTargetPercent, int MaxConcurrentJobs, int ThreadsPerJob);
