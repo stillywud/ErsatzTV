@@ -85,7 +85,7 @@ public class AddItemsToCopyPrepHandler(IDbContextFactory<TvContext> dbContextFac
             if (retryQueueItem is not null)
             {
                 DateTime now = DateTime.UtcNow;
-                ResetForRetry(retryQueueItem, now);
+                RefreshForRetry(retryQueueItem, version, file, decision, now);
                 dbContext.CopyPrepQueueLogEntries.Add(new CopyPrepQueueLogEntry
                 {
                     CopyPrepQueueItemId = retryQueueItem.Id,
@@ -136,8 +136,19 @@ public class AddItemsToCopyPrepHandler(IDbContextFactory<TvContext> dbContextFac
         return result;
     }
 
-    private static void ResetForRetry(CopyPrepQueueItem queueItem, DateTime now)
+    private static void RefreshForRetry(
+        CopyPrepQueueItem queueItem,
+        MediaVersion version,
+        MediaFile file,
+        CopyPrepDecision decision,
+        DateTime now)
     {
+        queueItem.MediaVersionId = version.Id;
+        queueItem.MediaFileId = file.Id;
+        queueItem.Reason = decision.Summary;
+        queueItem.SourcePath = file.Path;
+        queueItem.TargetPath = Path.ChangeExtension(file.Path, ".mp4");
+        queueItem.ArchivePath = Path.Combine(Path.GetDirectoryName(file.Path) ?? string.Empty, "archive", Path.GetFileName(file.Path));
         queueItem.Status = CopyPrepStatus.Queued;
         queueItem.QueuedAt = now;
         queueItem.UpdatedAt = now;

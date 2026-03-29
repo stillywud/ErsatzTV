@@ -79,6 +79,45 @@ public class AddItemsToCopyPrepHandlerTests
         dbContext.CopyPrepQueueLogEntries.ShouldContain(log => log.Event == "manual_retry_from_search_selection");
     }
 
+    [Test]
+    public async Task Should_refresh_retried_item_to_current_primary_file()
+    {
+        await using var factory = await TestDbContextFactory.Create();
+        int movieId = await factory.SeedMovie(
+            fileName: "retry-source-old.mkv",
+            videoCodec: "h264",
+            audioCodec: "aac",
+            pixelFormat: "yuv420p",
+            sampleAspectRatio: "1:1",
+            frameRate: "25/1");
+        int queueItemId = await factory.SeedQueueItemForMediaItem(movieId, CopyPrepStatus.Failed);
+        (int originalMediaVersionId, int originalMediaFileId, string originalSourcePath) =
+            await factory.GetQueueItemPointers(queueItemId);
+        (int currentMediaVersionId, int currentMediaFileId, string currentSourcePath) =
+            await factory.PrependHeadVersion(movieId, "retry-source-current.mkv");
+
+        var sut = new AddItemsToCopyPrepHandler(factory);
+
+        AddItemsToCopyPrepResult result = await sut.Handle(
+            new AddItemsToCopyPrep([movieId]),
+            CancellationToken.None);
+
+        result.RetriedCount.ShouldBe(1);
+
+        await using TvContext dbContext = await factory.CreateDbContextAsync(CancellationToken.None);
+        CopyPrepQueueItem queueItem = dbContext.CopyPrepQueueItems.Single(item => item.Id == queueItemId);
+        queueItem.MediaVersionId.ShouldBe(currentMediaVersionId);
+        queueItem.MediaFileId.ShouldBe(currentMediaFileId);
+        queueItem.SourcePath.ShouldBe(currentSourcePath);
+        queueItem.TargetPath.ShouldBe(Path.ChangeExtension(currentSourcePath, ".mp4"));
+        queueItem.ArchivePath.ShouldBe(Path.Combine(Path.GetDirectoryName(currentSourcePath) ?? string.Empty, "archive", Path.GetFileName(currentSourcePath)));
+        queueItem.Reason.ShouldContain("container/extension .mkv is not MP4/M4V");
+
+        queueItem.MediaVersionId.ShouldNotBe(originalMediaVersionId);
+        queueItem.MediaFileId.ShouldNotBe(originalMediaFileId);
+        queueItem.SourcePath.ShouldNotBe(originalSourcePath);
+    }
+
     private sealed class TestDbContextFactory : IDbContextFactory<TvContext>, IAsyncDisposable
     {
         private readonly SqliteConnection _connection;
@@ -222,6 +261,66 @@ public class AddItemsToCopyPrepHandlerTests
             await dbContext.SaveChangesAsync(CancellationToken.None);
 
             return queueItem.Id;
+        }
+
+        public async Task<(int MediaVersionId, int MediaFileId, string SourcePath)> GetQueueItemPointers(int queueItemId)
+        {
+            await using TvContext dbContext = await CreateDbContextAsync(CancellationToken.None);
+            return await dbContext.CopyPrepQueueItems
+                .Where(item => item.Id == queueItemId)
+                .Select(item => new ValueTuple<int, int, string>(item.MediaVersionId, item.MediaFileId, item.SourcePath))
+                .SingleAsync(CancellationToken.None);
+        }
+
+        public async Task<(int MediaVersionId, int MediaFileId, string SourcePath)> PrependHeadVersion(int mediaItemId, string fileName)
+        {
+            DateTime now = DateTime.UtcNow;
+            string filePath = Path.Combine(_mediaRoot, fileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+            await File.WriteAllTextAsync(filePath, string.Empty);
+
+            await using TvContext dbContext = await CreateDbContextAsync(CancellationToken.None);
+            Movie movie = await dbContext.Movies
+                .Include(m => m.MediaVersions)
+                    .ThenInclude(version => version.MediaFiles)
+                .Include(m => m.MediaVersions)
+                    .ThenInclude(version => version.Streams)
+                .SingleAsync(m => m.Id == mediaItemId, CancellationToken.None);
+
+            MediaVersion currentHeadVersion = movie.MediaVersions[0];
+            var replacementVersion = new MediaVersion
+            {
+                Name = "replacement-version",
+                MediaFiles =
+                [
+                    new MediaFile
+                    {
+                        Path = filePath,
+                        PathHash = $"hash-{_nextPathHash++}"
+                    }
+                ],
+                Streams = currentHeadVersion.Streams
+                    .Select(stream => new MediaStream
+                    {
+                        Index = stream.Index,
+                        Codec = stream.Codec,
+                        MediaStreamKind = stream.MediaStreamKind,
+                        PixelFormat = stream.PixelFormat,
+                        BitsPerRawSample = stream.BitsPerRawSample
+                    })
+                    .ToList(),
+                Chapters = [],
+                SampleAspectRatio = currentHeadVersion.SampleAspectRatio,
+                RFrameRate = currentHeadVersion.RFrameRate,
+                VideoScanKind = currentHeadVersion.VideoScanKind,
+                DateAdded = now,
+                DateUpdated = now
+            };
+
+            movie.MediaVersions.Insert(0, replacementVersion);
+            await dbContext.SaveChangesAsync(CancellationToken.None);
+
+            return (replacementVersion.Id, replacementVersion.MediaFiles.Single().Id, filePath);
         }
 
         public TvContext CreateDbContext() => new(_options, _loggerFactory, _slowQueryInterceptor);
