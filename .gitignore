@@ -45,3 +45,6 @@ scripts/download-test-content.sh
 docker-compose.override.yml
 
 ErsatzTV/wwwroot/v2/
+
+# Local git worktrees
+.worktrees/
