@@ -2,6 +2,9 @@
 @inherits MultiSelectBase<Search>
 @inject NavigationManager NavigationManager
 @inject PersistentComponentState ApplicationState
+@using ErsatzTV.Application.CopyPrep
+@using ErsatzTV.Application.CopyPrep.Commands
+@using ErsatzTV.Application.CopyPrep.Queries
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
@@ -30,6 +33,17 @@
                            OnClick="@(_ => AddSelectionToPlaylist())">
                     Add To Playlist
                 </MudButton>
+                @if (ShowCopyPrepUi())
+                {
+                    <MudButton Class="ml-3"
+                               Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Queue"
+                               Disabled="@(!HasEligibleCopyPrepSelection())"
+                               OnClick="@AddSelectedToCopyPrep">
+                        Add Selected To Copy-Prep
+                    </MudButton>
+                }
                 <MudButton Class="ml-3"
                            Variant="Variant.Filled"
                            Color="Color.Secondary"
@@ -43,6 +57,10 @@
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
                     <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add To Collection" OnClick="@AddSelectionToCollection"/>
                     <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add To Playlist" OnClick="AddSelectionToPlaylist"/>
+                    @if (ShowCopyPrepUi())
+                    {
+                        <MudMenuItem Icon="@Icons.Material.Filled.Queue" Label="Add Selected To Copy-Prep" Disabled="@(!HasEligibleCopyPrepSelection())" OnClick="AddSelectedToCopyPrep"/>
+                    }
                     <MudMenuItem Icon="@Icons.Material.Filled.Check" Label="Clear Selection" OnClick="ClearSelection"/>
                 </MudMenu>
             </div>
@@ -119,6 +137,19 @@
                             Add All
                         </MudButton>
                     </MudTooltip>
+                    @if (ShowCopyPrepUi())
+                    {
+                        <MudTooltip Text="Select All Eligible">
+                            <MudButton Class="ml-3"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Secondary"
+                                       StartIcon="@Icons.Material.Filled.DoneAll"
+                                       Disabled="@(!HasVisibleEligibleCopyPrepCards())"
+                                       OnClick="@SelectAllEligibleCopyPrep">
+                                Select All Eligible
+                            </MudButton>
+                        </MudTooltip>
+                    }
                     <MudTooltip Text="Save As Smart Collection">
                         <MudButton Class="ml-3" Variant="Variant.Filled"
                                    Color="Color.Secondary"
@@ -134,6 +165,10 @@
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
                     <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add All To Collection" OnClick="@AddAllToCollection"/>
                     <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add All To Playlist" OnClick="AddAllToPlaylist"/>
+                    @if (ShowCopyPrepUi())
+                    {
+                        <MudMenuItem Icon="@Icons.Material.Filled.DoneAll" Label="Select All Eligible" Disabled="@(!HasVisibleEligibleCopyPrepCards())" OnClick="SelectAllEligibleCopyPrep"/>
+                    }
                     <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save As Smart Collection" OnClick="SaveAsSmartCollection"/>
                 </MudMenu>
             </div>
@@ -163,7 +198,9 @@
                                AddToCollectionClicked="@AddToCollection"
                                SelectClicked="@(e => SelectClicked(card, e))"
                                IsSelected="@IsSelected(card)"
-                               IsSelectMode="@IsSelectMode()"/>
+                               IsSelectMode="@IsSelectMode()"
+                               StatusBadgeText="@GetCopyPrepBadgeText(card)"
+                               StatusBadgeColor="@GetCopyPrepBadgeColor(card)"/>
                 }
             </MudStack>
         }
@@ -425,6 +462,7 @@
     private RemoteStreamCardResultsViewModel _remoteStreams;
     private ArtistCardResultsViewModel _artists;
     private PersistingComponentStateSubscription _persistingSubscription;
+    private readonly Dictionary<int, CopyPrepSelectionStateViewModel> _copyPrepStates = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -522,6 +560,26 @@
             {
                 _artists = restoredArtists;
             }
+
+            if (ShowCopyPrepUi())
+            {
+                if (ApplicationState.TryTakeFromJson("_copyPrepStates", out List<CopyPrepSelectionStateViewModel> restoredCopyPrepStates))
+                {
+                    _copyPrepStates.Clear();
+                    foreach (CopyPrepSelectionStateViewModel state in restoredCopyPrepStates)
+                    {
+                        _copyPrepStates[state.MediaItemId] = state;
+                    }
+                }
+                else
+                {
+                    await LoadCopyPrepStates();
+                }
+            }
+            else
+            {
+                _copyPrepStates.Clear();
+            }
         }
     }
 
@@ -537,6 +595,7 @@
         ApplicationState.PersistAsJson("_images", _images);
         ApplicationState.PersistAsJson("_remoteStreams", _remoteStreams);
         ApplicationState.PersistAsJson("_artists", _artists);
+        ApplicationState.PersistAsJson("_copyPrepStates", _copyPrepStates.Values.ToList());
 
         return Task.CompletedTask;
     }
@@ -564,6 +623,94 @@
         }
 
         SelectClicked(GetSortedItems, card, e);
+    }
+
+    private bool ShowCopyPrepUi() => SearchCopyPrepPageState.IsLibraryScopedQuery(_query);
+
+    private async Task LoadCopyPrepStates()
+    {
+        _copyPrepStates.Clear();
+
+        if (!ShowCopyPrepUi())
+        {
+            return;
+        }
+
+        List<int> movieIds = _movies?.Cards.Select(card => card.MovieId).Distinct().ToList() ?? [];
+        if (movieIds.Count == 0)
+        {
+            return;
+        }
+
+        List<CopyPrepSelectionStateViewModel> states = await Mediator.Send(
+            new QueryCopyPrepSelectionStates(movieIds),
+            CancellationToken);
+
+        foreach (CopyPrepSelectionStateViewModel state in states)
+        {
+            _copyPrepStates[state.MediaItemId] = state;
+        }
+    }
+
+    private string GetCopyPrepBadgeText(MovieCardViewModel card) =>
+        _copyPrepStates.TryGetValue(card.MediaItemId, out CopyPrepSelectionStateViewModel state)
+            ? state.Status == CopyPrepSelectionStatus.NeedsCopyPrep
+                ? "needs copy-prep"
+                : "copy-ready"
+            : null;
+
+    private Color GetCopyPrepBadgeColor(MovieCardViewModel card) =>
+        _copyPrepStates.TryGetValue(card.MediaItemId, out CopyPrepSelectionStateViewModel state)
+            ? state.Status == CopyPrepSelectionStatus.NeedsCopyPrep
+                ? Color.Warning
+                : Color.Success
+            : Color.Default;
+
+    private IEnumerable<MediaCardViewModel> GetVisibleCopyPrepCards() =>
+        _movies?.Cards.OrderBy(card => card.SortTitle).Cast<MediaCardViewModel>() ?? [];
+
+    private List<int> GetSelectedEligibleMovieIds() =>
+        SelectedItems.OfType<MovieCardViewModel>()
+            .Where(card =>
+                _copyPrepStates.TryGetValue(card.MediaItemId, out CopyPrepSelectionStateViewModel state) &&
+                SearchCopyPrepPageState.CanSelect(state))
+            .Select(card => card.MovieId)
+            .Distinct()
+            .ToList();
+
+    private bool HasVisibleEligibleCopyPrepCards() =>
+        SearchCopyPrepPageState.GetSelectableCards(GetVisibleCopyPrepCards(), _copyPrepStates).Any();
+
+    private bool HasEligibleCopyPrepSelection() => GetSelectedEligibleMovieIds().Count != 0;
+
+    private void SelectAllEligibleCopyPrep(MouseEventArgs _)
+    {
+        IEnumerable<MediaCardViewModel> selectableCards = SearchCopyPrepPageState.GetSelectableCards(
+            GetVisibleCopyPrepCards(),
+            _copyPrepStates);
+
+        SelectAllPageItems(selectableCards);
+    }
+
+    private async Task AddSelectedToCopyPrep(MouseEventArgs _)
+    {
+        List<int> movieIds = GetSelectedEligibleMovieIds();
+        if (movieIds.Count == 0)
+        {
+            Snackbar.Add("No eligible visible movies selected for copy-prep.", Severity.Warning);
+            return;
+        }
+
+        AddItemsToCopyPrepResult result = await Mediator.Send(
+            new AddItemsToCopyPrep(movieIds),
+            CancellationToken);
+
+        Snackbar.Add(
+            $"Queued {result.QueuedCount}, retried {result.RetriedCount}, skipped active {result.SkippedExistingActiveCount}, skipped ready {result.SkippedCopyReadyCount}, skipped missing {result.SkippedMissingCount}",
+            Severity.Success);
+
+        ClearSelection();
+        await LoadCopyPrepStates();
     }
 
     private async Task AddToCollection(MediaCardViewModel card)
