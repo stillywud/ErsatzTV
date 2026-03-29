@@ -48,6 +48,8 @@ public class CancelCopyPrepQueueItemHandler(IDbContextFactory<TvContext> dbConte
         });
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        ProcessingCancellationRegistry.Signal(request.Id);
+
         return true;
     }
 
