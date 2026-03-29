@@ -1,5 +1,6 @@
 using ErsatzTV.Core.CopyPrep;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,13 +34,18 @@ public class QueryCopyPrepSelectionStatesHandler(IDbContextFactory<TvContext> db
                 continue;
             }
 
-            MediaVersion version = movie.MediaVersions?.FirstOrDefault();
-            MediaFile file = version?.MediaFiles?.FirstOrDefault();
-            if (version is null || file is null)
+            if (movie.MediaVersions.Count == 0)
             {
                 continue;
             }
 
+            MediaVersion version = movie.GetHeadVersion();
+            if (version.MediaFiles.Count == 0)
+            {
+                continue;
+            }
+
+            MediaFile file = version.MediaFiles.Head();
             CopyPrepDecision decision = CopyPrepAnalyzer.Analyze(version, file.Path);
             CopyPrepSelectionStatus status = decision.ShouldQueue
                 ? CopyPrepSelectionStatus.NeedsCopyPrep
