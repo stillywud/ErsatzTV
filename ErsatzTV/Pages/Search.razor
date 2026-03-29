@@ -360,7 +360,9 @@
                                AddToCollectionClicked="@AddToCollection"
                                SelectClicked="@(e => SelectClicked(card, e))"
                                IsSelected="@IsSelected(card)"
-                               IsSelectMode="@IsSelectMode()"/>
+                               IsSelectMode="@IsSelectMode()"
+                               StatusBadgeText="@GetCopyPrepBadgeText(card)"
+                               StatusBadgeColor="@GetCopyPrepBadgeColor(card)"/>
                 }
             </MudStack>
         }
@@ -637,13 +639,14 @@
         }
 
         List<int> movieIds = _movies?.Cards.Select(card => card.MovieId).Distinct().ToList() ?? [];
-        if (movieIds.Count == 0)
+        List<int> otherVideoIds = _otherVideos?.Cards.Select(card => card.OtherVideoId).Distinct().ToList() ?? [];
+        if (movieIds.Count == 0 && otherVideoIds.Count == 0)
         {
             return;
         }
 
         List<CopyPrepSelectionStateViewModel> states = await Mediator.Send(
-            new QueryCopyPrepSelectionStates(movieIds),
+            new QueryCopyPrepSelectionStates(movieIds, otherVideoIds),
             CancellationToken);
 
         foreach (CopyPrepSelectionStateViewModel state in states)
@@ -652,14 +655,14 @@
         }
     }
 
-    private string GetCopyPrepBadgeText(MovieCardViewModel card) =>
+    private string GetCopyPrepBadgeText(MediaCardViewModel card) =>
         _copyPrepStates.TryGetValue(card.MediaItemId, out CopyPrepSelectionStateViewModel state)
             ? state.Status == CopyPrepSelectionStatus.NeedsCopyPrep
                 ? "needs copy-prep"
                 : "copy-ready"
             : null;
 
-    private Color GetCopyPrepBadgeColor(MovieCardViewModel card) =>
+    private Color GetCopyPrepBadgeColor(MediaCardViewModel card) =>
         _copyPrepStates.TryGetValue(card.MediaItemId, out CopyPrepSelectionStateViewModel state)
             ? state.Status == CopyPrepSelectionStatus.NeedsCopyPrep
                 ? Color.Warning
@@ -667,7 +670,8 @@
             : Color.Default;
 
     private IEnumerable<MediaCardViewModel> GetVisibleCopyPrepCards() =>
-        _movies?.Cards.OrderBy(card => card.SortTitle).Cast<MediaCardViewModel>() ?? [];
+        (_movies?.Cards.OrderBy(card => card.SortTitle).Cast<MediaCardViewModel>() ?? [])
+        .Concat(_otherVideos?.Cards.OrderBy(card => card.SortTitle).Cast<MediaCardViewModel>() ?? []);
 
     private List<int> GetSelectedEligibleMovieIds() =>
         SelectedItems.OfType<MovieCardViewModel>()
@@ -678,10 +682,20 @@
             .Distinct()
             .ToList();
 
+    private List<int> GetSelectedEligibleOtherVideoIds() =>
+        SelectedItems.OfType<OtherVideoCardViewModel>()
+            .Where(card =>
+                _copyPrepStates.TryGetValue(card.MediaItemId, out CopyPrepSelectionStateViewModel state) &&
+                SearchCopyPrepPageState.CanSelect(state))
+            .Select(card => card.OtherVideoId)
+            .Distinct()
+            .ToList();
+
     private bool HasVisibleEligibleCopyPrepCards() =>
         SearchCopyPrepPageState.GetSelectableCards(GetVisibleCopyPrepCards(), _copyPrepStates).Any();
 
-    private bool HasEligibleCopyPrepSelection() => GetSelectedEligibleMovieIds().Count != 0;
+    private bool HasEligibleCopyPrepSelection() =>
+        GetSelectedEligibleMovieIds().Count != 0 || GetSelectedEligibleOtherVideoIds().Count != 0;
 
     private void SelectAllEligibleCopyPrep(MouseEventArgs _)
     {
@@ -695,14 +709,15 @@
     private async Task AddSelectedToCopyPrep(MouseEventArgs _)
     {
         List<int> movieIds = GetSelectedEligibleMovieIds();
-        if (movieIds.Count == 0)
+        List<int> otherVideoIds = GetSelectedEligibleOtherVideoIds();
+        if (movieIds.Count == 0 && otherVideoIds.Count == 0)
         {
-            Snackbar.Add("No eligible visible movies selected for copy-prep.", Severity.Warning);
+            Snackbar.Add("No eligible visible items selected for copy-prep.", Severity.Warning);
             return;
         }
 
         AddItemsToCopyPrepResult result = await Mediator.Send(
-            new AddItemsToCopyPrep(movieIds),
+            new AddItemsToCopyPrep(movieIds, otherVideoIds),
             CancellationToken);
 
         Snackbar.Add(

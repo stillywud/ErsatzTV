@@ -16,14 +16,14 @@ namespace ErsatzTV.Tests.Services;
 public class QueryCopyPrepSelectionStatesHandlerTests
 {
     [Test]
-    public void Query_contract_should_only_advertise_movie_ids()
+    public void Query_contract_should_advertise_movie_and_other_video_ids()
     {
         string[] propertyNames = typeof(QueryCopyPrepSelectionStates)
             .GetProperties()
             .Select(property => property.Name)
             .ToArray();
 
-        propertyNames.ShouldBe(["MovieIds"]);
+        propertyNames.ShouldBe(["MovieIds", "OtherVideoIds"]);
     }
 
     [Test]
@@ -41,7 +41,7 @@ public class QueryCopyPrepSelectionStatesHandlerTests
         var sut = new QueryCopyPrepSelectionStatesHandler(factory);
 
         List<CopyPrepSelectionStateViewModel> result = await sut.Handle(
-            new QueryCopyPrepSelectionStates([movieId]),
+            new QueryCopyPrepSelectionStates([movieId], []),
             CancellationToken.None);
 
         result.Count.ShouldBe(1);
@@ -69,7 +69,7 @@ public class QueryCopyPrepSelectionStatesHandlerTests
         var sut = new QueryCopyPrepSelectionStatesHandler(factory);
 
         List<CopyPrepSelectionStateViewModel> result = await sut.Handle(
-            new QueryCopyPrepSelectionStates([movieId]),
+            new QueryCopyPrepSelectionStates([movieId], []),
             CancellationToken.None);
 
         result.Count.ShouldBe(1);
@@ -80,6 +80,34 @@ public class QueryCopyPrepSelectionStatesHandlerTests
         item.Status.ShouldBe(CopyPrepSelectionStatus.CopyReady);
         item.IsSelectable.ShouldBeFalse();
         item.Reason.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task Should_mark_mkv_other_video_as_needs_copy_prep_with_reason()
+    {
+        await using var factory = await TestDbContextFactory.Create();
+        int otherVideoId = await factory.SeedOtherVideo(
+            path: @"D:\media\other-videos\example.mkv",
+            videoCodec: "h264",
+            audioCodec: "aac",
+            pixelFormat: "yuv420p",
+            sampleAspectRatio: "1:1",
+            frameRate: "25/1");
+
+        var sut = new QueryCopyPrepSelectionStatesHandler(factory);
+
+        List<CopyPrepSelectionStateViewModel> result = await sut.Handle(
+            new QueryCopyPrepSelectionStates([], [otherVideoId]),
+            CancellationToken.None);
+
+        result.Count.ShouldBe(1);
+
+        CopyPrepSelectionStateViewModel item = result.Single();
+        item.MediaItemId.ShouldBe(otherVideoId);
+        item.MediaKind.ShouldBe("other_video");
+        item.Status.ShouldBe(CopyPrepSelectionStatus.NeedsCopyPrep);
+        item.IsSelectable.ShouldBeTrue();
+        item.Reason.ShouldContain("container/extension .mkv is not MP4/M4V");
     }
 
     [Test]
@@ -107,7 +135,7 @@ public class QueryCopyPrepSelectionStatesHandlerTests
         var sut = new QueryCopyPrepSelectionStatesHandler(factory);
 
         List<CopyPrepSelectionStateViewModel> result = await sut.Handle(
-            new QueryCopyPrepSelectionStates([movieId]),
+            new QueryCopyPrepSelectionStates([movieId], []),
             CancellationToken.None);
 
         result.Count.ShouldBe(1);
@@ -200,6 +228,47 @@ public class QueryCopyPrepSelectionStatesHandlerTests
             await dbContext.SaveChangesAsync(CancellationToken.None);
 
             return movie.Id;
+        }
+
+        public async Task<int> SeedOtherVideo(
+            string path,
+            string videoCodec,
+            string audioCodec,
+            string pixelFormat,
+            string sampleAspectRatio,
+            string frameRate)
+        {
+            DateTime now = DateTime.UtcNow;
+
+            await using TvContext dbContext = await CreateDbContextAsync(CancellationToken.None);
+
+            var mediaSource = new LocalMediaSource();
+            var library = new LocalLibrary
+            {
+                Name = "Library",
+                MediaSource = mediaSource
+            };
+            var libraryPath = new LibraryPath
+            {
+                Path = @"D:\media\other-videos",
+                Library = library
+            };
+            var otherVideo = new OtherVideo
+            {
+                LibraryPath = libraryPath,
+                MediaVersions =
+                [
+                    CreateMediaVersion(
+                        new TestMediaVersion([path], videoCodec, audioCodec, pixelFormat, sampleAspectRatio, frameRate),
+                        now)
+                ],
+                OtherVideoMetadata = []
+            };
+
+            dbContext.MediaItems.Add(otherVideo);
+            await dbContext.SaveChangesAsync(CancellationToken.None);
+
+            return otherVideo.Id;
         }
 
         public TvContext CreateDbContext() => new(_options, _loggerFactory, _slowQueryInterceptor);

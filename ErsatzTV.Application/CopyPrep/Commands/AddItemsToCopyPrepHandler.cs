@@ -24,54 +24,59 @@ public class AddItemsToCopyPrepHandler(IDbContextFactory<TvContext> dbContextFac
                 .ThenInclude(version => version.Streams)
             .ToListAsync(cancellationToken);
 
-        List<CopyPrepQueueItem> existingQueueItems = await dbContext.CopyPrepQueueItems
-            .Where(item => request.MovieIds.Contains(item.MediaItemId))
+        List<OtherVideo> otherVideos = await dbContext.OtherVideos
+            .Where(otherVideo => request.OtherVideoIds.Contains(otherVideo.Id))
+            .Include(otherVideo => otherVideo.MediaVersions)
+                .ThenInclude(version => version.MediaFiles)
+            .Include(otherVideo => otherVideo.MediaVersions)
+                .ThenInclude(version => version.Streams)
             .ToListAsync(cancellationToken);
 
-        var moviesById = movies.ToDictionary(movie => movie.Id);
+        int[] allMediaItemIds = request.MovieIds
+            .Concat(request.OtherVideoIds)
+            .Distinct()
+            .ToArray();
+
+        List<CopyPrepQueueItem> existingQueueItems = await dbContext.CopyPrepQueueItems
+            .Where(item => allMediaItemIds.Contains(item.MediaItemId))
+            .ToListAsync(cancellationToken);
+
         var queueItemsByMediaItemId = existingQueueItems
             .GroupBy(item => item.MediaItemId)
             .ToDictionary(group => group.Key, group => group.ToList());
 
         var result = new AddItemsToCopyPrepResult();
 
-        foreach (int movieId in request.MovieIds)
+        foreach (SelectedItem item in GetSelectedItems(request, movies, otherVideos))
         {
-            if (!moviesById.TryGetValue(movieId, out Movie movie) || movie.MediaVersions.Count == 0)
+            if (item.Version.MediaFiles.Count == 0)
             {
                 result.SkippedMissingCount++;
                 continue;
             }
 
-            MediaVersion version = movie.GetHeadVersion();
-            if (version.MediaFiles.Count == 0)
-            {
-                result.SkippedMissingCount++;
-                continue;
-            }
-
-            MediaFile file = version.MediaFiles.Head();
+            MediaFile file = item.Version.MediaFiles.Head();
             if (string.IsNullOrWhiteSpace(file.Path) || !File.Exists(file.Path))
             {
                 result.SkippedMissingCount++;
                 continue;
             }
 
-            CopyPrepDecision decision = CopyPrepAnalyzer.Analyze(version, file.Path);
+            CopyPrepDecision decision = CopyPrepAnalyzer.Analyze(item.Version, file.Path);
             if (!decision.ShouldQueue)
             {
                 result.SkippedCopyReadyCount++;
                 continue;
             }
 
-            if (!queueItemsByMediaItemId.TryGetValue(movieId, out List<CopyPrepQueueItem> queueItems))
+            if (!queueItemsByMediaItemId.TryGetValue(item.MediaItemId, out List<CopyPrepQueueItem> queueItems))
             {
                 queueItems = [];
-                queueItemsByMediaItemId[movieId] = queueItems;
+                queueItemsByMediaItemId[item.MediaItemId] = queueItems;
             }
 
             CopyPrepQueueItem activeQueueItem = queueItems
-                .FirstOrDefault(item => item.Status is not (CopyPrepStatus.Failed or CopyPrepStatus.Canceled or CopyPrepStatus.Skipped));
+                .FirstOrDefault(queueItem => queueItem.Status is not (CopyPrepStatus.Failed or CopyPrepStatus.Canceled or CopyPrepStatus.Skipped));
             if (activeQueueItem is not null)
             {
                 result.SkippedExistingActiveCount++;
@@ -79,13 +84,13 @@ public class AddItemsToCopyPrepHandler(IDbContextFactory<TvContext> dbContextFac
             }
 
             CopyPrepQueueItem retryQueueItem = queueItems
-                .OrderByDescending(item => item.UpdatedAt)
-                .FirstOrDefault(item => item.Status is CopyPrepStatus.Failed or CopyPrepStatus.Canceled or CopyPrepStatus.Skipped);
+                .OrderByDescending(queueItem => queueItem.UpdatedAt)
+                .FirstOrDefault(queueItem => queueItem.Status is CopyPrepStatus.Failed or CopyPrepStatus.Canceled or CopyPrepStatus.Skipped);
 
             if (retryQueueItem is not null)
             {
                 DateTime now = DateTime.UtcNow;
-                RefreshForRetry(retryQueueItem, version, file, decision, now);
+                RefreshForRetry(retryQueueItem, item.Version, file, decision, now);
                 dbContext.CopyPrepQueueLogEntries.Add(new CopyPrepQueueLogEntry
                 {
                     CopyPrepQueueItemId = retryQueueItem.Id,
@@ -101,8 +106,8 @@ public class AddItemsToCopyPrepHandler(IDbContextFactory<TvContext> dbContextFac
             DateTime queuedAt = DateTime.UtcNow;
             var newQueueItem = new CopyPrepQueueItem
             {
-                MediaItemId = movieId,
-                MediaVersionId = version.Id,
+                MediaItemId = item.MediaItemId,
+                MediaVersionId = item.Version.Id,
                 MediaFileId = file.Id,
                 Status = CopyPrepStatus.Queued,
                 Reason = decision.Summary,
@@ -132,8 +137,36 @@ public class AddItemsToCopyPrepHandler(IDbContextFactory<TvContext> dbContextFac
             result.QueuedCount++;
         }
 
+        int foundMediaItems = movies.Count + otherVideos.Count;
+        int requestedMediaItems = allMediaItemIds.Length;
+        result.SkippedMissingCount += requestedMediaItems - foundMediaItems;
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return result;
+    }
+
+    private static IEnumerable<SelectedItem> GetSelectedItems(
+        AddItemsToCopyPrep request,
+        IReadOnlyCollection<Movie> movies,
+        IReadOnlyCollection<OtherVideo> otherVideos)
+    {
+        var moviesById = movies.ToDictionary(movie => movie.Id);
+        foreach (int movieId in request.MovieIds.Distinct())
+        {
+            if (moviesById.TryGetValue(movieId, out Movie movie) && movie.MediaVersions.Count > 0)
+            {
+                yield return new SelectedItem(movie.Id, "movie", movie.MediaVersions[0]);
+            }
+        }
+
+        var otherVideosById = otherVideos.ToDictionary(otherVideo => otherVideo.Id);
+        foreach (int otherVideoId in request.OtherVideoIds.Distinct())
+        {
+            if (otherVideosById.TryGetValue(otherVideoId, out OtherVideo otherVideo) && otherVideo.MediaVersions.Count > 0)
+            {
+                yield return new SelectedItem(otherVideo.Id, "other_video", otherVideo.MediaVersions[0]);
+            }
+        }
     }
 
     private static void RefreshForRetry(
@@ -160,4 +193,6 @@ public class AddItemsToCopyPrepHandler(IDbContextFactory<TvContext> dbContextFac
         queueItem.LastError = null;
         queueItem.LastExitCode = null;
     }
+
+    private sealed record SelectedItem(int MediaItemId, string MediaKind, MediaVersion Version);
 }

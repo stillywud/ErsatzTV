@@ -31,7 +31,7 @@ public class AddItemsToCopyPrepHandlerTests
         var sut = new AddItemsToCopyPrepHandler(factory);
 
         AddItemsToCopyPrepResult result = await sut.Handle(
-            new AddItemsToCopyPrep([movieId]),
+            new AddItemsToCopyPrep([movieId], []),
             CancellationToken.None);
 
         result.QueuedCount.ShouldBe(1);
@@ -48,6 +48,37 @@ public class AddItemsToCopyPrepHandlerTests
     }
 
     [Test]
+    public async Task Should_queue_new_eligible_other_video_and_write_search_selection_log()
+    {
+        await using var factory = await TestDbContextFactory.Create();
+        int otherVideoId = await factory.SeedOtherVideo(
+            fileName: "queue-other-video.mkv",
+            videoCodec: "h264",
+            audioCodec: "aac",
+            pixelFormat: "yuv420p",
+            sampleAspectRatio: "1:1",
+            frameRate: "25/1");
+
+        var sut = new AddItemsToCopyPrepHandler(factory);
+
+        AddItemsToCopyPrepResult result = await sut.Handle(
+            new AddItemsToCopyPrep([], [otherVideoId]),
+            CancellationToken.None);
+
+        result.QueuedCount.ShouldBe(1);
+        result.RetriedCount.ShouldBe(0);
+        result.SkippedCopyReadyCount.ShouldBe(0);
+        result.SkippedExistingActiveCount.ShouldBe(0);
+        result.SkippedUnsupportedCount.ShouldBe(0);
+        result.SkippedMissingCount.ShouldBe(0);
+
+        await using TvContext dbContext = await factory.CreateDbContextAsync(CancellationToken.None);
+        dbContext.CopyPrepQueueItems.Count(item => item.MediaItemId == otherVideoId).ShouldBe(1);
+        dbContext.CopyPrepQueueItems.ShouldContain(item => item.MediaItemId == otherVideoId && item.Status == CopyPrepStatus.Queued);
+        dbContext.CopyPrepQueueLogEntries.ShouldContain(log => log.Event == "queued_from_search_selection");
+    }
+
+    [Test]
     public async Task Should_requeue_failed_item_without_creating_duplicate_row()
     {
         await using var factory = await TestDbContextFactory.Create();
@@ -58,12 +89,12 @@ public class AddItemsToCopyPrepHandlerTests
             pixelFormat: "yuv420p",
             sampleAspectRatio: "1:1",
             frameRate: "25/1");
-        int queueItemId = await factory.SeedQueueItemForMediaItem(movieId, CopyPrepStatus.Failed);
+        int queueItemId = await factory.SeedQueueItemForMovie(movieId, CopyPrepStatus.Failed);
 
         var sut = new AddItemsToCopyPrepHandler(factory);
 
         AddItemsToCopyPrepResult result = await sut.Handle(
-            new AddItemsToCopyPrep([movieId]),
+            new AddItemsToCopyPrep([movieId], []),
             CancellationToken.None);
 
         result.QueuedCount.ShouldBe(0);
@@ -90,16 +121,16 @@ public class AddItemsToCopyPrepHandlerTests
             pixelFormat: "yuv420p",
             sampleAspectRatio: "1:1",
             frameRate: "25/1");
-        int queueItemId = await factory.SeedQueueItemForMediaItem(movieId, CopyPrepStatus.Failed);
+        int queueItemId = await factory.SeedQueueItemForMovie(movieId, CopyPrepStatus.Failed);
         (int originalMediaVersionId, int originalMediaFileId, string originalSourcePath) =
             await factory.GetQueueItemPointers(queueItemId);
         (int currentMediaVersionId, int currentMediaFileId, string currentSourcePath) =
-            await factory.PrependHeadVersion(movieId, "retry-source-current.mkv");
+            await factory.PrependMovieHeadVersion(movieId, "retry-source-current.mkv");
 
         var sut = new AddItemsToCopyPrepHandler(factory);
 
         AddItemsToCopyPrepResult result = await sut.Handle(
-            new AddItemsToCopyPrep([movieId]),
+            new AddItemsToCopyPrep([movieId], []),
             CancellationToken.None);
 
         result.RetriedCount.ShouldBe(1);
@@ -222,7 +253,79 @@ public class AddItemsToCopyPrepHandlerTests
             return movie.Id;
         }
 
-        public async Task<int> SeedQueueItemForMediaItem(int mediaItemId, CopyPrepStatus status)
+        public async Task<int> SeedOtherVideo(
+            string fileName,
+            string videoCodec,
+            string audioCodec,
+            string pixelFormat,
+            string sampleAspectRatio,
+            string frameRate)
+        {
+            DateTime now = DateTime.UtcNow;
+            string filePath = Path.Combine(_mediaRoot, fileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+            await File.WriteAllTextAsync(filePath, string.Empty);
+
+            await using TvContext dbContext = await CreateDbContextAsync(CancellationToken.None);
+
+            var mediaSource = new LocalMediaSource();
+            var library = new LocalLibrary
+            {
+                Name = "Library",
+                MediaSource = mediaSource
+            };
+            var libraryPath = new LibraryPath
+            {
+                Path = _mediaRoot,
+                Library = library
+            };
+            var mediaFile = new MediaFile
+            {
+                Path = filePath,
+                PathHash = $"hash-{_nextPathHash++}"
+            };
+            var mediaVersion = new MediaVersion
+            {
+                Name = "version",
+                MediaFiles = [mediaFile],
+                Streams =
+                [
+                    new MediaStream
+                    {
+                        Index = 0,
+                        Codec = videoCodec,
+                        MediaStreamKind = MediaStreamKind.Video,
+                        PixelFormat = pixelFormat,
+                        BitsPerRawSample = 8
+                    },
+                    new MediaStream
+                    {
+                        Index = 1,
+                        Codec = audioCodec,
+                        MediaStreamKind = MediaStreamKind.Audio
+                    }
+                ],
+                Chapters = [],
+                SampleAspectRatio = sampleAspectRatio,
+                RFrameRate = frameRate,
+                VideoScanKind = VideoScanKind.Progressive,
+                DateAdded = now,
+                DateUpdated = now
+            };
+            var otherVideo = new OtherVideo
+            {
+                LibraryPath = libraryPath,
+                MediaVersions = [mediaVersion],
+                OtherVideoMetadata = []
+            };
+
+            dbContext.MediaItems.Add(otherVideo);
+            await dbContext.SaveChangesAsync(CancellationToken.None);
+
+            return otherVideo.Id;
+        }
+
+        public async Task<int> SeedQueueItemForMovie(int mediaItemId, CopyPrepStatus status)
         {
             DateTime now = DateTime.UtcNow;
 
@@ -272,7 +375,7 @@ public class AddItemsToCopyPrepHandlerTests
                 .SingleAsync(CancellationToken.None);
         }
 
-        public async Task<(int MediaVersionId, int MediaFileId, string SourcePath)> PrependHeadVersion(int mediaItemId, string fileName)
+        public async Task<(int MediaVersionId, int MediaFileId, string SourcePath)> PrependMovieHeadVersion(int mediaItemId, string fileName)
         {
             DateTime now = DateTime.UtcNow;
             string filePath = Path.Combine(_mediaRoot, fileName);

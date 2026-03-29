@@ -24,41 +24,66 @@ public class QueryCopyPrepSelectionStatesHandler(IDbContextFactory<TvContext> db
                 .ThenInclude(version => version.Streams)
             .ToListAsync(cancellationToken);
 
-        var moviesById = movies.ToDictionary(movie => movie.Id);
+        List<OtherVideo> otherVideos = await dbContext.OtherVideos
+            .AsNoTracking()
+            .Where(otherVideo => request.OtherVideoIds.Contains(otherVideo.Id))
+            .Include(otherVideo => otherVideo.MediaVersions)
+                .ThenInclude(version => version.MediaFiles)
+            .Include(otherVideo => otherVideo.MediaVersions)
+                .ThenInclude(version => version.Streams)
+            .ToListAsync(cancellationToken);
+
         var result = new List<CopyPrepSelectionStateViewModel>();
 
+        var moviesById = movies.ToDictionary(movie => movie.Id);
         foreach (int movieId in request.MovieIds)
         {
-            if (!moviesById.TryGetValue(movieId, out Movie movie))
+            if (moviesById.TryGetValue(movieId, out Movie movie))
             {
-                continue;
+                ProjectSelectionState(result, movie.Id, "movie", movie.MediaVersions);
             }
+        }
 
-            if (movie.MediaVersions.Count == 0)
+        var otherVideosById = otherVideos.ToDictionary(otherVideo => otherVideo.Id);
+        foreach (int otherVideoId in request.OtherVideoIds)
+        {
+            if (otherVideosById.TryGetValue(otherVideoId, out OtherVideo otherVideo))
             {
-                continue;
+                ProjectSelectionState(result, otherVideo.Id, "other_video", otherVideo.MediaVersions);
             }
-
-            MediaVersion version = movie.GetHeadVersion();
-            if (version.MediaFiles.Count == 0)
-            {
-                continue;
-            }
-
-            MediaFile file = version.MediaFiles.Head();
-            CopyPrepDecision decision = CopyPrepAnalyzer.Analyze(version, file.Path);
-            CopyPrepSelectionStatus status = decision.ShouldQueue
-                ? CopyPrepSelectionStatus.NeedsCopyPrep
-                : CopyPrepSelectionStatus.CopyReady;
-
-            result.Add(new CopyPrepSelectionStateViewModel(
-                movie.Id,
-                "movie",
-                status,
-                decision.ShouldQueue,
-                decision.Summary));
         }
 
         return result;
+    }
+
+    private static void ProjectSelectionState(
+        List<CopyPrepSelectionStateViewModel> result,
+        int mediaItemId,
+        string mediaKind,
+        List<MediaVersion> versions)
+    {
+        if (versions.Count == 0)
+        {
+            return;
+        }
+
+        MediaVersion version = versions[0];
+        if (version.MediaFiles.Count == 0)
+        {
+            return;
+        }
+
+        MediaFile file = version.MediaFiles.Head();
+        CopyPrepDecision decision = CopyPrepAnalyzer.Analyze(version, file.Path);
+        CopyPrepSelectionStatus status = decision.ShouldQueue
+            ? CopyPrepSelectionStatus.NeedsCopyPrep
+            : CopyPrepSelectionStatus.CopyReady;
+
+        result.Add(new CopyPrepSelectionStateViewModel(
+            mediaItemId,
+            mediaKind,
+            status,
+            decision.ShouldQueue,
+            decision.Summary));
     }
 }
