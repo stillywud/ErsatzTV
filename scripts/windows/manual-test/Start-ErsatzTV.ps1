@@ -1,6 +1,6 @@
 param(
-    [string]$PackageRoot = (Split-Path -Parent $PSScriptRoot),
-    [string]$AppExe = (Join-Path (Split-Path -Parent $PSScriptRoot) 'app\ErsatzTV.exe'),
+    [string]$PackageRoot = '',
+    [string]$AppExe = '',
     [string[]]$AppArgs = @(),
     [string]$UiUrl = 'http://localhost:8409',
     [int]$ReadyTimeoutSeconds = 90,
@@ -8,6 +8,19 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($PackageRoot)) {
+    if (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'app') -PathType Container) {
+        $PackageRoot = $PSScriptRoot
+    }
+    else {
+        $PackageRoot = Split-Path -Parent $PSScriptRoot
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($AppExe)) {
+    $AppExe = Join-Path $PackageRoot 'app\ErsatzTV.exe'
+}
 
 $runtimeDir = Join-Path $PackageRoot 'runtime'
 $logsDir = Join-Path $runtimeDir 'logs'

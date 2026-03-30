@@ -56,7 +56,7 @@ function New-FakeRepo {
     New-Item -ItemType Directory -Force -Path $mainProjectDir, $scannerProjectDir, $assetsDir | Out-Null
 
     $referenceLine = if ($IncludeScannerReference) {
-        '        <ProjectReference Include="..\ErsatzTV.Scanner\ErsatzTV.Scanner.csproj" />' + "`r`n"
+        '        <ProjectReference Include="..\ErsatzTV.Scanner\ErsatzTV.Scanner.csproj" />'
     }
     else {
         ''
@@ -64,15 +64,36 @@ function New-FakeRepo {
 
     @"
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
   <ItemGroup>
-$referenceLine  </ItemGroup>
+$referenceLine
+  </ItemGroup>
 </Project>
 "@ | Set-Content -Path (Join-Path $mainProjectDir 'ErsatzTV.csproj') -Encoding UTF8
 
     @"
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 </Project>
 "@ | Set-Content -Path (Join-Path $scannerProjectDir 'ErsatzTV.Scanner.csproj') -Encoding UTF8
+
+    @"
+Console.WriteLine("main");
+"@ | Set-Content -Path (Join-Path $mainProjectDir 'Program.cs') -Encoding UTF8
+
+    @"
+Console.WriteLine("scanner");
+"@ | Set-Content -Path (Join-Path $scannerProjectDir 'Program.cs') -Encoding UTF8
 
     $sourceAssetsDir = Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')).Path 'manual-test'
     Copy-Item -Recurse -Force (Join-Path $sourceAssetsDir '*') $assetsDir
@@ -154,6 +175,19 @@ try {
     Assert-True ($missingScannerResult.ExitCode -ne 0) 'missing PublishedScannerDir should fail in skip-publish mode'
     Assert-True ((($missingScannerResult.Output -join "`n") -match 'PublishedScannerDir') -and (($missingScannerResult.Output -join "`n") -match 'existing directory')) ("missing PublishedScannerDir should produce a clear validation error. Output:`n{0}" -f ($missingScannerResult.Output -join "`n"))
 
+    $buildableRepo = Join-Path $tempRoot 'buildable-repo'
+    $strippedPath = "$PSHOME;$env:SystemRoot\System32;$env:SystemRoot"
+    New-FakeRepo -Root $buildableRepo -IncludeScannerReference $true
+
+    $strippedPathPublishResult = Invoke-PackageBuilder -ScriptPath $script -Arguments @(
+        '-RepoRoot', $buildableRepo,
+        '-OutputRoot', (Join-Path $tempRoot 'stripped-path-out'),
+        '-PackageName', 'stripped-path'
+    ) -EnvironmentOverrides @{ PATH = $strippedPath }
+    Assert-True ($strippedPathPublishResult.ExitCode -eq 0) ("package builder should recover dotnet from machine/user PATH when process PATH is stripped. Output:`n{0}" -f ($strippedPathPublishResult.Output -join "`n"))
+    Assert-True (Test-Path -LiteralPath (Join-Path $tempRoot 'stripped-path-out\stripped-path\app\ErsatzTV.exe') -PathType Leaf) 'stripped PATH publish should still include ErsatzTV.exe'
+    Assert-True (Test-Path -LiteralPath (Join-Path $tempRoot 'stripped-path-out\stripped-path\app\ErsatzTV.Scanner.exe') -PathType Leaf) 'stripped PATH publish should still include ErsatzTV.Scanner.exe'
+
     $missingReferenceResult = Invoke-PackageBuilder -ScriptPath $script -Arguments @(
         '-RepoRoot', $fakeRepo,
         '-OutputRoot', (Join-Path $tempRoot 'missing-reference-out'),
@@ -162,7 +196,7 @@ try {
     Assert-True ($missingReferenceResult.ExitCode -ne 0) 'missing scanner project reference should fail explicitly'
     Assert-True ((($missingReferenceResult.Output -join "`n") -match 'ProjectReference') -and (($missingReferenceResult.Output -join "`n") -match 'not found')) ("missing scanner project reference should produce an explicit failure. Output:`n{0}" -f ($missingReferenceResult.Output -join "`n"))
 
-    Write-Host 'PASS: package builder validates skip-publish input directories and fails explicitly when the scanner project reference is missing'
+    Write-Host 'PASS: package builder validates skip-publish input directories, recovers dotnet from machine/user PATH when process PATH is stripped, and fails explicitly when the scanner project reference is missing'
 }
 finally {
     Remove-Item -Recurse -Force $tempRoot -ErrorAction SilentlyContinue

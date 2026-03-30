@@ -59,6 +59,18 @@ function Validate-PublishedDirectory {
 }
 
 $RepoRoot = (Resolve-Path $RepoRoot).Path
+
+$machinePath = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
+$userPath = [System.Environment]::GetEnvironmentVariable('PATH', 'User')
+if ($machinePath) {
+    $env:PATH = $machinePath + ';' + $userPath
+}
+
+$dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
+if (-not $dotnet) {
+    throw 'dotnet command not found. Install .NET 10 SDK first.'
+}
+
 $mainCsproj = Join-Path $RepoRoot 'ErsatzTV\ErsatzTV.csproj'
 $scannerCsproj = Join-Path $RepoRoot 'ErsatzTV.Scanner\ErsatzTV.Scanner.csproj'
 $assetsDir = Join-Path $RepoRoot 'scripts\windows\manual-test'
@@ -83,10 +95,10 @@ else {
         $PublishedScannerDir = Join-Path $stagingRoot 'scanner'
         $PublishedMainDir = Join-Path $stagingRoot 'main'
 
-        & dotnet publish $scannerCsproj --framework net10.0 --runtime win-x64 -c Release -o $PublishedScannerDir -p:RestoreEnablePackagePruning=true -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded --self-contained true
+        & $dotnet.Source publish $scannerCsproj --framework net10.0 --runtime win-x64 -c Release -o $PublishedScannerDir -p:RestoreEnablePackagePruning=true -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded --self-contained true
         if ($LASTEXITCODE -ne 0) { throw 'scanner publish failed' }
 
-        & dotnet publish $mainCsproj --framework net10.0 --runtime win-x64 -c Release -o $PublishedMainDir -p:RestoreEnablePackagePruning=true -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded --self-contained true
+        & $dotnet.Source publish $mainCsproj --framework net10.0 --runtime win-x64 -c Release -o $PublishedMainDir -p:RestoreEnablePackagePruning=true -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded --self-contained true
         if ($LASTEXITCODE -ne 0) { throw 'main publish failed' }
     }
     finally {
