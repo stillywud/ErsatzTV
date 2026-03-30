@@ -58,6 +58,19 @@ function Validate-PublishedDirectory {
     }
 }
 
+function Validate-PublishedArtifact {
+    param(
+        [string]$Directory,
+        [string]$RequiredFile,
+        [string]$ContextName
+    )
+
+    $artifactPath = Join-Path $Directory $RequiredFile
+    if (-not (Test-Path -LiteralPath $artifactPath -PathType Leaf)) {
+        throw "$ContextName is missing required artifact: $artifactPath"
+    }
+}
+
 $RepoRoot = (Resolve-Path $RepoRoot).Path
 
 $machinePath = [System.Environment]::GetEnvironmentVariable('PATH', 'Machine')
@@ -107,6 +120,9 @@ else {
         }
     }
 }
+
+Validate-PublishedArtifact -Directory $PublishedMainDir -RequiredFile 'ErsatzTV.exe' -ContextName 'Main publish output'
+Validate-PublishedArtifact -Directory $PublishedScannerDir -RequiredFile 'ErsatzTV.Scanner.exe' -ContextName 'Scanner publish output'
 
 Copy-Item -Recurse -Force (Join-Path $PublishedScannerDir '*') (Join-Path $packageDir 'app')
 Copy-Item -Recurse -Force (Join-Path $PublishedMainDir '*') (Join-Path $packageDir 'app')

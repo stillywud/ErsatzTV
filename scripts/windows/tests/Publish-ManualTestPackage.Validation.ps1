@@ -175,6 +175,23 @@ try {
     Assert-True ($missingScannerResult.ExitCode -ne 0) 'missing PublishedScannerDir should fail in skip-publish mode'
     Assert-True ((($missingScannerResult.Output -join "`n") -match 'PublishedScannerDir') -and (($missingScannerResult.Output -join "`n") -match 'existing directory')) ("missing PublishedScannerDir should produce a clear validation error. Output:`n{0}" -f ($missingScannerResult.Output -join "`n"))
 
+    $missingMainArtifactDir = Join-Path $tempRoot 'missing-main-artifact'
+    $missingScannerArtifactDir = Join-Path $tempRoot 'missing-scanner-artifact'
+    New-Item -ItemType Directory -Force -Path $missingMainArtifactDir, $missingScannerArtifactDir | Out-Null
+    'not-an-exe' | Set-Content -Path (Join-Path $missingMainArtifactDir 'foo.txt') -Encoding ASCII
+    'not-an-exe' | Set-Content -Path (Join-Path $missingScannerArtifactDir 'bar.txt') -Encoding ASCII
+
+    $missingArtifactResult = Invoke-PackageBuilder -ScriptPath $script -Arguments @(
+        '-RepoRoot', $fakeRepo,
+        '-OutputRoot', (Join-Path $tempRoot 'missing-artifact-out'),
+        '-PackageName', 'missing-artifact',
+        '-SkipDotnetPublish',
+        '-PublishedMainDir', $missingMainArtifactDir,
+        '-PublishedScannerDir', $missingScannerArtifactDir
+    )
+    Assert-True ($missingArtifactResult.ExitCode -ne 0) 'missing required publish artifacts should fail explicitly'
+    Assert-True ((($missingArtifactResult.Output -join "`n") -match 'Main publish output is missing required artifact') -or (($missingArtifactResult.Output -join "`n") -match 'Scanner publish output is missing required artifact')) ("missing required publish artifacts should produce a clear validation error. Output:`n{0}" -f ($missingArtifactResult.Output -join "`n"))
+
     $buildableRepo = Join-Path $tempRoot 'buildable-repo'
     $strippedPath = "$PSHOME;$env:SystemRoot\System32;$env:SystemRoot"
     New-FakeRepo -Root $buildableRepo -IncludeScannerReference $true
@@ -196,7 +213,7 @@ try {
     Assert-True ($missingReferenceResult.ExitCode -ne 0) 'missing scanner project reference should fail explicitly'
     Assert-True ((($missingReferenceResult.Output -join "`n") -match 'ProjectReference') -and (($missingReferenceResult.Output -join "`n") -match 'not found')) ("missing scanner project reference should produce an explicit failure. Output:`n{0}" -f ($missingReferenceResult.Output -join "`n"))
 
-    Write-Host 'PASS: package builder validates skip-publish input directories, recovers dotnet from machine/user PATH when process PATH is stripped, and fails explicitly when the scanner project reference is missing'
+    Write-Host 'PASS: package builder validates skip-publish directories, required publish artifacts, machine/user PATH recovery, and explicit scanner-reference failure handling'
 }
 finally {
     Remove-Item -Recurse -Force $tempRoot -ErrorAction SilentlyContinue
