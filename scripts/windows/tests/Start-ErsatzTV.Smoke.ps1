@@ -103,6 +103,7 @@ $logsDir = Join-Path $runtimeDir 'logs'
 $statePath = Join-Path $runtimeDir 'launcher-state.json'
 $fakeServer = Join-Path $tempRoot 'fake-server.ps1'
 $launcherInvoker = Join-Path $tempRoot 'invoke-launcher.ps1'
+$browserFailureInvoker = Join-Path $tempRoot 'invoke-launcher-browser-failure.ps1'
 $readyMarker = Join-Path $tempRoot 'ready-marker.txt'
 $appExe = Join-Path $PSHOME 'powershell.exe'
 $readyDelayMilliseconds = 3000
@@ -156,6 +157,38 @@ param(
 & `$Launcher -PackageRoot `$PackageRoot -AppExe `$AppExe -AppArgs @('-NoProfile','-ExecutionPolicy','Bypass','-File',`$FakeServer,'-Port',`$Port,'-ReadyDelayMilliseconds',`$ReadyDelayMilliseconds,'-ReadyMarkerPath',`$ReadyMarkerPath) -UiUrl `$UiUrl -OpenBrowser:`$false
 "@ | Set-Content -Path $launcherInvoker -Encoding UTF8
 
+@"
+param(
+    [string]`$Launcher,
+    [string]`$PackageRoot,
+    [string]`$AppExe,
+    [string]`$FakeServer,
+    [int]`$Port,
+    [string]`$UiUrl,
+    [int]`$ReadyDelayMilliseconds,
+    [string]`$ReadyMarkerPath
+)
+
+function Start-Process {
+    param(
+        [Parameter(Position = 0)]
+        [string]`$FilePath,
+        [Parameter(Position = 1)]
+        [object]`$ArgumentList,
+        [string]`$WorkingDirectory,
+        [switch]`$PassThru
+    )
+
+    if (`$FilePath -like 'http*') {
+        throw 'simulated browser launch failure'
+    }
+
+    Microsoft.PowerShell.Management\Start-Process @PSBoundParameters
+}
+
+& `$Launcher -PackageRoot `$PackageRoot -AppExe `$AppExe -AppArgs @('-NoProfile','-ExecutionPolicy','Bypass','-File',`$FakeServer,'-Port',`$Port,'-ReadyDelayMilliseconds',`$ReadyDelayMilliseconds,'-ReadyMarkerPath',`$ReadyMarkerPath) -UiUrl `$UiUrl -OpenBrowser
+"@ | Set-Content -Path $browserFailureInvoker -Encoding UTF8
+
 try {
     $invalidAppExeResult = Invoke-Launcher -Launcher $launcher -PackageRoot $tempRoot -AppExe $appDir -UiUrl $url -ReadyTimeoutSeconds 5
     Assert-True ($invalidAppExeResult.ExitCode -ne 0) 'directory AppExe should be rejected'
@@ -177,6 +210,30 @@ try {
     Assert-True ((Get-Process -Id $corruptStatePid -ErrorAction SilentlyContinue) -ne $null) 'process started after invalid state should be running'
 
     Stop-ProcessIfRunning -Id $corruptStatePid
+    Start-Sleep -Seconds 1
+    if (Test-Path -LiteralPath $readyMarker -PathType Leaf) {
+        Remove-Item -LiteralPath $readyMarker -Force
+    }
+
+    @{
+        pid = 'abc'
+        appExe = 'C:\fake\ErsatzTV.exe'
+        uiUrl = $url
+        startedAt = '2026-03-30T00:00:00Z'
+    } | ConvertTo-Json | Set-Content -Path $statePath -Encoding UTF8
+
+    $schemaInvalidStateRun = Invoke-LauncherAndMeasure -LauncherInvoker $launcherInvoker -Launcher $launcher -PackageRoot $tempRoot -AppExe $appExe -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
+    Assert-True ($schemaInvalidStateRun.ExitCode -eq 0) ("launcher should ignore schema-invalid state file and still start. Output:`n{0}" -f ($schemaInvalidStateRun.Output -join "`n"))
+    Assert-True (Test-Path -LiteralPath $readyMarker -PathType Leaf) 'launcher should still wait for readiness when recorded state file schema is invalid'
+    Assert-True ($schemaInvalidStateRun.ElapsedMilliseconds -ge $minimumObservedWaitMilliseconds) 'launcher should still wait for delayed readiness when recorded state file schema is invalid'
+    Assert-True ((Get-LauncherLogContent -LogsDir $logsDir) -match 'Ignoring invalid launcher state file') 'schema-invalid state file should be logged and ignored'
+
+    $schemaInvalidState = Get-Content $statePath | ConvertFrom-Json
+    $schemaInvalidStatePid = [int]$schemaInvalidState.pid
+    Assert-True ($schemaInvalidStatePid -gt 0) 'state file should be rewritten after ignoring schema-invalid prior state'
+    Assert-True ((Get-Process -Id $schemaInvalidStatePid -ErrorAction SilentlyContinue) -ne $null) 'process started after schema-invalid state should be running'
+
+    Stop-ProcessIfRunning -Id $schemaInvalidStatePid
     Start-Sleep -Seconds 1
     if (Test-Path -LiteralPath $readyMarker -PathType Leaf) {
         Remove-Item -LiteralPath $readyMarker -Force
@@ -219,7 +276,22 @@ try {
     Assert-True ((Get-Process -Id $secondPid -ErrorAction SilentlyContinue) -ne $null) 'second process should be running'
     Assert-True ((Get-Process -Id $firstPid -ErrorAction SilentlyContinue) -eq $null) 'first process should be stopped after restart'
 
-    Write-Host 'PASS: launcher rejects directory AppExe, logs failure details, ignores invalid state files, skips stale recorded pid reuse, restarts old instance, and waits for delayed readiness'
+    Stop-ProcessIfRunning -Id $secondPid
+    Start-Sleep -Seconds 1
+    Remove-Item -LiteralPath $readyMarker -Force
+
+    $browserFailureRun = Invoke-LauncherAndMeasure -LauncherInvoker $browserFailureInvoker -Launcher $launcher -PackageRoot $tempRoot -AppExe $appExe -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
+    Assert-True ($browserFailureRun.ExitCode -eq 0) ("launcher should still succeed when browser launch fails. Output:`n{0}" -f ($browserFailureRun.Output -join "`n"))
+    Assert-True (Test-Path -LiteralPath $readyMarker -PathType Leaf) 'browser failure run should still wait for readiness before returning'
+    Assert-True ($browserFailureRun.ElapsedMilliseconds -ge $minimumObservedWaitMilliseconds) 'browser failure run should still wait for delayed readiness before returning'
+    Assert-True ((Get-LauncherLogContent -LogsDir $logsDir) -match 'Unable to open browser automatically') 'browser failure should be logged and ignored'
+
+    $browserFailureState = Get-Content $statePath | ConvertFrom-Json
+    $browserFailurePid = [int]$browserFailureState.pid
+    Assert-True ($browserFailurePid -gt 0) 'state file should contain pid after browser-failure run'
+    Assert-True ((Get-Process -Id $browserFailurePid -ErrorAction SilentlyContinue) -ne $null) 'process should still be running after browser-failure run'
+
+    Write-Host 'PASS: launcher rejects directory AppExe, logs failure details, ignores invalid state files, skips stale recorded pid reuse, restarts old instance, tolerates browser launch failure, and waits for delayed readiness'
 }
 finally {
     if (Test-Path $statePath) {
