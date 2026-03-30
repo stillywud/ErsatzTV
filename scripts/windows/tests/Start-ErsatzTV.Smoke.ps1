@@ -19,6 +19,31 @@ function Get-FreePort {
     return $port
 }
 
+function Invoke-Launcher {
+    param(
+        [string]$Launcher,
+        [string]$PackageRoot,
+        [string]$AppExe,
+        [string]$UiUrl = 'http://localhost:8409/',
+        [int]$ReadyTimeoutSeconds = 90
+    )
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $Launcher -PackageRoot $PackageRoot -AppExe $AppExe -UiUrl $UiUrl -ReadyTimeoutSeconds $ReadyTimeoutSeconds 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+
+    return [pscustomobject]@{
+        ExitCode = $exitCode
+        Output = @($output)
+    }
+}
+
 function Invoke-LauncherAndMeasure {
     param(
         [string]$LauncherInvoker,
@@ -33,13 +58,27 @@ function Invoke-LauncherAndMeasure {
     )
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $LauncherInvoker -Launcher $Launcher -PackageRoot $PackageRoot -AppExe $AppExe -FakeServer $FakeServer -Port $Port -UiUrl $UiUrl -ReadyDelayMilliseconds $ReadyDelayMilliseconds -ReadyMarkerPath $ReadyMarkerPath
+    $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $LauncherInvoker -Launcher $Launcher -PackageRoot $PackageRoot -AppExe $AppExe -FakeServer $FakeServer -Port $Port -UiUrl $UiUrl -ReadyDelayMilliseconds $ReadyDelayMilliseconds -ReadyMarkerPath $ReadyMarkerPath 2>&1
     $exitCode = $LASTEXITCODE
     $stopwatch.Stop()
 
     return [pscustomobject]@{
         ExitCode = $exitCode
+        Output = @($output)
         ElapsedMilliseconds = [int][Math]::Round($stopwatch.Elapsed.TotalMilliseconds)
+    }
+}
+
+function Stop-ProcessIfRunning {
+    param([int]$Id)
+
+    if ($Id -le 0) {
+        return
+    }
+
+    $process = Get-Process -Id $Id -ErrorAction SilentlyContinue
+    if ($null -ne $process) {
+        Stop-Process -Id $Id -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -52,8 +91,10 @@ $statePath = Join-Path $runtimeDir 'launcher-state.json'
 $fakeServer = Join-Path $tempRoot 'fake-server.ps1'
 $launcherInvoker = Join-Path $tempRoot 'invoke-launcher.ps1'
 $readyMarker = Join-Path $tempRoot 'ready-marker.txt'
+$appExe = Join-Path $PSHOME 'powershell.exe'
 $readyDelayMilliseconds = 3000
 $minimumObservedWaitMilliseconds = 2000
+$staleProcess = $null
 New-Item -ItemType Directory -Force -Path $appDir | Out-Null
 
 $port = Get-FreePort
@@ -103,8 +144,23 @@ param(
 "@ | Set-Content -Path $launcherInvoker -Encoding UTF8
 
 try {
-    $firstRun = Invoke-LauncherAndMeasure -LauncherInvoker $launcherInvoker -Launcher $launcher -PackageRoot $tempRoot -AppExe "$PSHOME\\powershell.exe" -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
-    Assert-True ($firstRun.ExitCode -eq 0) 'first launcher run should succeed'
+    $invalidAppExeResult = Invoke-Launcher -Launcher $launcher -PackageRoot $tempRoot -AppExe $appDir -UiUrl $url -ReadyTimeoutSeconds 5
+    Assert-True ($invalidAppExeResult.ExitCode -ne 0) 'directory AppExe should be rejected'
+    Assert-True ((($invalidAppExeResult.Output -join "`n") -match 'App exe not found:')) ("directory AppExe failure should report missing executable. Output:`n{0}" -f ($invalidAppExeResult.Output -join "`n"))
+
+    $staleProcess = Start-Process -FilePath $appExe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-Command','Start-Sleep -Seconds 60') -PassThru
+    Assert-True ((Get-Process -Id $staleProcess.Id -ErrorAction SilentlyContinue) -ne $null) 'stale test process should be running before launcher start'
+
+    @{
+        pid = $staleProcess.Id
+        appExe = $appExe
+        uiUrl = $url
+        startedAt = (Get-Date).AddHours(-1).ToString('o')
+    } | ConvertTo-Json | Set-Content -Path $statePath -Encoding UTF8
+
+    $firstRun = Invoke-LauncherAndMeasure -LauncherInvoker $launcherInvoker -Launcher $launcher -PackageRoot $tempRoot -AppExe $appExe -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
+    Assert-True ($firstRun.ExitCode -eq 0) ("first launcher run should succeed. Output:`n{0}" -f ($firstRun.Output -join "`n"))
+    Assert-True ((Get-Process -Id $staleProcess.Id -ErrorAction SilentlyContinue) -ne $null) 'launcher should not stop a stale recorded pid when identity does not match'
     Assert-True (Test-Path -LiteralPath $readyMarker -PathType Leaf) 'first launcher run should not return before readiness marker exists'
     Assert-True ($firstRun.ElapsedMilliseconds -ge $minimumObservedWaitMilliseconds) 'first launcher run should wait for delayed readiness before returning'
 
@@ -115,8 +171,8 @@ try {
 
     Remove-Item -LiteralPath $readyMarker -Force
 
-    $secondRun = Invoke-LauncherAndMeasure -LauncherInvoker $launcherInvoker -Launcher $launcher -PackageRoot $tempRoot -AppExe "$PSHOME\\powershell.exe" -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
-    Assert-True ($secondRun.ExitCode -eq 0) 'second launcher run should succeed'
+    $secondRun = Invoke-LauncherAndMeasure -LauncherInvoker $launcherInvoker -Launcher $launcher -PackageRoot $tempRoot -AppExe $appExe -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
+    Assert-True ($secondRun.ExitCode -eq 0) ("second launcher run should succeed. Output:`n{0}" -f ($secondRun.Output -join "`n"))
     Assert-True (Test-Path -LiteralPath $readyMarker -PathType Leaf) 'second launcher run should not return before readiness marker exists'
     Assert-True ($secondRun.ElapsedMilliseconds -ge $minimumObservedWaitMilliseconds) 'second launcher run should wait for delayed readiness before returning'
 
@@ -129,14 +185,19 @@ try {
     Assert-True ((Get-Process -Id $secondPid -ErrorAction SilentlyContinue) -ne $null) 'second process should be running'
     Assert-True ((Get-Process -Id $firstPid -ErrorAction SilentlyContinue) -eq $null) 'first process should be stopped after restart'
 
-    Write-Host 'PASS: launcher restarts old instance and waits for delayed readiness'
+    Write-Host 'PASS: launcher rejects directory AppExe, skips stale recorded pid reuse, restarts old instance, and waits for delayed readiness'
 }
 finally {
     if (Test-Path $statePath) {
         $state = Get-Content $statePath | ConvertFrom-Json
         if ($state.pid) {
-            Stop-Process -Id $state.pid -Force -ErrorAction SilentlyContinue
+            Stop-ProcessIfRunning -Id ([int]$state.pid)
         }
     }
+
+    if ($null -ne $staleProcess) {
+        Stop-ProcessIfRunning -Id $staleProcess.Id
+    }
+
     Remove-Item -Recurse -Force $tempRoot -ErrorAction SilentlyContinue
 }

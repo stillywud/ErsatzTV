@@ -41,6 +41,38 @@ function Stop-RecordedProcess {
         return
     }
 
+    $pathMatches = $false
+    if ($state.appExe) {
+        try {
+            $recordedAppExe = [System.IO.Path]::GetFullPath([string]$state.appExe)
+            $processPath = [System.IO.Path]::GetFullPath([string]$process.Path)
+            $pathMatches = [string]::Equals($recordedAppExe, $processPath, [System.StringComparison]::OrdinalIgnoreCase)
+        }
+        catch {
+            Write-Log "Unable to verify recorded pid $($state.pid) executable path; skipping stop"
+            return
+        }
+    }
+
+    $startMatches = $false
+    if ($state.startedAt) {
+        try {
+            $recordedStartedAt = ([datetimeoffset]::Parse([string]$state.startedAt)).UtcDateTime
+            $processStartedAt = $process.StartTime.ToUniversalTime()
+            $startDeltaSeconds = [Math]::Abs((New-TimeSpan -Start $recordedStartedAt -End $processStartedAt).TotalSeconds)
+            $startMatches = $startDeltaSeconds -lt 5
+        }
+        catch {
+            Write-Log "Unable to verify recorded pid $($state.pid) start time; skipping stop"
+            return
+        }
+    }
+
+    if (-not ($pathMatches -and $startMatches)) {
+        Write-Log "Recorded pid $($state.pid) does not match recorded app identity; skipping stop"
+        return
+    }
+
     Write-Log "Stopping recorded pid $($state.pid)"
     Stop-Process -Id ([int]$state.pid) -Force -ErrorAction Stop
     Start-Sleep -Seconds 1
@@ -85,7 +117,7 @@ Write-Log "Started pid $($process.Id)"
 
 @{
     pid = $process.Id
-    appExe = $AppExe
+    appExe = (Resolve-Path -LiteralPath $AppExe).Path
     uiUrl = $UiUrl
     startedAt = (Get-Date).ToString('o')
 } | ConvertTo-Json | Set-Content -Path $statePath -Encoding UTF8
