@@ -37,7 +37,16 @@ function Get-RecordedState {
             return $null
         }
 
-        return $stateContent | ConvertFrom-Json -ErrorAction Stop
+        $state = $stateContent | ConvertFrom-Json -ErrorAction Stop
+
+        $parsedPid = 0
+        if (-not [int]::TryParse([string]$state.pid, [ref]$parsedPid) -or $parsedPid -le 0) {
+            Write-Log "Ignoring invalid launcher state file '$Path': pid is missing or invalid"
+            return $null
+        }
+
+        $state.pid = $parsedPid
+        return $state
     }
     catch {
         Write-Log "Ignoring invalid launcher state file '$Path': $($_.Exception.Message)"
@@ -137,7 +146,7 @@ Write-Log "Started pid $($process.Id)"
     pid = $process.Id
     appExe = (Resolve-Path -LiteralPath $AppExe).Path
     uiUrl = $UiUrl
-    startedAt = (Get-Date).ToString('o')
+    startedAt = $process.StartTime.ToUniversalTime().ToString('o')
 } | ConvertTo-Json | Set-Content -Path $statePath -Encoding UTF8
 
 Wait-ForUrl -Url $UiUrl -TimeoutSeconds $ReadyTimeoutSeconds
