@@ -22,7 +22,7 @@ Write-Log 'Launcher started'
 Write-Log "PackageRoot=$PackageRoot"
 Write-Log "AppExe=$AppExe"
 
-if (-not (Test-Path $AppExe)) {
+if (-not (Test-Path -LiteralPath $AppExe -PathType Leaf)) {
     Write-Log 'App exe not found'
     throw "App exe not found: $AppExe"
 }
