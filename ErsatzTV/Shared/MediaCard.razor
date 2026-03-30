@@ -133,6 +133,16 @@
     <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
         @(Title ?? Data.Title)
     </MudText>
+    @if (!string.IsNullOrWhiteSpace(StatusBadgeText))
+    {
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="@StatusBadgeColor"
+                 Variant="Variant.Filled"
+                 Style="margin: 8px auto 0 auto; display: flex; width: fit-content;">
+            @StatusBadgeText
+        </MudChip>
+    }
     <MudText Typo="Typo.body2" Align="Align.Center" Class="media-card-title mud-text-secondary">
         @(Subtitle ?? Data.Subtitle)
     </MudText>
@@ -157,6 +167,12 @@
 
     [Parameter]
     public string Subtitle { get; set; }
+
+    [Parameter]
+    public string StatusBadgeText { get; set; }
+
+    [Parameter]
+    public Color StatusBadgeColor { get; set; } = Color.Default;
 
     [Parameter]
     public string ContainerClass { get; set; }

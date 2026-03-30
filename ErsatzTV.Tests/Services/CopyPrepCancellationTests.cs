@@ -1,3 +1,4 @@
+using ErsatzTV.Application.CopyPrep;
 using ErsatzTV.Application.CopyPrep.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -70,6 +71,22 @@ public class CopyPrepCancellationTests
             after.UpdatedAt.ShouldBe(before.UpdatedAt);
             after.LogEntries.ShouldBeEmpty();
         }
+    }
+
+    [Test]
+    public async Task Cancel_handler_should_signal_processing_cancellation_for_active_item()
+    {
+        await using var factory = await TestDbContextFactory.Create();
+        int queueItemId = await factory.SeedQueueItem(CopyPrepStatus.Processing);
+        using var cts = new CancellationTokenSource();
+        using var registration = ProcessingCancellationRegistry.Register(queueItemId, cts);
+
+        var sut = new CancelCopyPrepQueueItemHandler(factory);
+
+        bool result = await sut.Handle(new CancelCopyPrepQueueItem(queueItemId), CancellationToken.None);
+
+        result.ShouldBeTrue();
+        cts.IsCancellationRequested.ShouldBeTrue();
     }
 
     [Test]

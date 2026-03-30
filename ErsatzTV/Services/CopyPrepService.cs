@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
+using ErsatzTV.Application.CopyPrep;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.CopyPrep;
@@ -161,6 +162,9 @@ public class CopyPrepService(
 
     private async Task ProcessQueueItem(int queueItemId, CopyPrepSettings settings, CancellationToken cancellationToken)
     {
+        using var processingCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using IDisposable _ = ProcessingCancellationRegistry.Register(queueItemId, processingCancellation);
+
         try
         {
             using IServiceScope scope = serviceScopeFactory.CreateScope();
@@ -315,7 +319,7 @@ public class CopyPrepService(
                 cancellationToken,
                 queueItem.LastCommand);
 
-            int exitCode = await RunFfmpeg(ffmpegPath, ffmpegArguments, logPath, cancellationToken);
+            int exitCode = await RunFfmpeg(ffmpegPath, ffmpegArguments, logPath, processingCancellation.Token);
             queueItem.LastExitCode = exitCode;
             queueItem.UpdatedAt = DateTime.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
