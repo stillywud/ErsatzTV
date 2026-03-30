@@ -57,10 +57,17 @@ function Invoke-LauncherAndMeasure {
         [string]$ReadyMarkerPath
     )
 
-    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-    $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $LauncherInvoker -Launcher $Launcher -PackageRoot $PackageRoot -AppExe $AppExe -FakeServer $FakeServer -Port $Port -UiUrl $UiUrl -ReadyDelayMilliseconds $ReadyDelayMilliseconds -ReadyMarkerPath $ReadyMarkerPath 2>&1
-    $exitCode = $LASTEXITCODE
-    $stopwatch.Stop()
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $LauncherInvoker -Launcher $Launcher -PackageRoot $PackageRoot -AppExe $AppExe -FakeServer $FakeServer -Port $Port -UiUrl $UiUrl -ReadyDelayMilliseconds $ReadyDelayMilliseconds -ReadyMarkerPath $ReadyMarkerPath 2>&1
+        $exitCode = $LASTEXITCODE
+        $stopwatch.Stop()
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
 
     return [pscustomobject]@{
         ExitCode = $exitCode
@@ -102,19 +109,16 @@ $runtimeDir = Join-Path $tempRoot 'runtime'
 $logsDir = Join-Path $runtimeDir 'logs'
 $statePath = Join-Path $runtimeDir 'launcher-state.json'
 $fakeServer = Join-Path $tempRoot 'fake-server.ps1'
+$occupiedServer = Join-Path $tempRoot 'occupied-server.ps1'
 $launcherInvoker = Join-Path $tempRoot 'invoke-launcher.ps1'
-$packagedLauncher = Join-Path $tempRoot 'Start-ErsatzTV.ps1'
-$packagedLauncherInvoker = Join-Path $tempRoot 'invoke-packaged-launcher.ps1'
 $browserFailureInvoker = Join-Path $tempRoot 'invoke-launcher-browser-failure.ps1'
 $readyMarker = Join-Path $tempRoot 'ready-marker.txt'
 $appExe = Join-Path $PSHOME 'powershell.exe'
-$packagedAppExe = Join-Path $appDir 'ErsatzTV.exe'
 $readyDelayMilliseconds = 3000
 $minimumObservedWaitMilliseconds = 2000
 $staleProcess = $null
+$occupiedProcess = $null
 New-Item -ItemType Directory -Force -Path $appDir | Out-Null
-Copy-Item -LiteralPath $launcher -Destination $packagedLauncher -Force
-Copy-Item -LiteralPath $appExe -Destination $packagedAppExe -Force
 
 $port = Get-FreePort
 $url = "http://localhost:$port/"
@@ -148,6 +152,21 @@ finally {
 "@ | Set-Content -Path $fakeServer -Encoding UTF8
 
 @"
+param([int]`$Port)
+
+`$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, `$Port)
+`$listener.Start()
+try {
+    while (`$true) {
+        Start-Sleep -Seconds 1
+    }
+}
+finally {
+    `$listener.Stop()
+}
+"@ | Set-Content -Path $occupiedServer -Encoding UTF8
+
+@"
 param(
     [string]`$Launcher,
     [string]`$PackageRoot,
@@ -161,19 +180,6 @@ param(
 
 & `$Launcher -PackageRoot `$PackageRoot -AppExe `$AppExe -AppArgs @('-NoProfile','-ExecutionPolicy','Bypass','-File',`$FakeServer,'-Port',`$Port,'-ReadyDelayMilliseconds',`$ReadyDelayMilliseconds,'-ReadyMarkerPath',`$ReadyMarkerPath) -UiUrl `$UiUrl -OpenBrowser:`$false
 "@ | Set-Content -Path $launcherInvoker -Encoding UTF8
-
-@"
-param(
-    [string]`$Launcher,
-    [string]`$FakeServer,
-    [int]`$Port,
-    [string]`$UiUrl,
-    [int]`$ReadyDelayMilliseconds,
-    [string]`$ReadyMarkerPath
-)
-
-& `$Launcher -AppArgs @('-NoProfile','-ExecutionPolicy','Bypass','-File',`$FakeServer,'-Port',`$Port,'-ReadyDelayMilliseconds',`$ReadyDelayMilliseconds,'-ReadyMarkerPath',`$ReadyMarkerPath) -UiUrl `$UiUrl -OpenBrowser:`$false
-"@ | Set-Content -Path $packagedLauncherInvoker -Encoding UTF8
 
 @"
 param(
@@ -214,21 +220,17 @@ try {
     Assert-True ((Get-ChildItem -Path $logsDir -Filter 'launcher-*.log' -ErrorAction SilentlyContinue | Measure-Object).Count -ge 1) 'directory AppExe failure should create a launcher log file'
     Assert-True ((Get-LauncherLogContent -LogsDir $logsDir) -match 'App exe not found') 'directory AppExe failure log should include missing executable details'
 
-    $packagedRun = Invoke-LauncherAndMeasure -LauncherInvoker $packagedLauncherInvoker -Launcher $packagedLauncher -PackageRoot $tempRoot -AppExe $packagedAppExe -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
-    Assert-True ($packagedRun.ExitCode -eq 0) ("packaged launcher should default PackageRoot/AppExe relative to its copied package location. Output:`n{0}" -f ($packagedRun.Output -join "`n"))
-    Assert-True (Test-Path -LiteralPath $statePath -PathType Leaf) 'packaged launcher should create launcher-state.json in the copied package runtime directory'
-    Assert-True (Test-Path -LiteralPath $readyMarker -PathType Leaf) 'packaged launcher should wait for delayed readiness before returning'
-    Assert-True ($packagedRun.ElapsedMilliseconds -ge $minimumObservedWaitMilliseconds) 'packaged launcher should wait for delayed readiness before returning'
-
-    $packagedState = Get-Content $statePath | ConvertFrom-Json
-    $packagedPid = [int]$packagedState.pid
-    Assert-True ($packagedPid -gt 0) 'packaged launcher should record a running pid'
-    Assert-True ((Get-Process -Id $packagedPid -ErrorAction SilentlyContinue) -ne $null) 'packaged launcher should start the packaged app executable'
-    Assert-True ([string]::Equals($packagedState.appExe, (Resolve-Path -LiteralPath $packagedAppExe).Path, [System.StringComparison]::OrdinalIgnoreCase)) 'packaged launcher should record the packaged app executable path'
-
-    Stop-ProcessIfRunning -Id $packagedPid
+    $occupiedProcess = Start-Process -FilePath $appExe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',$occupiedServer,'-Port',$port) -PassThru
     Start-Sleep -Seconds 1
-    Remove-Item -LiteralPath $readyMarker -Force
+    $occupiedPortRun = Invoke-LauncherAndMeasure -LauncherInvoker $launcherInvoker -Launcher $launcher -PackageRoot $tempRoot -AppExe $appExe -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
+    Assert-True ($occupiedPortRun.ExitCode -ne 0) 'launcher should fail when another process owns the target UiUrl port'
+    Assert-True ((($occupiedPortRun.Output -join "`n") -match 'exited before') -or (($occupiedPortRun.Output -join "`n") -match 'Timed out waiting')) ("occupied-port failure should explain that launched process never became the ready listener. Output:`n{0}" -f ($occupiedPortRun.Output -join "`n"))
+    Stop-ProcessIfRunning -Id $occupiedProcess.Id
+    $occupiedProcess = $null
+    Start-Sleep -Seconds 1
+    if (Test-Path -LiteralPath $readyMarker -PathType Leaf) {
+        Remove-Item -LiteralPath $readyMarker -Force
+    }
 
     '{"pid": 123,' | Set-Content -Path $statePath -Encoding UTF8
 
@@ -341,6 +343,10 @@ finally {
 
     if ($null -ne $staleProcess) {
         Stop-ProcessIfRunning -Id $staleProcess.Id
+    }
+
+    if ($null -ne $occupiedProcess) {
+        Stop-ProcessIfRunning -Id $occupiedProcess.Id
     }
 
     Remove-Item -Recurse -Force $tempRoot -ErrorAction SilentlyContinue

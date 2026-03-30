@@ -118,24 +118,56 @@ function Stop-RecordedProcess {
     Start-Sleep -Seconds 1
 }
 
+function Get-ListeningProcessIds {
+    param([int]$Port)
+
+    $connectionCommand = Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue
+    if ($null -ne $connectionCommand) {
+        return @(
+            Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue |
+                Select-Object -ExpandProperty OwningProcess -Unique
+        )
+    }
+
+    return @(
+        netstat -ano -p TCP |
+            Select-String -Pattern (':{0}\s+.*LISTENING\s+(\d+)$' -f $Port) |
+            ForEach-Object { [int]$_.Matches[0].Groups[1].Value } |
+            Select-Object -Unique
+    )
+}
+
 function Wait-ForUrl {
     param(
         [string]$Url,
-        [int]$TimeoutSeconds
+        [int]$TimeoutSeconds,
+        [int]$ProcessId
     )
 
+    $uri = [uri]$Url
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
-        try {
-            $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5
-            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
-                Write-Log "Ready url responded with status $($response.StatusCode)"
-                return
+        $process = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+        if ($null -eq $process) {
+            throw "Launched process $ProcessId exited before $Url became ready"
+        }
+
+        $listeningProcessIds = @(Get-ListeningProcessIds -Port $uri.Port)
+        $ownedByLaunchedProcess = $listeningProcessIds -contains $ProcessId
+        $ownedByHttpSys = $listeningProcessIds -contains 4
+        if ($ownedByLaunchedProcess -or $ownedByHttpSys) {
+            try {
+                $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5
+                if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
+                    Write-Log "Ready url responded with status $($response.StatusCode)"
+                    return
+                }
+            }
+            catch {
             }
         }
-        catch {
-            Start-Sleep -Seconds 1
-        }
+
+        Start-Sleep -Seconds 1
     }
 
     throw "Timed out waiting for $Url"
@@ -172,7 +204,7 @@ Write-Log "Started pid $($process.Id)"
     startedAt = $process.StartTime.ToUniversalTime().ToString('o')
 } | ConvertTo-Json | Set-Content -Path $statePath -Encoding UTF8
 
-Wait-ForUrl -Url $UiUrl -TimeoutSeconds $ReadyTimeoutSeconds
+Wait-ForUrl -Url $UiUrl -TimeoutSeconds $ReadyTimeoutSeconds -ProcessId $process.Id
 
 if ($OpenBrowser) {
     try {

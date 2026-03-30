@@ -37,62 +37,55 @@ $fakeScanner = Join-Path $tempRoot 'fake-scanner'
 $outRoot = Join-Path $tempRoot 'out'
 $packageDir = Join-Path $outRoot 'ErsatzTV-manual-test-win-x64'
 $launcher = Join-Path $packageDir 'Start-ErsatzTV.ps1'
-$launcherInvoker = Join-Path $tempRoot 'invoke-packaged-launcher.ps1'
 $readyMarker = Join-Path $packageDir 'ready-marker.txt'
-$fakeServer = Join-Path $tempRoot 'fake-server.ps1'
 $port = Get-FreePort
 $url = "http://localhost:$port/"
 
 New-Item -ItemType Directory -Force -Path $fakeMain, $fakeScanner | Out-Null
-Copy-Item -LiteralPath (Join-Path $PSHOME 'powershell.exe') -Destination (Join-Path $fakeMain 'ErsatzTV.exe') -Force
 'fake-scanner' | Set-Content -Path (Join-Path $fakeScanner 'ErsatzTV.Scanner.exe') -Encoding ASCII
 
-@"
-param(
-    [int]`$Port,
-    [int]`$ReadyDelayMilliseconds,
-    [string]`$ReadyMarkerPath
-)
+$fakeMainSource = @"
+using System;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Threading;
 
-`$listener = [System.Net.HttpListener]::new()
-`$listener.Prefixes.Add("http://localhost:`$Port/")
-Start-Sleep -Milliseconds `$ReadyDelayMilliseconds
-`$listener.Start()
-(Get-Date).ToString('o') | Set-Content -Path `$ReadyMarkerPath -Encoding ASCII
-try {
-    while (`$true) {
-        `$context = `$listener.GetContext()
-        `$buffer = [System.Text.Encoding]::UTF8.GetBytes('ok')
-        `$context.Response.StatusCode = 200
-        `$context.Response.OutputStream.Write(`$buffer, 0, `$buffer.Length)
-        `$context.Response.Close()
+public static class Program
+{
+    public static void Main(string[] args)
+    {
+        int port = int.Parse(args[0]);
+        int readyDelayMilliseconds = int.Parse(args[1]);
+        string readyMarkerPath = args[2];
+
+        using (var listener = new HttpListener())
+        {
+            listener.Prefixes.Add(string.Format("http://localhost:{0}/", port));
+            Thread.Sleep(readyDelayMilliseconds);
+            listener.Start();
+            File.WriteAllText(readyMarkerPath, DateTime.UtcNow.ToString("o"));
+
+            while (true)
+            {
+                var context = listener.GetContext();
+                byte[] buffer = Encoding.UTF8.GetBytes("ok");
+                context.Response.StatusCode = 200;
+                context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                context.Response.Close();
+            }
+        }
     }
 }
-finally {
-    if (`$listener.IsListening) {
-        `$listener.Stop()
-    }
-}
-"@ | Set-Content -Path $fakeServer -Encoding UTF8
-
-@"
-param(
-    [string]`$Launcher,
-    [string]`$FakeServer,
-    [int]`$Port,
-    [string]`$UiUrl,
-    [string]`$ReadyMarkerPath
-)
-
-& `$Launcher -AppArgs @('-NoProfile','-ExecutionPolicy','Bypass','-File',`$FakeServer,'-Port',`$Port,'-ReadyDelayMilliseconds',1500,'-ReadyMarkerPath',`$ReadyMarkerPath) -UiUrl `$UiUrl -OpenBrowser:`$false
-"@ | Set-Content -Path $launcherInvoker -Encoding UTF8
+"@
+Add-Type -TypeDefinition $fakeMainSource -Language CSharp -OutputAssembly (Join-Path $fakeMain 'ErsatzTV.exe') -OutputType ConsoleApplication
 
 try {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $builder -RepoRoot $repoRoot -OutputRoot $outRoot -PackageName 'ErsatzTV-manual-test-win-x64' -SkipDotnetPublish -PublishedMainDir $fakeMain -PublishedScannerDir $fakeScanner
     Assert-True ($LASTEXITCODE -eq 0) 'package builder should succeed with fake publish dirs'
     Assert-True (Test-Path -LiteralPath $launcher -PathType Leaf) 'packaged launcher should exist'
 
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $launcherInvoker -Launcher $launcher -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyMarkerPath $readyMarker
+    & $launcher -AppArgs @($port, 1500, $readyMarker) -UiUrl $url -OpenBrowser:$false
     Assert-True ($LASTEXITCODE -eq 0) 'packaged launcher should succeed from produced package layout'
 
     $statePath = Join-Path $packageDir 'runtime\launcher-state.json'
