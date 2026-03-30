@@ -82,11 +82,24 @@ function Stop-ProcessIfRunning {
     }
 }
 
+function Get-LauncherLogContent {
+    param([string]$LogsDir)
+
+    if (-not (Test-Path -LiteralPath $LogsDir -PathType Container)) {
+        return ''
+    }
+
+    return ((Get-ChildItem -Path $LogsDir -Filter 'launcher-*.log' | Sort-Object LastWriteTime, Name | ForEach-Object {
+        Get-Content -Path $_.FullName -Raw
+    }) -join "`n")
+}
+
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\..')
 $launcher = Join-Path $repoRoot 'scripts\windows\manual-test\Start-ErsatzTV.ps1'
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("ersatztv-launcher-smoke-" + [guid]::NewGuid().ToString('N'))
 $appDir = Join-Path $tempRoot 'app'
 $runtimeDir = Join-Path $tempRoot 'runtime'
+$logsDir = Join-Path $runtimeDir 'logs'
 $statePath = Join-Path $runtimeDir 'launcher-state.json'
 $fakeServer = Join-Path $tempRoot 'fake-server.ps1'
 $launcherInvoker = Join-Path $tempRoot 'invoke-launcher.ps1'
@@ -147,6 +160,27 @@ try {
     $invalidAppExeResult = Invoke-Launcher -Launcher $launcher -PackageRoot $tempRoot -AppExe $appDir -UiUrl $url -ReadyTimeoutSeconds 5
     Assert-True ($invalidAppExeResult.ExitCode -ne 0) 'directory AppExe should be rejected'
     Assert-True ((($invalidAppExeResult.Output -join "`n") -match 'App exe not found:')) ("directory AppExe failure should report missing executable. Output:`n{0}" -f ($invalidAppExeResult.Output -join "`n"))
+    Assert-True ((Get-ChildItem -Path $logsDir -Filter 'launcher-*.log' -ErrorAction SilentlyContinue | Measure-Object).Count -ge 1) 'directory AppExe failure should create a launcher log file'
+    Assert-True ((Get-LauncherLogContent -LogsDir $logsDir) -match 'App exe not found') 'directory AppExe failure log should include missing executable details'
+
+    '{"pid": 123,' | Set-Content -Path $statePath -Encoding UTF8
+
+    $corruptStateRun = Invoke-LauncherAndMeasure -LauncherInvoker $launcherInvoker -Launcher $launcher -PackageRoot $tempRoot -AppExe $appExe -FakeServer $fakeServer -Port $port -UiUrl $url -ReadyDelayMilliseconds $readyDelayMilliseconds -ReadyMarkerPath $readyMarker
+    Assert-True ($corruptStateRun.ExitCode -eq 0) ("launcher should ignore invalid state file and still start. Output:`n{0}" -f ($corruptStateRun.Output -join "`n"))
+    Assert-True (Test-Path -LiteralPath $readyMarker -PathType Leaf) 'launcher should still wait for readiness when recorded state file is invalid'
+    Assert-True ($corruptStateRun.ElapsedMilliseconds -ge $minimumObservedWaitMilliseconds) 'launcher should still wait for delayed readiness when recorded state file is invalid'
+    Assert-True ((Get-LauncherLogContent -LogsDir $logsDir) -match 'Ignoring invalid launcher state file') 'invalid state file should be logged and ignored'
+
+    $corruptState = Get-Content $statePath | ConvertFrom-Json
+    $corruptStatePid = [int]$corruptState.pid
+    Assert-True ($corruptStatePid -gt 0) 'state file should be rewritten after ignoring invalid prior state'
+    Assert-True ((Get-Process -Id $corruptStatePid -ErrorAction SilentlyContinue) -ne $null) 'process started after invalid state should be running'
+
+    Stop-ProcessIfRunning -Id $corruptStatePid
+    Start-Sleep -Seconds 1
+    if (Test-Path -LiteralPath $readyMarker -PathType Leaf) {
+        Remove-Item -LiteralPath $readyMarker -Force
+    }
 
     $staleProcess = Start-Process -FilePath $appExe -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-Command','Start-Sleep -Seconds 60') -PassThru
     Assert-True ((Get-Process -Id $staleProcess.Id -ErrorAction SilentlyContinue) -ne $null) 'stale test process should be running before launcher start'
@@ -185,13 +219,17 @@ try {
     Assert-True ((Get-Process -Id $secondPid -ErrorAction SilentlyContinue) -ne $null) 'second process should be running'
     Assert-True ((Get-Process -Id $firstPid -ErrorAction SilentlyContinue) -eq $null) 'first process should be stopped after restart'
 
-    Write-Host 'PASS: launcher rejects directory AppExe, skips stale recorded pid reuse, restarts old instance, and waits for delayed readiness'
+    Write-Host 'PASS: launcher rejects directory AppExe, logs failure details, ignores invalid state files, skips stale recorded pid reuse, restarts old instance, and waits for delayed readiness'
 }
 finally {
     if (Test-Path $statePath) {
-        $state = Get-Content $statePath | ConvertFrom-Json
-        if ($state.pid) {
-            Stop-ProcessIfRunning -Id ([int]$state.pid)
+        try {
+            $state = Get-Content $statePath | ConvertFrom-Json
+            if ($state.pid) {
+                Stop-ProcessIfRunning -Id ([int]$state.pid)
+            }
+        }
+        catch {
         }
     }
 

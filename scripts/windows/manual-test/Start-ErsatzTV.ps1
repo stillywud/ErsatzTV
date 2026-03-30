@@ -23,15 +23,33 @@ function Write-Log {
     $line | Tee-Object -FilePath $logPath -Append
 }
 
+function Get-RecordedState {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $null
+    }
+
+    try {
+        $stateContent = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+        if ([string]::IsNullOrWhiteSpace($stateContent)) {
+            Write-Log "Ignoring invalid launcher state file '$Path': file is empty"
+            return $null
+        }
+
+        return $stateContent | ConvertFrom-Json -ErrorAction Stop
+    }
+    catch {
+        Write-Log "Ignoring invalid launcher state file '$Path': $($_.Exception.Message)"
+        return $null
+    }
+}
+
 function Stop-RecordedProcess {
     param([string]$Path)
 
-    if (-not (Test-Path $Path)) {
-        return
-    }
-
-    $state = Get-Content $Path | ConvertFrom-Json
-    if (-not $state.pid) {
+    $state = Get-RecordedState -Path $Path
+    if ($null -eq $state -or -not $state.pid) {
         return
     }
 
