@@ -20,7 +20,7 @@ try {
     $output = $null
 
     try {
-        $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $launcher -PackageRoot $tempRoot -AppExe (Join-Path $tempRoot 'app\ErsatzTV.exe') -OpenBrowser:$false 2>&1
+        $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $launcher -PackageRoot $tempRoot -AppExe (Join-Path $tempRoot 'app\ErsatzTV.exe') 2>&1
     }
     catch {
         $output = $_
