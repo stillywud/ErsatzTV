@@ -152,7 +152,17 @@ if (-not (Test-Path -LiteralPath $AppExe -PathType Leaf)) {
 
 Stop-RecordedProcess -Path $statePath
 
-$process = Start-Process -FilePath $AppExe -ArgumentList $AppArgs -WorkingDirectory (Split-Path -Parent $AppExe) -PassThru
+$startProcessSplat = @{
+    FilePath = $AppExe
+    WorkingDirectory = (Split-Path -Parent $AppExe)
+    PassThru = $true
+}
+
+if ($null -ne $AppArgs -and $AppArgs.Count -gt 0) {
+    $startProcessSplat.ArgumentList = $AppArgs
+}
+
+$process = Start-Process @startProcessSplat
 Write-Log "Started pid $($process.Id)"
 
 @{

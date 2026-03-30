@@ -108,8 +108,8 @@ else {
     }
 }
 
-Copy-Item -Recurse -Force (Join-Path $PublishedMainDir '*') (Join-Path $packageDir 'app')
 Copy-Item -Recurse -Force (Join-Path $PublishedScannerDir '*') (Join-Path $packageDir 'app')
+Copy-Item -Recurse -Force (Join-Path $PublishedMainDir '*') (Join-Path $packageDir 'app')
 
 $launcherCmdAsset = Resolve-ManualTestAsset -AssetsDir $assetsDir -ExpectedName '启动 ErsatzTV.cmd' -FallbackFilter '*.cmd'
 $readmeAsset = Resolve-ManualTestAsset -AssetsDir $assetsDir -ExpectedName 'README-手测说明.txt' -FallbackFilter 'README-*.txt'

@@ -28,6 +28,8 @@ $outRoot = Join-Path $tempRoot 'out'
 New-Item -ItemType Directory -Force -Path $fakeMain, $fakeScanner | Out-Null
 'fake-main' | Set-Content -Path (Join-Path $fakeMain 'ErsatzTV.exe')
 'fake-scanner' | Set-Content -Path (Join-Path $fakeScanner 'ErsatzTV.Scanner.exe')
+'main-wins' | Set-Content -Path (Join-Path $fakeMain 'SharedDependency.dll')
+'scanner-loses' | Set-Content -Path (Join-Path $fakeScanner 'SharedDependency.dll')
 
 try {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $script -RepoRoot $repoRoot -OutputRoot $outRoot -PackageName 'ErsatzTV-manual-test-win-x64' -SkipDotnetPublish -PublishedMainDir $fakeMain -PublishedScannerDir $fakeScanner
@@ -45,6 +47,13 @@ try {
     Assert-Exists (Join-Path $packageDir 'Start-ErsatzTV.ps1')
     Assert-Exists (Join-Path $packageDir 'app\ErsatzTV.exe')
     Assert-Exists (Join-Path $packageDir 'app\ErsatzTV.Scanner.exe')
+
+    $sharedDependencyPath = Join-Path $packageDir 'app\SharedDependency.dll'
+    Assert-Exists $sharedDependencyPath
+    $sharedDependencyContent = (Get-Content -Path $sharedDependencyPath -Raw).Trim()
+    if ($sharedDependencyContent -ne 'main-wins') {
+        throw "Expected main publish output to win duplicate-file copy order, got: $sharedDependencyContent"
+    }
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
