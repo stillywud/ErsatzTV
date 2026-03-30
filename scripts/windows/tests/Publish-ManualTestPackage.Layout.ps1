@@ -7,6 +7,17 @@ function Assert-Exists {
     }
 }
 
+function Assert-Contains {
+    param(
+        [string[]]$Items,
+        [string]$Expected
+    )
+
+    if ($Items -notcontains $Expected) {
+        throw "Expected collection to contain '$Expected'. Actual entries: $($Items -join ', ')"
+    }
+}
+
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\..')
 $script = Join-Path $repoRoot 'scripts\windows\Publish-ManualTestPackage.ps1'
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("ersatztv-package-layout-" + [guid]::NewGuid().ToString('N'))
@@ -35,7 +46,21 @@ try {
     Assert-Exists (Join-Path $packageDir 'app\ErsatzTV.exe')
     Assert-Exists (Join-Path $packageDir 'app\ErsatzTV.Scanner.exe')
 
-    Write-Host 'PASS: package builder creates the expected layout and zip'
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+    try {
+        $entries = @($archive.Entries | ForEach-Object { $_.FullName.Replace('\', '/') })
+        Assert-Contains -Items $entries -Expected '启动 ErsatzTV.cmd'
+        Assert-Contains -Items $entries -Expected 'README-手测说明.txt'
+        Assert-Contains -Items $entries -Expected 'Start-ErsatzTV.ps1'
+        Assert-Contains -Items $entries -Expected 'app/ErsatzTV.exe'
+        Assert-Contains -Items $entries -Expected 'app/ErsatzTV.Scanner.exe'
+    }
+    finally {
+        $archive.Dispose()
+    }
+
+    Write-Host 'PASS: package builder creates the expected layout and zip contents'
 }
 finally {
     Remove-Item -Recurse -Force $tempRoot -ErrorAction SilentlyContinue

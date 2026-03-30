@@ -18,6 +18,11 @@ function Remove-ScannerReference {
     Copy-Item -Force $CsprojPath $BackupPath
     $content = Get-Content -Raw $CsprojPath
     $targetLine = '        <ProjectReference Include="..\ErsatzTV.Scanner\ErsatzTV.Scanner.csproj" />'
+
+    if (-not $content.Contains($targetLine)) {
+        throw "Expected scanner ProjectReference not found in $CsprojPath"
+    }
+
     $updated = $content.Replace($targetLine + "`r`n", '').Replace($targetLine + "`n", '').Replace($targetLine, '')
     Set-Content -Path $CsprojPath -Value $updated -Encoding UTF8
 }
@@ -42,6 +47,17 @@ function Resolve-ManualTestAsset {
     throw "Unable to resolve manual-test asset '$ExpectedName' in $AssetsDir"
 }
 
+function Validate-PublishedDirectory {
+    param(
+        [string]$Path,
+        [string]$ParameterName
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Path) -or -not (Test-Path -LiteralPath $Path -PathType Container)) {
+        throw "-SkipDotnetPublish requires $ParameterName to be an existing directory: $Path"
+    }
+}
+
 $RepoRoot = (Resolve-Path $RepoRoot).Path
 $mainCsproj = Join-Path $RepoRoot 'ErsatzTV\ErsatzTV.csproj'
 $scannerCsproj = Join-Path $RepoRoot 'ErsatzTV.Scanner\ErsatzTV.Scanner.csproj'
@@ -55,7 +71,11 @@ Remove-Item -Recurse -Force $stagingRoot, $packageDir -ErrorAction SilentlyConti
 Remove-Item -Force $zipPath -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $stagingRoot, $packageDir, (Join-Path $packageDir 'app') | Out-Null
 
-if (-not $SkipDotnetPublish) {
+if ($SkipDotnetPublish) {
+    Validate-PublishedDirectory -Path $PublishedMainDir -ParameterName 'PublishedMainDir'
+    Validate-PublishedDirectory -Path $PublishedScannerDir -ParameterName 'PublishedScannerDir'
+}
+else {
     $backupPath = Join-Path $stagingRoot 'ErsatzTV.csproj.backup'
     try {
         Remove-ScannerReference -CsprojPath $mainCsproj -BackupPath $backupPath
