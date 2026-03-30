@@ -73,7 +73,7 @@ Write-Log "PackageRoot=$PackageRoot"
 Write-Log "AppExe=$AppExe"
 Write-Log "UiUrl=$UiUrl"
 
-if (-not (Test-Path $AppExe)) {
+if (-not (Test-Path -LiteralPath $AppExe -PathType Leaf)) {
     Write-Log 'App exe not found'
     throw "App exe not found: $AppExe"
 }
