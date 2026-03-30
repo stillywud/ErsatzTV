@@ -152,8 +152,13 @@ Write-Log "Started pid $($process.Id)"
 Wait-ForUrl -Url $UiUrl -TimeoutSeconds $ReadyTimeoutSeconds
 
 if ($OpenBrowser) {
-    Write-Log 'Opening browser'
-    Start-Process $UiUrl | Out-Null
+    try {
+        Write-Log 'Opening browser'
+        Start-Process $UiUrl | Out-Null
+    }
+    catch {
+        Write-Log "Unable to open browser automatically: $($_.Exception.Message)"
+    }
 }
 
 exit 0
