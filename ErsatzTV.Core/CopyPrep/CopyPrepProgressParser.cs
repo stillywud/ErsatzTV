@@ -43,10 +43,7 @@ public static class CopyPrepProgressParser
             }
         }
 
-        Dictionary<string, string> latest = blocks.LastOrDefault(block =>
-            block.ContainsKey("out_time_us") ||
-            block.ContainsKey("out_time_ms") ||
-            block.ContainsKey("out_time"));
+        Dictionary<string, string> latest = blocks.LastOrDefault();
 
         if (latest is null)
         {
@@ -56,9 +53,9 @@ public static class CopyPrepProgressParser
         }
 
         double?[] speeds = blocks
+            .TakeLast(6)
             .Select(block => ParseSpeed(block.GetValueOrDefault("speed")))
             .Where(value => value.HasValue)
-            .TakeLast(6)
             .Cast<double?>()
             .ToArray();
 
