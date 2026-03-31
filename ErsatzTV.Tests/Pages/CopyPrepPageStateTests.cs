@@ -244,6 +244,33 @@ public class CopyPrepPageStateTests
     }
 
     [Test]
+    public void Should_format_balanced_running_metrics_for_default_queue_row()
+    {
+        var item = MakeItem(
+            id: 1,
+            status: CopyPrepStatus.Processing,
+            progress: new CopyPrepProgressViewModel(
+                TotalDuration: TimeSpan.FromMinutes(78),
+                ProcessedDuration: TimeSpan.FromMinutes(41),
+                Percent: 52.43d,
+                EstimatedRemaining: TimeSpan.FromMinutes(37),
+                CurrentSpeedMultiplier: 1.36d,
+                AverageSpeedMultiplier: 1.32d,
+                FramesPerSecond: 28.7d,
+                ProcessedFrames: 71_424,
+                EstimatedTotalFrames: 136_300,
+                OutputBytes: 5_153_960_960,
+                LastProgressAt: new DateTime(2026, 3, 31, 6, 0, 0, DateTimeKind.Utc)));
+
+        CopyPrepPageState.FormatProgressPercent(item, DateTime.UtcNow).ShouldBe("52.43%");
+        CopyPrepPageState.FormatProcessedDuration(item).ShouldBe("00:41:00 / 01:18:00");
+        CopyPrepPageState.FormatEta(item).ShouldBe("00:37:00");
+        CopyPrepPageState.FormatSpeed(item).ShouldBe("1.32x / 28.7 fps");
+        CopyPrepPageState.FormatFrames(item).ShouldBe("71,424 / 136,300");
+        CopyPrepPageState.FormatOutputSize(item).ShouldBe("4.8 GB");
+    }
+
+    [Test]
     [TestCase(CopyPrepStatus.Queued, 5)]
     [TestCase(CopyPrepStatus.Processing, 50)]
     [TestCase(CopyPrepStatus.Prepared, 80)]
