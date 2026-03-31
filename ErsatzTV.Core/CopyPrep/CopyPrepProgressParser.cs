@@ -13,7 +13,22 @@ public static class CopyPrepProgressParser
                 : CopyPrepProgressSnapshot.Empty;
         }
 
-        return ParseLines(File.ReadLines(logPath), lastProgressAt);
+        try
+        {
+            return ParseLines(File.ReadLines(logPath), lastProgressAt);
+        }
+        catch (IOException)
+        {
+            return lastProgressAt.HasValue
+                ? CopyPrepProgressSnapshot.Empty with { LastProgressAt = lastProgressAt }
+                : CopyPrepProgressSnapshot.Empty;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return lastProgressAt.HasValue
+                ? CopyPrepProgressSnapshot.Empty with { LastProgressAt = lastProgressAt }
+                : CopyPrepProgressSnapshot.Empty;
+        }
     }
 
     internal static CopyPrepProgressSnapshot ParseLines(IEnumerable<string> lines, DateTime? lastProgressAt)

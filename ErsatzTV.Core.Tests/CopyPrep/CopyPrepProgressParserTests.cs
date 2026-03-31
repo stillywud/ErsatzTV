@@ -1,3 +1,4 @@
+using System.IO;
 using ErsatzTV.Core.CopyPrep;
 using NUnit.Framework;
 using Shouldly;
@@ -161,5 +162,29 @@ public class CopyPrepProgressParserTests
         CopyPrepProgressSnapshot result = CopyPrepProgressParser.ParseLines(lines, null);
 
         result.ShouldBe(CopyPrepProgressSnapshot.Empty);
+    }
+
+    [Test]
+    public void ParseFile_Should_ReturnEmptySnapshot_WithPreservedLastProgressAt_WhenFileIsTransientlyLocked()
+    {
+        string logPath = Path.Combine(Path.GetTempPath(), $"copy-prep-progress-{Guid.NewGuid():N}.log");
+        File.WriteAllText(logPath, "frame=220\nprogress=continue\n");
+
+        try
+        {
+            var lastProgressAt = new DateTime(2026, 3, 31, 6, 0, 0, DateTimeKind.Utc);
+            using var stream = new FileStream(logPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+            Should.NotThrow(() =>
+            {
+                CopyPrepProgressSnapshot result = CopyPrepProgressParser.ParseFile(logPath, lastProgressAt);
+
+                result.ShouldBe(CopyPrepProgressSnapshot.Empty with { LastProgressAt = lastProgressAt });
+            });
+        }
+        finally
+        {
+            File.Delete(logPath);
+        }
     }
 }
