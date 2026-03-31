@@ -95,9 +95,9 @@ public static class CopyPrepPageState
 
     public static int GetPseudoProgressPercent(CopyPrepStatus status) => status switch
     {
-        CopyPrepStatus.Queued => 0,
-        CopyPrepStatus.Processing => 0,
-        CopyPrepStatus.Prepared => 100,
+        CopyPrepStatus.Queued => 5,
+        CopyPrepStatus.Processing => 50,
+        CopyPrepStatus.Prepared => 80,
         CopyPrepStatus.Replaced => 100,
         CopyPrepStatus.Failed => 100,
         CopyPrepStatus.Canceled => 100,

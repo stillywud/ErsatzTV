@@ -68,6 +68,8 @@ public class GetCopyPrepQueueItemsHandler(IDbContextFactory<TvContext> dbContext
                         snapshot.AverageSpeedMultiplier.Value))
                 : null;
 
+        DateTime? lastProgressAtForDisplay = snapshot.HasLiveProgress ? snapshot.LastProgressAt : null;
+
         return new CopyPrepQueueItemViewModel(
             item.Id,
             item.MediaItemId,
@@ -102,7 +104,7 @@ public class GetCopyPrepQueueItemsHandler(IDbContextFactory<TvContext> dbContext
                 ProcessedFrames: snapshot.ProcessedFrames,
                 EstimatedTotalFrames: estimatedTotalFrames,
                 OutputBytes: snapshot.OutputBytes,
-                LastProgressAt: snapshot.LastProgressAt),
+                LastProgressAt: lastProgressAtForDisplay),
             (item.LogEntries ?? [])
                 .OrderByDescending(logEntry => logEntry.CreatedAt)
                 .Select(logEntry => new CopyPrepQueueLogEntryViewModel(

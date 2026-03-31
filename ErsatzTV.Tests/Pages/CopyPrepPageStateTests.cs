@@ -184,6 +184,41 @@ public class CopyPrepPageStateTests
         CopyPrepPageState.CanRetry(status).ShouldBe(expected);
 
     [Test]
+    public void Should_treat_touched_log_without_completed_progress_block_as_starting_not_running()
+    {
+        string logPath = Path.Combine(Path.GetTempPath(), $"copy-prep-page-state-{Guid.NewGuid():N}.log");
+        DateTime now = new(2026, 3, 31, 6, 0, 0, DateTimeKind.Utc);
+
+        File.WriteAllLines(logPath,
+        [
+            "frame=220",
+            "fps=27.3",
+            "total_size=20971520"
+        ]);
+        File.SetLastWriteTimeUtc(logPath, now.AddMinutes(-5));
+
+        try
+        {
+            CopyPrepQueueItemViewModel item = GetCopyPrepQueueItemsHandler.Project(BuildQueueItem(
+                sourcePath: @"D:\media\show\episode-01.mkv",
+                libraryName: "My Library",
+                status: CopyPrepStatus.Processing,
+                lastLogPath: logPath));
+
+            item.Progress.LastProgressAt.ShouldBeNull();
+            CopyPrepPageState.GetDisplayStatus(item, now)
+                .ShouldBe(ErsatzTV.Pages.CopyPrepDisplayStatus.Starting);
+            CopyPrepPageState.IsPossiblyStalled(item, now).ShouldBeFalse();
+            CopyPrepPageState.GetProgressBarValue(item, now).ShouldBe(0d);
+            CopyPrepPageState.FormatProgressPercent(item, now).ShouldBe("0.00%");
+        }
+        finally
+        {
+            File.Delete(logPath);
+        }
+    }
+
+    [Test]
     public void Should_map_processing_without_live_progress_to_starting_with_zero_percent()
     {
         var item = MakeItem(
@@ -209,12 +244,62 @@ public class CopyPrepPageStateTests
     }
 
     [Test]
-    public void Should_map_queued_items_to_zero_percent_instead_of_fake_five_percent()
-    {
-        var item = MakeItem(id: 1, status: CopyPrepStatus.Queued);
+    [TestCase(CopyPrepStatus.Queued, 5)]
+    [TestCase(CopyPrepStatus.Processing, 50)]
+    [TestCase(CopyPrepStatus.Prepared, 80)]
+    [TestCase(CopyPrepStatus.Replaced, 100)]
+    [TestCase(CopyPrepStatus.Failed, 100)]
+    [TestCase(CopyPrepStatus.Canceled, 100)]
+    [TestCase(CopyPrepStatus.Skipped, 100)]
+    public void Should_preserve_compatibility_pseudo_progress_values_for_current_razor_page(
+        CopyPrepStatus status,
+        int expected) =>
+        CopyPrepPageState.GetPseudoProgressPercent(status).ShouldBe(expected);
 
-        CopyPrepPageState.GetProgressBarValue(item, DateTime.UtcNow).ShouldBe(0d);
-        CopyPrepPageState.FormatProgressPercent(item, DateTime.UtcNow).ShouldBe("0.00%");
+    [Test]
+    public void Should_project_real_progress_percent_eta_and_last_progress_from_completed_block()
+    {
+        string logPath = Path.Combine(Path.GetTempPath(), $"copy-prep-page-state-{Guid.NewGuid():N}.log");
+        DateTime now = new(2026, 3, 31, 6, 0, 0, DateTimeKind.Utc);
+
+        File.WriteAllLines(logPath,
+        [
+            "frame=71928",
+            "fps=24.0",
+            "total_size=2147483648",
+            "out_time_us=3000000000",
+            "speed=2.00x",
+            "progress=continue"
+        ]);
+        File.SetLastWriteTimeUtc(logPath, now.AddSeconds(-10));
+
+        try
+        {
+            CopyPrepQueueItem queueItem = BuildQueueItem(
+                sourcePath: @"D:\media\show\episode-01.mkv",
+                libraryName: "My Library",
+                status: CopyPrepStatus.Processing,
+                lastLogPath: logPath);
+            queueItem.MediaVersion = new MediaVersion
+            {
+                Duration = TimeSpan.FromMinutes(100),
+                RFrameRate = "24000/1001"
+            };
+
+            CopyPrepQueueItemViewModel item = GetCopyPrepQueueItemsHandler.Project(queueItem);
+
+            item.Progress.Percent.ShouldNotBeNull();
+            item.Progress.Percent.Value.ShouldBe(50d, 0.01d);
+            item.Progress.EstimatedRemaining.ShouldBe(TimeSpan.FromMinutes(25));
+            item.Progress.LastProgressAt.ShouldBe(now.AddSeconds(-10));
+            item.Progress.ProcessedFrames.ShouldBe(71_928);
+            CopyPrepPageState.GetDisplayStatus(item, now).ShouldBe(ErsatzTV.Pages.CopyPrepDisplayStatus.Running);
+            CopyPrepPageState.IsPossiblyStalled(item, now).ShouldBeFalse();
+        }
+        finally
+        {
+            File.Delete(logPath);
+        }
     }
 
     [Test]
@@ -371,18 +456,20 @@ public class CopyPrepPageStateTests
         string libraryName,
         bool includeMediaItem = true,
         bool includeLibraryPath = true,
-        bool includeLibrary = true)
+        bool includeLibrary = true,
+        CopyPrepStatus status = CopyPrepStatus.Queued,
+        string lastLogPath = @"D:\copy-prep\logs\episode-01.log")
     {
         var queueItem = new CopyPrepQueueItem
         {
             Id = 1,
             MediaItemId = 10,
-            Status = CopyPrepStatus.Queued,
+            Status = status,
             Reason = "Needs prep",
             SourcePath = sourcePath,
             TargetPath = @"D:\copy-prep\episode-01.mp4",
             ArchivePath = @"D:\copy-prep\archive\episode-01.mkv",
-            LastLogPath = @"D:\copy-prep\logs\episode-01.log",
+            LastLogPath = lastLogPath,
             LastCommand = "ffmpeg -i input",
             LastError = string.Empty,
             AttemptCount = 0,
