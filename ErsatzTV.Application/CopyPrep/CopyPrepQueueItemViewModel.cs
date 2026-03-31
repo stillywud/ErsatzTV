@@ -33,4 +33,5 @@ public record CopyPrepQueueItemViewModel(
     DateTime? FailedAt,
     DateTime? CanceledAt,
     DateTime? ReplacedAt,
+    CopyPrepProgressViewModel Progress,
     List<CopyPrepQueueLogEntryViewModel> LogEntries);

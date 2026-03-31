@@ -183,15 +183,81 @@ public class CopyPrepPageStateTests
     public void Should_indicate_when_queue_item_can_be_retried(CopyPrepStatus status, bool expected) =>
         CopyPrepPageState.CanRetry(status).ShouldBe(expected);
 
-    [TestCase(CopyPrepStatus.Queued, 5)]
-    [TestCase(CopyPrepStatus.Processing, 50)]
-    [TestCase(CopyPrepStatus.Prepared, 80)]
-    [TestCase(CopyPrepStatus.Replaced, 100)]
-    [TestCase(CopyPrepStatus.Failed, 100)]
-    [TestCase(CopyPrepStatus.Canceled, 100)]
-    [TestCase(CopyPrepStatus.Skipped, 100)]
-    public void Should_map_status_to_pseudo_progress_percent(CopyPrepStatus status, int expected) =>
-        CopyPrepPageState.GetPseudoProgressPercent(status).ShouldBe(expected);
+    [Test]
+    public void Should_map_processing_without_live_progress_to_starting_with_zero_percent()
+    {
+        var item = MakeItem(
+            id: 1,
+            status: CopyPrepStatus.Processing,
+            progress: new CopyPrepProgressViewModel(
+                TotalDuration: TimeSpan.FromMinutes(80),
+                ProcessedDuration: null,
+                Percent: null,
+                EstimatedRemaining: null,
+                CurrentSpeedMultiplier: null,
+                AverageSpeedMultiplier: null,
+                FramesPerSecond: null,
+                ProcessedFrames: null,
+                EstimatedTotalFrames: 120_000,
+                OutputBytes: null,
+                LastProgressAt: null));
+
+        CopyPrepPageState.GetDisplayStatus(item, new DateTime(2026, 3, 31, 6, 0, 0, DateTimeKind.Utc))
+            .ShouldBe(ErsatzTV.Pages.CopyPrepDisplayStatus.Starting);
+        CopyPrepPageState.GetProgressBarValue(item, DateTime.UtcNow).ShouldBe(0d);
+        CopyPrepPageState.FormatProgressPercent(item, DateTime.UtcNow).ShouldBe("0.00%");
+    }
+
+    [Test]
+    public void Should_map_queued_items_to_zero_percent_instead_of_fake_five_percent()
+    {
+        var item = MakeItem(id: 1, status: CopyPrepStatus.Queued);
+
+        CopyPrepPageState.GetProgressBarValue(item, DateTime.UtcNow).ShouldBe(0d);
+        CopyPrepPageState.FormatProgressPercent(item, DateTime.UtcNow).ShouldBe("0.00%");
+    }
+
+    [Test]
+    public void Should_preserve_real_failed_progress_and_detect_stale_processing()
+    {
+        DateTime now = new(2026, 3, 31, 6, 0, 0, DateTimeKind.Utc);
+
+        var failed = MakeItem(
+            id: 1,
+            status: CopyPrepStatus.Failed,
+            progress: new CopyPrepProgressViewModel(
+                TotalDuration: TimeSpan.FromMinutes(100),
+                ProcessedDuration: TimeSpan.FromMinutes(52),
+                Percent: 52.43d,
+                EstimatedRemaining: null,
+                CurrentSpeedMultiplier: null,
+                AverageSpeedMultiplier: null,
+                FramesPerSecond: 28.7d,
+                ProcessedFrames: 71_424,
+                EstimatedTotalFrames: 136_300,
+                OutputBytes: 4_800_000_000,
+                LastProgressAt: now.AddSeconds(-30)));
+
+        var stalled = MakeItem(
+            id: 2,
+            status: CopyPrepStatus.Processing,
+            progress: new CopyPrepProgressViewModel(
+                TotalDuration: TimeSpan.FromMinutes(100),
+                ProcessedDuration: TimeSpan.FromMinutes(52),
+                Percent: 52.43d,
+                EstimatedRemaining: TimeSpan.FromMinutes(37),
+                CurrentSpeedMultiplier: 1.20d,
+                AverageSpeedMultiplier: 1.15d,
+                FramesPerSecond: 28.7d,
+                ProcessedFrames: 71_424,
+                EstimatedTotalFrames: 136_300,
+                OutputBytes: 4_800_000_000,
+                LastProgressAt: now.AddSeconds(-75)));
+
+        CopyPrepPageState.GetProgressBarValue(failed, now).ShouldBe(52.43d);
+        CopyPrepPageState.IsPossiblyStalled(stalled, now).ShouldBeTrue();
+        CopyPrepPageState.FormatLastProgressAge(stalled, now).ShouldBe("1m 15s ago");
+    }
 
     [Test]
     public void Should_preserve_selected_item_when_it_remains_visible_after_filtering()
@@ -257,8 +323,23 @@ public class CopyPrepPageStateTests
         DateTime? updatedAt = null,
         DateTime? startedAt = null,
         DateTime? completedAt = null,
-        DateTime? replacedAt = null) =>
-        new(
+        DateTime? replacedAt = null,
+        CopyPrepProgressViewModel? progress = null)
+    {
+        progress ??= new CopyPrepProgressViewModel(
+            TotalDuration: null,
+            ProcessedDuration: null,
+            Percent: null,
+            EstimatedRemaining: null,
+            CurrentSpeedMultiplier: null,
+            AverageSpeedMultiplier: null,
+            FramesPerSecond: null,
+            ProcessedFrames: null,
+            EstimatedTotalFrames: null,
+            OutputBytes: null,
+            LastProgressAt: null);
+
+        return new(
             Id: id,
             MediaItemId: id,
             Status: status,
@@ -281,7 +362,9 @@ public class CopyPrepPageStateTests
             FailedAt: null,
             CanceledAt: null,
             ReplacedAt: replacedAt,
+            Progress: progress,
             LogEntries: []);
+    }
 
     private static CopyPrepQueueItem BuildQueueItem(
         string sourcePath,

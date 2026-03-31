@@ -1,3 +1,4 @@
+using System.Globalization;
 using ErsatzTV.Application.CopyPrep;
 using ErsatzTV.Core.Domain.CopyPrep;
 
@@ -10,8 +11,19 @@ public record CopyPrepSummaryViewModel(
     int CompletedToday,
     TimeSpan? AverageDuration);
 
+public enum CopyPrepDisplayStatus
+{
+    Queued,
+    Starting,
+    Running,
+    Done,
+    Failed
+}
+
 public static class CopyPrepPageState
 {
+    private static readonly TimeSpan PossiblyStalledAfter = TimeSpan.FromSeconds(60);
+
     public static IEnumerable<CopyPrepQueueItemViewModel> ApplyFilters(
         IEnumerable<CopyPrepQueueItemViewModel> items,
         string search,
@@ -83,15 +95,91 @@ public static class CopyPrepPageState
 
     public static int GetPseudoProgressPercent(CopyPrepStatus status) => status switch
     {
-        CopyPrepStatus.Queued => 5,
-        CopyPrepStatus.Processing => 50,
-        CopyPrepStatus.Prepared => 80,
+        CopyPrepStatus.Queued => 0,
+        CopyPrepStatus.Processing => 0,
+        CopyPrepStatus.Prepared => 100,
         CopyPrepStatus.Replaced => 100,
         CopyPrepStatus.Failed => 100,
         CopyPrepStatus.Canceled => 100,
         CopyPrepStatus.Skipped => 100,
         _ => 0
     };
+
+    public static CopyPrepDisplayStatus GetDisplayStatus(CopyPrepQueueItemViewModel item, DateTime nowUtc) => item.Status switch
+    {
+        CopyPrepStatus.Queued => CopyPrepDisplayStatus.Queued,
+        CopyPrepStatus.Processing when item.Progress.LastProgressAt is null => CopyPrepDisplayStatus.Starting,
+        CopyPrepStatus.Processing => CopyPrepDisplayStatus.Running,
+        CopyPrepStatus.Prepared or CopyPrepStatus.Replaced => CopyPrepDisplayStatus.Done,
+        _ => CopyPrepDisplayStatus.Failed
+    };
+
+    public static bool IsPossiblyStalled(CopyPrepQueueItemViewModel item, DateTime nowUtc) =>
+        item.Status == CopyPrepStatus.Processing &&
+        item.Progress.LastProgressAt is { } lastProgressAt &&
+        nowUtc - lastProgressAt > PossiblyStalledAfter;
+
+    public static double GetProgressBarValue(CopyPrepQueueItemViewModel item, DateTime nowUtc) =>
+        GetDisplayStatus(item, nowUtc) switch
+        {
+            CopyPrepDisplayStatus.Queued => 0d,
+            CopyPrepDisplayStatus.Starting => 0d,
+            CopyPrepDisplayStatus.Done when item.Progress.Percent is null => 100d,
+            _ => item.Progress.Percent ?? 0d
+        };
+
+    public static string FormatProgressPercent(CopyPrepQueueItemViewModel item, DateTime nowUtc) =>
+        $"{GetProgressBarValue(item, nowUtc):0.00}%";
+
+    public static string FormatProcessedDuration(CopyPrepQueueItemViewModel item)
+    {
+        string processed = item.Progress.ProcessedDuration.HasValue
+            ? item.Progress.ProcessedDuration.Value.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)
+            : "00:00:00";
+
+        return item.Progress.TotalDuration.HasValue
+            ? $"{processed} / {item.Progress.TotalDuration.Value:hh\\:mm\\:ss}"
+            : processed;
+    }
+
+    public static string FormatEta(CopyPrepQueueItemViewModel item) =>
+        item.Progress.EstimatedRemaining.HasValue
+            ? item.Progress.EstimatedRemaining.Value.ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture)
+            : "Calculating";
+
+    public static string FormatSpeed(CopyPrepQueueItemViewModel item)
+    {
+        string speed = item.Progress.AverageSpeedMultiplier.HasValue
+            ? $"{item.Progress.AverageSpeedMultiplier.Value:0.00}x"
+            : "Calculating";
+        string fps = item.Progress.FramesPerSecond.HasValue
+            ? $" / {item.Progress.FramesPerSecond.Value:0.0} fps"
+            : string.Empty;
+        return speed + fps;
+    }
+
+    public static string FormatFrames(CopyPrepQueueItemViewModel item) =>
+        item.Progress.ProcessedFrames.HasValue && item.Progress.EstimatedTotalFrames.HasValue
+            ? $"{item.Progress.ProcessedFrames.Value:N0} / {item.Progress.EstimatedTotalFrames.Value:N0}"
+            : item.Progress.ProcessedFrames.HasValue
+                ? $"{item.Progress.ProcessedFrames.Value:N0}"
+                : "—";
+
+    public static string FormatOutputSize(CopyPrepQueueItemViewModel item) =>
+        item.Progress.OutputBytes.HasValue ? FormatBytes(item.Progress.OutputBytes.Value) : "—";
+
+    public static string FormatLastProgressAge(CopyPrepQueueItemViewModel item, DateTime nowUtc)
+    {
+        if (!item.Progress.LastProgressAt.HasValue)
+        {
+            return "No updates yet";
+        }
+
+        TimeSpan age = nowUtc - item.Progress.LastProgressAt.Value;
+        return age.TotalMinutes >= 1
+            ? $"{(int)age.TotalMinutes}m {age.Seconds}s ago"
+            : $"{age.Seconds}s ago";
+    }
 
     public static TimeSpan? GetDuration(CopyPrepQueueItemViewModel item)
     {
@@ -132,4 +220,19 @@ public static class CopyPrepPageState
         CopyPrepStatus.Replaced => item.ReplacedAt ?? item.CompletedAt,
         _ => item.CompletedAt ?? item.ReplacedAt
     };
+
+    private static string FormatBytes(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB", "TB"];
+        double value = bytes;
+        int unitIndex = 0;
+
+        while (value >= 1024d && unitIndex < units.Length - 1)
+        {
+            value /= 1024d;
+            unitIndex += 1;
+        }
+
+        return $"{value:0.0} {units[unitIndex]}";
+    }
 }
