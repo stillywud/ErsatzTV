@@ -101,9 +101,9 @@ public static class CopyPrepProgressParser
             return TimeSpan.FromMilliseconds(microseconds / 1000d);
         }
 
-        if (ParseLong(block.GetValueOrDefault("out_time_ms")) is { } milliseconds)
+        if (ParseLong(block.GetValueOrDefault("out_time_ms")) is { } microsecondsFromMsField)
         {
-            return TimeSpan.FromMilliseconds(milliseconds);
+            return TimeSpan.FromMilliseconds(microsecondsFromMsField / 1000d);
         }
 
         string outTime = block.GetValueOrDefault("out_time");

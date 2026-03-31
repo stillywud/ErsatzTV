@@ -118,6 +118,42 @@ public class CopyPrepProgressParserTests
     }
 
     [Test]
+    public void ParseLines_Should_Treat_OutTimeMs_AsMicroseconds()
+    {
+        string[] lines =
+        [
+            "frame=220",
+            "fps=27.3",
+            "total_size=20971520",
+            "out_time_ms=9000000",
+            "speed=1.40x",
+            "progress=continue"
+        ];
+
+        CopyPrepProgressSnapshot result = CopyPrepProgressParser.ParseLines(lines, DateTime.UtcNow);
+
+        result.ProcessedDuration.ShouldBe(TimeSpan.FromSeconds(9));
+    }
+
+    [Test]
+    public void ParseLines_Should_FallBack_To_OutTime_WhenNumericDurationKeysAreMissing()
+    {
+        string[] lines =
+        [
+            "frame=220",
+            "fps=27.3",
+            "total_size=20971520",
+            "out_time=00:00:09.000000",
+            "speed=1.40x",
+            "progress=continue"
+        ];
+
+        CopyPrepProgressSnapshot result = CopyPrepProgressParser.ParseLines(lines, DateTime.UtcNow);
+
+        result.ProcessedDuration.ShouldBe(TimeSpan.FromSeconds(9));
+    }
+
+    [Test]
     public void ParseLines_Should_ReturnEmptySnapshot_WhenNoProgressBlockExists()
     {
         string[] lines = ["ffmpeg version 7.1", "Input #0, matroska,webm, from 'episode.mkv':"];
