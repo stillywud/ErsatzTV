@@ -323,7 +323,11 @@
 
                 try
                 {
-                    await InvokeAsync(RefreshAsync);
+                    await InvokeAsync(async () =>
+                    {
+                        await RefreshAsync();
+                        StateHasChanged();
+                    });
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
@@ -372,7 +376,7 @@
             : null;
 
         _filteredItems = CopyPrepPageState.ApplyFilters(_allItems, _search, status, _libraryFilter).ToList();
-        _summary = CopyPrepPageState.BuildSummary(_allItems, DateTime.UtcNow);
+        _summary = CopyPrepPageState.BuildSummary(_allItems, _nowUtc);
 
         int? desiredId = selectedId ?? _selectedItem?.Id;
         _selectedItem = CopyPrepPageState.ResolveSelectedItem(_filteredItems, desiredId);
