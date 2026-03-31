@@ -251,16 +251,25 @@
 
                             <MudText Typo="Typo.subtitle1" Class="mb-2">Recent Events</MudText>
                             <MudDivider Class="mb-3" />
-                            @foreach (CopyPrepQueueLogEntryViewModel logEntry in _selectedItem.LogEntries.Take(10))
+                            @if (_selectedItem.LogEntries.Count == 0)
                             {
-                                <MudPaper Outlined="true" Class="pa-3 mb-3">
-                                    <MudText Typo="Typo.caption">@FormatDateTime(logEntry.CreatedAt) · @logEntry.Level · @logEntry.Event</MudText>
-                                    <MudText Typo="Typo.body2">@logEntry.Message</MudText>
-                                    @if (!string.IsNullOrWhiteSpace(logEntry.Details))
-                                    {
-                                        <MudText Typo="Typo.caption">@logEntry.Details</MudText>
-                                    }
-                                </MudPaper>
+                                <MudText>No log entries</MudText>
+                            }
+                            else
+                            {
+                                @foreach (CopyPrepQueueLogEntryViewModel logEntry in _selectedItem.LogEntries
+                                    .OrderByDescending(entry => entry.CreatedAt)
+                                    .Take(10))
+                                {
+                                    <MudPaper Outlined="true" Class="pa-3 mb-3">
+                                        <MudText Typo="Typo.caption">@FormatDateTime(logEntry.CreatedAt) · @logEntry.Level · @logEntry.Event</MudText>
+                                        <MudText Typo="Typo.body2">@logEntry.Message</MudText>
+                                        @if (!string.IsNullOrWhiteSpace(logEntry.Details))
+                                        {
+                                            <MudText Typo="Typo.caption">@logEntry.Details</MudText>
+                                        }
+                                    </MudPaper>
+                                }
                             }
                         }
                     </MudPaper>
@@ -312,7 +321,18 @@
                     continue;
                 }
 
-                await InvokeAsync(RefreshAsync);
+                try
+                {
+                    await InvokeAsync(RefreshAsync);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch
+                {
+                    // ignore transient refresh failures and try again on the next tick
+                }
             }
         }
         catch (OperationCanceledException)
