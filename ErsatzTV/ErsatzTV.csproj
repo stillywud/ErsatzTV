@@ -130,6 +130,46 @@
           <Generator>ResXFileCodeGenerator</Generator>
           <LastGenOutput>UISettings.Designer.cs</LastGenOutput>
         </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\Search.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>Search.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\Schedules.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>Schedules.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\Playouts.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>Playouts.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\Blocks.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>Blocks.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\MovieList.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>MovieList.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\TelevisionShowList.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>TelevisionShowList.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\ManualCollections.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>ManualCollections.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\SmartCollections.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>SmartCollections.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\ArtistList.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>ArtistList.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\Playlists.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>Playlists.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
@@ -181,6 +221,56 @@
         <DesignTime>True</DesignTime>
         <AutoGen>True</AutoGen>
         <DependentUpon>UISettings.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\Search.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Search.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\Schedules.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Schedules.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\Playouts.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Playouts.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\Blocks.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Blocks.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\MovieList.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>MovieList.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\TelevisionShowList.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>TelevisionShowList.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\ManualCollections.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>ManualCollections.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\SmartCollections.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>SmartCollections.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\ArtistList.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>ArtistList.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\Playlists.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Playlists.resx</DependentUpon>
       </Compile>
     </ItemGroup>
 

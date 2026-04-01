@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ButtonAddToCollection" xml:space="preserve">
+        <value>添加到收藏</value>
+    </data>
+    <data name="ButtonAddToPlaylist" xml:space="preserve">
+        <value>添加到播放列表</value>
+    </data>
+    <data name="ButtonAddSelectedToCopyPrep" xml:space="preserve">
+        <value>添加所选到复制准备</value>
+    </data>
+    <data name="ButtonClearSelection" xml:space="preserve">
+        <value>清除选择</value>
+    </data>
+    <data name="LabelMovies" xml:space="preserve">
+        <value>电影</value>
+    </data>
+    <data name="LabelShows" xml:space="preserve">
+        <value>电视节目</value>
+    </data>
+    <data name="LabelEpisodes" xml:space="preserve">
+        <value>剧集</value>
+    </data>
+    <data name="LabelSeasons" xml:space="preserve">
+        <value>季</value>
+    </data>
+    <data name="LabelArtists" xml:space="preserve">
+        <value>艺术家</value>
+    </data>
+    <data name="LabelAlbums" xml:space="preserve">
+        <value>专辑</value>
+    </data>
+    <data name="LabelSongs" xml:space="preserve">
+        <value>歌曲</value>
+    </data>
+    <data name="LabelMusicVideos" xml:space="preserve">
+        <value>音乐视频</value>
+    </data>
+    <data name="LabelOtherVideos" xml:space="preserve">
+        <value>其他视频</value>
+    </data>
+    <data name="LabelCollections" xml:space="preserve">
+        <value>收藏</value>
+    </data>
+    <data name="LabelPlaylists" xml:space="preserve">
+        <value>播放列表</value>
+    </data>
+    <data name="LabelChannels" xml:space="preserve">
+        <value>频道</value>
+    </data>
+    <data name="LabelNoResults" xml:space="preserve">
+        <value>未找到结果</value>
+    </data>
+    <data name="LabelSearch" xml:space="preserve">
+        <value>搜索</value>
+    </data>
+    <data name="LabelFilter" xml:space="preserve">
+        <value>筛选</value>
+    </data>
+    <data name="LabelSortBy" xml:space="preserve">
+        <value>排序</value>
+    </data>
+    <data name="LabelSortByTitle" xml:space="preserve">
+        <value>按标题排序</value>
+    </data>
+    <data name="LabelSortByDateAdded" xml:space="preserve">
+        <value>按添加日期排序</value>
+    </data>
+    <data name="LabelSortByYear" xml:space="preserve">
+        <value>按年份排序</value>
+    </data>
+</root>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="LabelBlocks" xml:space="preserve">
+        <value>板块</value>
+    </data>
+    <data name="ButtonAddBlock" xml:space="preserve">
+        <value>添加板块</value>
+    </data>
+    <data name="LabelBlockName" xml:space="preserve">
+        <value>板块名称</value>
+    </data>
+    <data name="LabelBlockDuration" xml:space="preserve">
+        <value>板块时长</value>
+    </data>
+    <data name="LabelBlockType" xml:space="preserve">
+        <value>板块类型</value>
+    </data>
+    <data name="LabelCollection" xml:space="preserve">
+        <value>收藏</value>
+    </data>
+    <data name="LabelSmartCollection" xml:space="preserve">
+        <value>智能收藏</value>
+    </data>
+    <data name="LabelMultiCollection" xml:space="preserve">
+        <value>多重收藏</value>
+    </data>
+    <data name="LabelFallback" xml:space="preserve">
+        <value>后备</value>
+    </data>
+    <data name="LabelCount" xml:space="preserve">
+        <value>数量</value>
+    </data>
+    <data name="LabelDuration" xml:space="preserve">
+        <value>时长</value>
+    </data>
+    <data name="LabelHours" xml:space="preserve">
+        <value>小时</value>
+    </data>
+    <data name="LabelMinutes" xml:space="preserve">
+        <value>分钟</value>
+    </data>
+    <data name="LabelSeconds" xml:space="preserve">
+        <value>秒</value>
+    </data>
+</root>
