@@ -50,4 +50,12 @@ public class ScannerController(
 
         return new OkResult();
     }
+
+    [HttpPost("scan-complete")]
+    [EndpointSummary("Scanner process completed")]
+    public IActionResult ScanComplete(Guid scanId)
+    {
+        scannerProxyService.EndScan(scanId);
+        return new OkResult();
+    }
 }

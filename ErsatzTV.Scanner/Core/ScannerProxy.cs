@@ -89,4 +89,23 @@ public class ScannerProxy(IHttpClientFactory httpClientFactory, ILogger<ScannerP
 
         return false;
     }
+
+    public async Task NotifyScanComplete(CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(_baseUrl))
+        {
+            return;
+        }
+
+        try
+        {
+            using var httpClient = httpClientFactory.CreateClient();
+            var url = $"{_baseUrl}/scan-complete";
+            await httpClient.PostAsync(url, null, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "[ScannerProxy] Failed to notify scan complete");
+        }
+    }
 }

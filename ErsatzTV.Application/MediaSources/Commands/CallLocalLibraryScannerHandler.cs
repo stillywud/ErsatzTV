@@ -80,7 +80,10 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
             }
             finally
             {
-                _scannerProxyService.EndScan(scanId);
+                // Don't call EndScan here - the scanner process will send a "scan-complete"
+                // HTTP request when it's done, and the server will call EndScan in response.
+                // This ensures all pending reindex requests are processed before the scan
+                // is marked as inactive.
             }
         }
 

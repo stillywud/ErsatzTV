@@ -9,4 +9,6 @@ public interface IScannerProxy
     Task<bool> ReindexMediaItems(int[] mediaItemIds, CancellationToken cancellationToken);
 
     Task<bool> RemoveMediaItems(int[] mediaItemIds, CancellationToken cancellationToken);
+
+    Task NotifyScanComplete(CancellationToken cancellationToken);
 }

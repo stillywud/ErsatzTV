@@ -5,6 +5,7 @@ using ErsatzTV.Scanner.Application.FFmpeg;
 using ErsatzTV.Scanner.Application.Jellyfin;
 using ErsatzTV.Scanner.Application.MediaSources;
 using ErsatzTV.Scanner.Application.Plex;
+using ErsatzTV.Scanner.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -165,9 +166,17 @@ public class Worker : BackgroundService
 
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                IScannerProxy scannerProxy = scope.ServiceProvider.GetRequiredService<IScannerProxy>();
 
-                var scan = new ScanLocalLibrary(baseUrl, libraryId, force);
-                await mediator.Send(scan, token);
+                try
+                {
+                    var scan = new ScanLocalLibrary(baseUrl, libraryId, force);
+                    await mediator.Send(scan, token);
+                }
+                finally
+                {
+                    await scannerProxy.NotifyScanComplete(token);
+                }
             }
         });
 
