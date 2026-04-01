@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ButtonAddProfile" xml:space="preserve">
+        <value>添加配置</value>
+    </data>
+    <data name="LabelFFmpegProfiles" xml:space="preserve">
+        <value>FFmpeg 配置</value>
+    </data>
+    <data name="LabelName" xml:space="preserve">
+        <value>名称</value>
+    </data>
+    <data name="LabelResolution" xml:space="preserve">
+        <value>分辨率</value>
+    </data>
+    <data name="LabelVideoFormat" xml:space="preserve">
+        <value>视频格式</value>
+    </data>
+    <data name="LabelAudioFormat" xml:space="preserve">
+        <value>音频格式</value>
+    </data>
+    <data name="ButtonEditProfile" xml:space="preserve">
+        <value>编辑配置</value>
+    </data>
+    <data name="ButtonCopyProfile" xml:space="preserve">
+        <value>复制配置</value>
+    </data>
+    <data name="ButtonDeleteProfile" xml:space="preserve">
+        <value>删除配置</value>
+    </data>
+    <data name="ButtonDeleteProfileConfirm" xml:space="preserve">
+        <value>确定要删除此 FFmpeg 配置吗？</value>
+    </data>
+    <data name="ButtonDeleteProfileSuccess" xml:space="preserve">
+        <value>FFmpeg 配置已删除</value>
+    </data>
+    <data name="ButtonCopyProfileSuccess" xml:space="preserve">
+        <value>FFmpeg 配置已复制</value>
+    </data>
+    <data name="LabelResolutionWidth" xml:space="preserve">
+        <value>宽度</value>
+    </data>
+    <data name="LabelResolutionHeight" xml:space="preserve">
+        <value>高度</value>
+    </data>
+    <data name="LabelBitrate" xml:space="preserve">
+        <value>码率</value>
+    </data>
+    <data name="LabelVideoCodec" xml:space="preserve">
+        <value>视频编码</value>
+    </data>
+    <data name="LabelAudioCodec" xml:space="preserve">
+        <value>音频编码</value>
+    </data>
+    <data name="LabelHardwareAcceleration" xml:space="preserve">
+        <value>硬件加速</value>
+    </data>
+    <data name="LabelSave" xml:space="preserve">
+        <value>保存</value>
+    </data>
+    <data name="LabelCancel" xml:space="preserve">
+        <value>取消</value>
+    </data>
+    <data name="LabelVideoBitrate" xml:space="preserve">
+        <value>视频码率</value>
+    </data>
+    <data name="LabelAudioBitrate" xml:space="preserve">
+        <value>音频码率</value>
+    </data>
+    <data name="LabelAudioChannels" xml:space="preserve">
+        <value>音频声道</value>
+    </data>
+    <data name="LabelAudioSampleRate" xml:space="preserve">
+        <value>音频采样率</value>
+    </data>
+    <data name="LabelFrameRate" xml:space="preserve">
+        <value>帧率</value>
+    </data>
+    <data name="LabelVideoBitrateMode" xml:space="preserve">
+        <value>视频码率模式</value>
+    </data>
+    <data name="LabelConstantBitrate" xml:space="preserve">
+        <value>固定码率</value>
+    </data>
+    <data name="LabelVariableBitrate" xml:space="preserve">
+        <value>可变码率</value>
+    </data>
+    <data name="LabelTwoPass" xml:space="preserve">
+        <value>二次编码</value>
+    </data>
+    <data name="LabelNormalize" xml:space="preserve">
+        <value>标准化音量</value>
+    </data>
+    <data name="LabelNormalizeLoudness" xml:space="preserve">
+        <value>标准化响度</value>
+    </data>
+    <data name="LabelEncoderThreads" xml:space="preserve">
+        <value>编码线程</value>
+    </data>
+    <data name="LabelSpeed" xml:space="preserve">
+        <value>速度</value>
+    </data>
+    <data name="LabelSpeedVerySlow" xml:space="preserve">
+        <value>非常慢</value>
+    </data>
+    <data name="LabelSpeedSlow" xml:space="preserve">
+        <value>慢</value>
+    </data>
+    <data name="LabelSpeedMedium" xml:space="preserve">
+        <value>中等</value>
+    </data>
+    <data name="LabelSpeedFast" xml:space="preserve">
+        <value>快</value>
+    </data>
+    <data name="LabelSpeedVeryFast" xml:space="preserve">
+        <value>非常快</value>
+    </data>
+    <data name="LabelSpeedSuperFast" xml:space="preserve">
+        <value>超快</value>
+    </data>
+    <data name="LabelTune" xml:space="preserve">
+        <value>优化</value>
+    </data>
+    <data name="LabelProfile" xml:space="preserve">
+        <value>配置</value>
+    </data>
+    <data name="LabelCRF" xml:space="preserve">
+        <value>CRF</value>
+    </data>
+    <data name="LabelPreset" xml:space="preserve">
+        <value>预设</value>
+    </data>
+    <data name="LabelCustom" xml:space="preserve">
+        <value>自定义</value>
+    </data>
+    <data name="LabelFFmpegProfileSaved" xml:space="preserve">
+        <value>FFmpeg 配置已保存</value>
+    </data>
+</root>

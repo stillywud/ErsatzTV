@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="LabelLibraries" xml:space="preserve">
+        <value>媒体库</value>
+    </data>
+    <data name="LabelLibraryKind" xml:space="preserve">
+        <value>媒体库类型</value>
+    </data>
+    <data name="LabelServerName" xml:space="preserve">
+        <value>服务器名称</value>
+    </data>
+    <data name="LabelLibraryName" xml:space="preserve">
+        <value>媒体库名称</value>
+    </data>
+    <data name="LabelMediaKind" xml:space="preserve">
+        <value>媒体类型</value>
+    </data>
+    <data name="LabelMusicVideos" xml:space="preserve">
+        <value>音乐视频</value>
+    </data>
+    <data name="LabelOtherVideos" xml:space="preserve">
+        <value>其他视频</value>
+    </data>
+    <data name="LabelRemoteStreams" xml:space="preserve">
+        <value>远程流</value>
+    </data>
+    <data name="LabelExternalCollections" xml:space="preserve">
+        <value>外部收藏</value>
+    </data>
+    <data name="ButtonDeepScanLibrary" xml:space="preserve">
+        <value>深度扫描媒体库</value>
+    </data>
+    <data name="ButtonScanLibrary" xml:space="preserve">
+        <value>扫描媒体库</value>
+    </data>
+    <data name="ButtonSearchLibrary" xml:space="preserve">
+        <value>搜索媒体库</value>
+    </data>
+    <data name="ButtonDeepScanCollections" xml:space="preserve">
+        <value>深度扫描收藏</value>
+    </data>
+    <data name="ButtonScanCollections" xml:space="preserve">
+        <value>扫描收藏</value>
+    </data>
+</root>
