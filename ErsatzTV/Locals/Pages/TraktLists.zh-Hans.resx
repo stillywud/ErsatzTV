@@ -18,25 +18,28 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="ButtonSaveTraktList" xml:space="preserve">
-        <value>Save Trakt List</value>
+    <data name="ButtonAddTraktList" xml:space="preserve">
+        <value>添加Trakt列表</value>
     </data>
-    <data name="LabelTraktList" xml:space="preserve">
-        <value>Trakt List</value>
+    <data name="LabelTraktLists" xml:space="preserve">
+        <value>Trakt列表</value>
     </data>
     <data name="LabelId" xml:space="preserve">
-        <value>Id</value>
+        <value>ID</value>
     </data>
-    <data name="LabelAutomaticRefresh" xml:space="preserve">
-        <value>Automatic Refresh</value>
+    <data name="LabelName" xml:space="preserve">
+        <value>名称</value>
     </data>
-    <data name="LabelAutomaticRefreshHelp" xml:space="preserve">
-        <value>Update list from trakt.tv once each day</value>
+    <data name="LabelLastUpdated" xml:space="preserve">
+        <value>最后更新</value>
     </data>
-    <data name="LabelGeneratePlaylist" xml:space="preserve">
-        <value>Generate Playlist</value>
+    <data name="LabelItemCount" xml:space="preserve">
+        <value>项目数量</value>
     </data>
-    <data name="LabelGeneratePlaylistHelp" xml:space="preserve">
-        <value>Generate a playlist from the sorted trakt list items</value>
+    <data name="TooltipEditTraktList" xml:space="preserve">
+        <value>编辑Trakt列表</value>
+    </data>
+    <data name="TooltipDeleteTraktList" xml:space="preserve">
+        <value>删除Trakt列表</value>
     </data>
 </root>

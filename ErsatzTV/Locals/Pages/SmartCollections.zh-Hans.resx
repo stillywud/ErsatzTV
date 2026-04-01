@@ -18,25 +18,19 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="ButtonSaveTraktList" xml:space="preserve">
-        <value>Save Trakt List</value>
+    <data name="LabelSmartCollections" xml:space="preserve">
+        <value>智能收藏</value>
     </data>
-    <data name="LabelTraktList" xml:space="preserve">
-        <value>Trakt List</value>
+    <data name="LabelSearchSmartCollections" xml:space="preserve">
+        <value>搜索智能收藏</value>
     </data>
-    <data name="LabelId" xml:space="preserve">
-        <value>Id</value>
+    <data name="LabelName" xml:space="preserve">
+        <value>名称</value>
     </data>
-    <data name="LabelAutomaticRefresh" xml:space="preserve">
-        <value>Automatic Refresh</value>
+    <data name="TooltipEditSmartCollection" xml:space="preserve">
+        <value>编辑智能收藏</value>
     </data>
-    <data name="LabelAutomaticRefreshHelp" xml:space="preserve">
-        <value>Update list from trakt.tv once each day</value>
-    </data>
-    <data name="LabelGeneratePlaylist" xml:space="preserve">
-        <value>Generate Playlist</value>
-    </data>
-    <data name="LabelGeneratePlaylistHelp" xml:space="preserve">
-        <value>Generate a playlist from the sorted trakt list items</value>
+    <data name="TooltipDeleteSmartCollection" xml:space="preserve">
+        <value>删除智能收藏</value>
     </data>
 </root>

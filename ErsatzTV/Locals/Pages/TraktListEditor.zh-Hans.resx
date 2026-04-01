@@ -19,24 +19,24 @@
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
     <data name="ButtonSaveTraktList" xml:space="preserve">
-        <value>Save Trakt List</value>
+        <value>保存Trakt列表</value>
     </data>
     <data name="LabelTraktList" xml:space="preserve">
-        <value>Trakt List</value>
+        <value>Trakt列表</value>
     </data>
     <data name="LabelId" xml:space="preserve">
-        <value>Id</value>
+        <value>ID</value>
     </data>
     <data name="LabelAutomaticRefresh" xml:space="preserve">
-        <value>Automatic Refresh</value>
+        <value>自动刷新</value>
     </data>
     <data name="LabelAutomaticRefreshHelp" xml:space="preserve">
-        <value>Update list from trakt.tv once each day</value>
+        <value>每天从trakt.tv更新一次列表</value>
     </data>
     <data name="LabelGeneratePlaylist" xml:space="preserve">
-        <value>Generate Playlist</value>
+        <value>生成播放列表</value>
     </data>
     <data name="LabelGeneratePlaylistHelp" xml:space="preserve">
-        <value>Generate a playlist from the sorted trakt list items</value>
+        <value>从排序的Trakt列表项目生成播放列表</value>
     </data>
 </root>

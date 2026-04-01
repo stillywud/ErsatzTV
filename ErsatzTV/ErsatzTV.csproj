@@ -250,6 +250,14 @@
           <Generator>ResXFileCodeGenerator</Generator>
           <LastGenOutput>SmartCollections.Designer.cs</LastGenOutput>
         </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\TraktLists.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>TraktLists.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Locals\Pages\TraktListEditor.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>TraktListEditor.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
@@ -451,6 +459,16 @@
         <DesignTime>True</DesignTime>
         <AutoGen>True</AutoGen>
         <DependentUpon>SmartCollections.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\TraktLists.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>TraktLists.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Locals\Pages\TraktListEditor.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>TraktListEditor.resx</DependentUpon>
       </Compile>
     </ItemGroup>
 
