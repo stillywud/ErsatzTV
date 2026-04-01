@@ -18,8 +18,8 @@ public class GetUiSettingsHandler(IConfigElementRepository configElementReposito
 
         return new UiSettingsViewModel
         {
-            IsDarkMode = await pagesIsDarkMode.IfNoneAsync(true),
-            Language = await pagesLanguage.IfNoneAsync("en")
+            IsDarkMode = await pagesIsDarkMode.IfNoneAsync(false),
+            Language = await pagesLanguage.IfNoneAsync("zh-Hans")
         };
     }
 }

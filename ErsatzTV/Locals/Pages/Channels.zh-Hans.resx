@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ButtonAddChannel" xml:space="preserve">
+        <value>添加频道</value>
+    </data>
+    <data name="ButtonEditChannelNumbers" xml:space="preserve">
+        <value>编辑频道号</value>
+    </data>
+    <data name="LabelChannels" xml:space="preserve">
+        <value>频道</value>
+    </data>
+    <data name="ButtonShowDisabled" xml:space="preserve">
+        <value>显示已禁用</value>
+    </data>
+    <data name="LabelNumber" xml:space="preserve">
+        <value>编号</value>
+    </data>
+    <data name="LabelLogo" xml:space="preserve">
+        <value>标志</value>
+    </data>
+    <data name="LabelName" xml:space="preserve">
+        <value>名称</value>
+    </data>
+    <data name="LabelLanguage" xml:space="preserve">
+        <value>语言</value>
+    </data>
+    <data name="LabelStreamingMode" xml:space="preserve">
+        <value>模式</value>
+    </data>
+    <data name="LabelFFmpegProfile" xml:space="preserve">
+        <value>FFmpeg 配置</value>
+    </data>
+    <data name="LabelChannelDisabledHelp" xml:space="preserve">
+        <value>频道已禁用</value>
+    </data>
+    <data name="LabelChannelHiddenHelp" xml:space="preserve">
+        <value>频道在EPG中隐藏</value>
+    </data>
+    <data name="LabelChannelHiddenAbbreviation" xml:space="preserve">
+        <value>H</value>
+    </data>
+    <data name="LabelChannelDisabledAbbreviation" xml:space="preserve">
+        <value>D</value>
+    </data>
+    <data name="ButtonPreviewChannelHelp" xml:space="preserve">
+        <value>预览频道</value>
+    </data>
+    <data name="ButtonPreviewChannelHelpNormalize" xml:space="preserve">
+        <value>预览频道；音频和/或视频可能无法正常播放，需要转码</value>
+    </data>
+    <data name="ButtonPreviewChannelHelpBrowser" xml:space="preserve">
+        <value>频道预览需要与此浏览器兼容的FFmpeg配置</value>
+    </data>
+    <data name="ButtonPreviewChannelHelpSettings" xml:space="preserve">
+        <value>频道预览需要播放、MPEG-TS/HLS分段器和兼容的FFmpeg配置</value>
+    </data>
+    <data name="ButtonStopTranscodeHelp" xml:space="preserve">
+        <value>停止转码会话</value>
+    </data>
+    <data name="ButtonEditChannelHelp" xml:space="preserve">
+        <value>编辑频道</value>
+    </data>
+    <data name="ButtonTroubleshootChannelHelp" xml:space="preserve">
+        <value>频道故障排除</value>
+    </data>
+    <data name="ButtonDeleteChannelHelp" xml:space="preserve">
+        <value>删除频道</value>
+    </data>
+</root>
