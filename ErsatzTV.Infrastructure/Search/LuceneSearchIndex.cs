@@ -115,7 +115,27 @@ public sealed class LuceneSearchIndex : ISearchIndex
         bool directoryExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
         bool fileExists = File.Exists(_cleanShutdownPath);
 
-        return Task.FromResult(directoryExists && fileExists);
+        if (!directoryExists || !fileExists)
+        {
+            return Task.FromResult(false);
+        }
+
+        // Also check if index has documents - empty index should trigger rebuild
+        try
+        {
+            using var tempDir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
+            using Analyzer analyzer = SearchQueryParser.AnalyzerWrapper();
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
+                { OpenMode = OpenMode.CREATE_OR_APPEND };
+            using var tempWriter = new IndexWriter(tempDir, indexConfig);
+            bool hasDocs = tempWriter.MaxDoc > 0;
+            tempWriter.Dispose(false);
+            return Task.FromResult(hasDocs);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
     }
 
     public int Version => 50;
@@ -292,11 +312,14 @@ public sealed class LuceneSearchIndex : ISearchIndex
         _writer.DeleteAll();
         _writer.Commit();
 
+        var itemCount = 0;
         await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems(cancellationToken))
         {
+            itemCount++;
             await RebuildItem(searchRepository, fallbackMetadataProvider, languageCodeService, mediaItem);
         }
 
+        _logger.LogDebug("Search index rebuilt with {Count} items", itemCount);
         _writer.Commit();
         return Unit.Default;
     }

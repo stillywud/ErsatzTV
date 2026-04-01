@@ -1,9 +1,10 @@
 using System.Net.Http.Json;
 using ErsatzTV.Scanner.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core;
 
-public class ScannerProxy(IHttpClientFactory httpClientFactory) : IScannerProxy
+public class ScannerProxy(IHttpClientFactory httpClientFactory, ILogger<ScannerProxy> logger) : IScannerProxy
 {
     private string? _baseUrl;
 
@@ -38,6 +39,7 @@ public class ScannerProxy(IHttpClientFactory httpClientFactory) : IScannerProxy
     {
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
+            logger.LogWarning("[ScannerProxy] ReindexMediaItems failed: _baseUrl is null or empty!");
             return false;
         }
 
@@ -53,9 +55,9 @@ public class ScannerProxy(IHttpClientFactory httpClientFactory) : IScannerProxy
             await httpClient.PostAsJsonAsync(url, mediaItemIds, cancellationToken);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
-            // do nothing
+            logger.LogWarning(ex, "[ScannerProxy] Reindex failed for IDs: {Ids}", string.Join(",", mediaItemIds));
         }
 
         return false;
