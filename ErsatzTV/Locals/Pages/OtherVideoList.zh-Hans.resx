@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
         <xsd:element name="root" msdata:IsDataSet="true">
-
         </xsd:element>
     </xsd:schema>
     <resheader name="resmimetype">
@@ -18,19 +16,28 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="LabelSmartCollections" xml:space="preserve">
-        <value>Smart Collections</value>
+    <data name="LabelOtherVideos" xml:space="preserve">
+        <value>其他视频</value>
     </data>
-    <data name="LabelSearchSmartCollections" xml:space="preserve">
-        <value>Search for smart collections</value>
+    <data name="ButtonScanLibrary" xml:space="preserve">
+        <value>扫描媒体库</value>
     </data>
-    <data name="LabelName" xml:space="preserve">
-        <value>Name</value>
+    <data name="ButtonDeepScan" xml:space="preserve">
+        <value>深度扫描</value>
     </data>
-    <data name="TooltipEditSmartCollection" xml:space="preserve">
-        <value>Edit Smart Collection</value>
+    <data name="LabelTitle" xml:space="preserve">
+        <value>标题</value>
     </data>
-    <data name="TooltipDeleteSmartCollection" xml:space="preserve">
-        <value>Delete Smart Collection</value>
+    <data name="LabelDateAdded" xml:space="preserve">
+        <value>添加日期</value>
+    </data>
+    <data name="ButtonPlay" xml:space="preserve">
+        <value>播放</value>
+    </data>
+    <data name="ButtonEdit" xml:space="preserve">
+        <value>编辑</value>
+    </data>
+    <data name="ButtonDelete" xml:space="preserve">
+        <value>删除</value>
     </data>
 </root>

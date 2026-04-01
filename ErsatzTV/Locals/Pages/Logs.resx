@@ -18,19 +18,25 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="LabelSmartCollections" xml:space="preserve">
-        <value>Smart Collections</value>
+    <data name="LabelLogs" xml:space="preserve">
+        <value>Logs</value>
     </data>
-    <data name="LabelSearchSmartCollections" xml:space="preserve">
-        <value>Search for smart collections</value>
+    <data name="LabelSearch" xml:space="preserve">
+        <value>Search</value>
     </data>
-    <data name="LabelName" xml:space="preserve">
-        <value>Name</value>
+    <data name="LabelTimestamp" xml:space="preserve">
+        <value>Timestamp</value>
     </data>
-    <data name="TooltipEditSmartCollection" xml:space="preserve">
-        <value>Edit Smart Collection</value>
+    <data name="LabelLevel" xml:space="preserve">
+        <value>Level</value>
     </data>
-    <data name="TooltipDeleteSmartCollection" xml:space="preserve">
-        <value>Delete Smart Collection</value>
+    <data name="LabelMessage" xml:space="preserve">
+        <value>Message</value>
+    </data>
+    <data name="LabelNoRecordsFound" xml:space="preserve">
+        <value>No matching records found</value>
+    </data>
+    <data name="LabelLoading" xml:space="preserve">
+        <value>Loading...</value>
     </data>
 </root>

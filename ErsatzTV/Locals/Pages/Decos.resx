@@ -18,19 +18,25 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="LabelSmartCollections" xml:space="preserve">
-        <value>Smart Collections</value>
+    <data name="LabelDecoGroups" xml:space="preserve">
+        <value>Deco Groups</value>
     </data>
-    <data name="LabelSearchSmartCollections" xml:space="preserve">
-        <value>Search for smart collections</value>
+    <data name="LabelDecoGroupName" xml:space="preserve">
+        <value>Deco Group Name</value>
     </data>
-    <data name="LabelName" xml:space="preserve">
-        <value>Name</value>
+    <data name="ButtonAddDecoGroup" xml:space="preserve">
+        <value>Add Deco Group</value>
     </data>
-    <data name="TooltipEditSmartCollection" xml:space="preserve">
-        <value>Edit Smart Collection</value>
+    <data name="LabelDecos" xml:space="preserve">
+        <value>Decos</value>
     </data>
-    <data name="TooltipDeleteSmartCollection" xml:space="preserve">
-        <value>Delete Smart Collection</value>
+    <data name="LabelDecoGroup" xml:space="preserve">
+        <value>Deco Group</value>
+    </data>
+    <data name="LabelDecoName" xml:space="preserve">
+        <value>Deco Name</value>
+    </data>
+    <data name="ButtonAddDeco" xml:space="preserve">
+        <value>Add Deco</value>
     </data>
 </root>

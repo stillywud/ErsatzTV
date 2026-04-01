@@ -18,19 +18,25 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="LabelSmartCollections" xml:space="preserve">
-        <value>Smart Collections</value>
+    <data name="LabelTemplateGroups" xml:space="preserve">
+        <value>Template Groups</value>
     </data>
-    <data name="LabelSearchSmartCollections" xml:space="preserve">
-        <value>Search for smart collections</value>
+    <data name="LabelTemplateGroupName" xml:space="preserve">
+        <value>Template Group Name</value>
     </data>
-    <data name="LabelName" xml:space="preserve">
-        <value>Name</value>
+    <data name="ButtonAddTemplateGroup" xml:space="preserve">
+        <value>Add Template Group</value>
     </data>
-    <data name="TooltipEditSmartCollection" xml:space="preserve">
-        <value>Edit Smart Collection</value>
+    <data name="LabelTemplates" xml:space="preserve">
+        <value>Templates</value>
     </data>
-    <data name="TooltipDeleteSmartCollection" xml:space="preserve">
-        <value>Delete Smart Collection</value>
+    <data name="LabelTemplateGroup" xml:space="preserve">
+        <value>Template Group</value>
+    </data>
+    <data name="LabelTemplateName" xml:space="preserve">
+        <value>Template Name</value>
+    </data>
+    <data name="ButtonAddTemplate" xml:space="preserve">
+        <value>Add Template</value>
     </data>
 </root>

@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
         <xsd:element name="root" msdata:IsDataSet="true">
-
         </xsd:element>
     </xsd:schema>
     <resheader name="resmimetype">
@@ -18,19 +16,22 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="LabelSmartCollections" xml:space="preserve">
-        <value>Smart Collections</value>
+    <data name="LabelTrash" xml:space="preserve">
+        <value>回收站</value>
     </data>
-    <data name="LabelSearchSmartCollections" xml:space="preserve">
-        <value>Search for smart collections</value>
+    <data name="ButtonRestore" xml:space="preserve">
+        <value>恢复</value>
     </data>
-    <data name="LabelName" xml:space="preserve">
-        <value>Name</value>
+    <data name="ButtonDeletePermanently" xml:space="preserve">
+        <value>永久删除</value>
     </data>
-    <data name="TooltipEditSmartCollection" xml:space="preserve">
-        <value>Edit Smart Collection</value>
+    <data name="LabelDateDeleted" xml:space="preserve">
+        <value>删除日期</value>
     </data>
-    <data name="TooltipDeleteSmartCollection" xml:space="preserve">
-        <value>Delete Smart Collection</value>
+    <data name="LabelRestoreConfirm" xml:space="preserve">
+        <value>确定要恢复此项目吗？</value>
+    </data>
+    <data name="LabelDeleteConfirm" xml:space="preserve">
+        <value>确定要永久删除此项目吗？此操作无法撤销。</value>
     </data>
 </root>

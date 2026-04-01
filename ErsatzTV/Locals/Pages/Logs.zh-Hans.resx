@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="LabelLogs" xml:space="preserve">
+        <value>日志</value>
+    </data>
+    <data name="LabelSearch" xml:space="preserve">
+        <value>搜索</value>
+    </data>
+    <data name="LabelTimestamp" xml:space="preserve">
+        <value>时间戳</value>
+    </data>
+    <data name="LabelLevel" xml:space="preserve">
+        <value>级别</value>
+    </data>
+    <data name="LabelMessage" xml:space="preserve">
+        <value>消息</value>
+    </data>
+    <data name="LabelNoRecordsFound" xml:space="preserve">
+        <value>未找到匹配记录</value>
+    </data>
+    <data name="LabelLoading" xml:space="preserve">
+        <value>加载中...</value>
+    </data>
+    <data name="ButtonDownload" xml:space="preserve">
+        <value>下载</value>
+    </data>
+    <data name="ButtonRefresh" xml:space="preserve">
+        <value>刷新</value>
+    </data>
+    <data name="LabelLevel" xml:space="preserve">
+        <value>级别</value>
+    </data>
+    <data name="LabelTimestamp" xml:space="preserve">
+        <value>时间戳</value>
+    </data>
+    <data name="LabelMessage" xml:space="preserve">
+        <value>消息</value>
+    </data>
+    <data name="LabelSource" xml:space="preserve">
+        <value>来源</value>
+    </data>
+    <data name="LabelDebug" xml:space="preserve">
+        <value>调试</value>
+    </data>
+    <data name="LabelInformation" xml:space="preserve">
+        <value>信息</value>
+    </data>
+    <data name="LabelWarning" xml:space="preserve">
+        <value>警告</value>
+    </data>
+    <data name="LabelError" xml:space="preserve">
+        <value>错误</value>
+    </data>
+</root>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ButtonAddWatermark" xml:space="preserve">
+        <value>Add Watermark</value>
+    </data>
+    <data name="LabelWatermarks" xml:space="preserve">
+        <value>Watermarks</value>
+    </data>
+    <data name="LabelName" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="LabelImage" xml:space="preserve">
+        <value>Image</value>
+    </data>
+    <data name="LabelMode" xml:space="preserve">
+        <value>Mode</value>
+    </data>
+    <data name="LabelLocation" xml:space="preserve">
+        <value>Location</value>
+    </data>
+    <data name="TooltipEditWatermark" xml:space="preserve">
+        <value>Edit Watermark</value>
+    </data>
+    <data name="TooltipCopyWatermark" xml:space="preserve">
+        <value>Copy Watermark</value>
+    </data>
+    <data name="TooltipDeleteWatermark" xml:space="preserve">
+        <value>Delete Watermark</value>
+    </data>
+    <data name="LabelChannelLogo" xml:space="preserve">
+        <value>[channel logo]</value>
+    </data>
+    <data name="DialogDeleteWatermark" xml:space="preserve">
+        <value>Delete Watermark</value>
+    </data>
+    <data name="DialogCopyWatermark" xml:space="preserve">
+        <value>Copy Watermark</value>
+    </data>
+</root>

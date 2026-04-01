@@ -18,19 +18,34 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="LabelSmartCollections" xml:space="preserve">
-        <value>Smart Collections</value>
+    <data name="ButtonAddFillerPreset" xml:space="preserve">
+        <value>Add Filler Preset</value>
     </data>
-    <data name="LabelSearchSmartCollections" xml:space="preserve">
-        <value>Search for smart collections</value>
+    <data name="LabelFillerPresets" xml:space="preserve">
+        <value>Filler Presets</value>
     </data>
     <data name="LabelName" xml:space="preserve">
         <value>Name</value>
     </data>
-    <data name="TooltipEditSmartCollection" xml:space="preserve">
-        <value>Edit Smart Collection</value>
+    <data name="LabelFillerKind" xml:space="preserve">
+        <value>Filler Kind</value>
     </data>
-    <data name="TooltipDeleteSmartCollection" xml:space="preserve">
-        <value>Delete Smart Collection</value>
+    <data name="LabelPreRoll" xml:space="preserve">
+        <value>Pre-Roll</value>
+    </data>
+    <data name="LabelMidRoll" xml:space="preserve">
+        <value>Mid-Roll</value>
+    </data>
+    <data name="LabelPostRoll" xml:space="preserve">
+        <value>Post-Roll</value>
+    </data>
+    <data name="LabelFallback" xml:space="preserve">
+        <value>Fallback</value>
+    </data>
+    <data name="LabelTail" xml:space="preserve">
+        <value>Tail</value>
+    </data>
+    <data name="LabelNone" xml:space="preserve">
+        <value>None</value>
     </data>
 </root>

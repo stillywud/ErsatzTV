@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ButtonDeleteFromDatabase" xml:space="preserve">
+        <value>Delete From Database</value>
+    </data>
+    <data name="ButtonClearSelection" xml:space="preserve">
+        <value>Clear Selection</value>
+    </data>
+    <data name="ButtonSelectAll" xml:space="preserve">
+        <value>Select All</value>
+    </data>
+    <data name="ButtonEmptyTrash" xml:space="preserve">
+        <value>Empty Trash</value>
+    </data>
+    <data name="LabelTrash" xml:space="preserve">
+        <value>Trash</value>
+    </data>
+    <data name="LabelMovies" xml:space="preserve">
+        <value>Movies</value>
+    </data>
+    <data name="LabelShows" xml:space="preserve">
+        <value>Shows</value>
+    </data>
+    <data name="LabelSeasons" xml:space="preserve">
+        <value>Seasons</value>
+    </data>
+    <data name="LabelEpisodes" xml:space="preserve">
+        <value>Episodes</value>
+    </data>
+    <data name="LabelArtists" xml:space="preserve">
+        <value>Artists</value>
+    </data>
+    <data name="LabelMusicVideos" xml:space="preserve">
+        <value>Music Videos</value>
+    </data>
+    <data name="LabelOtherVideos" xml:space="preserve">
+        <value>Other Videos</value>
+    </data>
+    <data name="LabelSongs" xml:space="preserve">
+        <value>Songs</value>
+    </data>
+    <data name="LabelImages" xml:space="preserve">
+        <value>Images</value>
+    </data>
+    <data name="LabelRemoteStreams" xml:space="preserve">
+        <value>Remote Streams</value>
+    </data>
+    <data name="LabelSeeAll" xml:space="preserve">
+        <value>See All >></value>
+    </data>
+    <data name="LabelNothingToSee" xml:space="preserve">
+        <value>Nothing to see here...</value>
+    </data>
+    <data name="DialogDeleteFromDatabase" xml:space="preserve">
+        <value>Delete From Database</value>
+    </data>
+    <data name="LabelContainsMediaItems" xml:space="preserve">
+        <value>This library contains {0} media items.</value>
+    </data>
+</root>
