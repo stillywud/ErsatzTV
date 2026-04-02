@@ -1,4 +1,4 @@
-﻿@page "/media/music/songs"
+@page "/media/music/songs"
 @page "/media/music/songs/page/{PageNumber:int}"
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
@@ -6,6 +6,7 @@
 @using ErsatzTV.Extensions
 @inherits MultiSelectBase<SongList>
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.SongList> Loc
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100;">
@@ -114,7 +115,7 @@
             var parameters = new DialogParameters { { "EntityType", "song" }, { "EntityName", song.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>(Loc["DialogAddToCollection"].Value, parameters, options);
             DialogResult result = await dialog.Result;
             if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
             {
@@ -123,10 +124,10 @@
                 addResult.Match(
                     Left: error =>
                     {
-                        Snackbar.Add($"Unexpected error adding song to collection: {error.Value}");
+                        Snackbar.Add(Loc["MessageUnexpectedErrorAddingSongToCollection", error.Value].Value);
                         Logger.LogError("Unexpected error adding song to collection: {Error}", error.Value);
                     },
-                    Right: _ => Snackbar.Add($"Added {song.Title} to collection {collection.Name}", Severity.Success));
+                    Right: _ => Snackbar.Add(Loc["MessageAddedSongToCollection", song.Title, collection.Name].Value, Severity.Success));
             }
         }
     }

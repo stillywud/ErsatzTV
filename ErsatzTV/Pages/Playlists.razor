@@ -6,29 +6,30 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IDialogService Dialog
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Playlists> Loc
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Playlist Groups</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelPlaylistGroups"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Playlist Group Name</MudText>
+                    <MudText>@Loc["LabelPlaylistGroupName"]</MudText>
                 </div>
                 <MudTextField @bind-Value="_playlistGroupName" For="@(() => _playlistGroupName)"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex"></div>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddPlaylistGroup())" StartIcon="@Icons.Material.Filled.Add">
-                    Add Playlist Group
+                    @Loc["ButtonAddPlaylistGroup"]
                 </MudButton>
             </MudStack>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Playlists</MudText>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">@Loc["LabelPlaylists"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Playlist Group</MudText>
+                    <MudText>@Loc["LabelPlaylistGroup"]</MudText>
                 </div>
                 <MudSelect @bind-Value="_selectedPlaylistGroup">
                     @foreach (PlaylistGroupViewModel playlistGroup in _playlistGroups)
@@ -39,14 +40,14 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Playlist Name</MudText>
+                    <MudText>@Loc["LabelPlaylistName"]</MudText>
                 </div>
                 <MudTextField @bind-Value="_playlistName" For="@(() => _playlistName)"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex"></div>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddPlaylist())" StartIcon="@Icons.Material.Filled.Add">
-                    Add Playlist
+                    @Loc["ButtonAddPlaylist"]
                 </MudButton>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
@@ -184,7 +185,7 @@
             var parameters = new DialogParameters { { "EntityType", "playlist group" }, { "EntityName", treeItem.Text } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Playlist Group", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>(Loc["DialogDeletePlaylistGroup"], parameters, options);
             DialogResult result = await dialog.Result;
             if (result is not null && !result.Canceled)
             {
@@ -211,7 +212,7 @@
             var parameters = new DialogParameters { { "EntityType", "playlist" }, { "EntityName", treeItem.Text } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Playlist", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>(Loc["DialogDeletePlaylist"], parameters, options);
             DialogResult result = await dialog.Result;
             if (result is not null && !result.Canceled)
             {

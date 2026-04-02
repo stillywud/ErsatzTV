@@ -79,4 +79,76 @@
     <data name="LabelRepeat" xml:space="preserve">
         <value>重复</value>
     </data>
+    <data name="ButtonAddClassic" xml:space="preserve">
+        <value>经典时间表</value>
+    </data>
+    <data name="ButtonAddBlock" xml:space="preserve">
+        <value>模块时间表</value>
+    </data>
+    <data name="ButtonAddSequential" xml:space="preserve">
+        <value>顺序时间表</value>
+    </data>
+    <data name="ButtonAddScripted" xml:space="preserve">
+        <value>脚本时间表</value>
+    </data>
+    <data name="ButtonAddJson" xml:space="preserve">
+        <value>JSON (dizqueTV) 时间表</value>
+    </data>
+    <data name="ButtonResetAllPlayouts" xml:space="preserve">
+        <value>重置所有播放</value>
+    </data>
+    <data name="PlaceholderSearchPlayouts" xml:space="preserve">
+        <value>搜索播放</value>
+    </data>
+    <data name="LabelDefaultSchedule" xml:space="preserve">
+        <value>默认时间表</value>
+    </data>
+    <data name="LabelScheduleKind" xml:space="preserve">
+        <value>时间表类型</value>
+    </data>
+    <data name="LabelBlock" xml:space="preserve">
+        <value>模块</value>
+    </data>
+    <data name="LabelSequential" xml:space="preserve">
+        <value>顺序</value>
+    </data>
+    <data name="LabelScripted" xml:space="preserve">
+        <value>脚本</value>
+    </data>
+    <data name="LabelJsonDizqueTV" xml:space="preserve">
+        <value>JSON (dizqueTV)</value>
+    </data>
+    <data name="ButtonEditPlayout" xml:space="preserve">
+        <value>编辑播放</value>
+    </data>
+    <data name="ButtonRefreshPlayout" xml:space="preserve">
+        <value>刷新播放</value>
+    </data>
+    <data name="ButtonScheduleReset" xml:space="preserve">
+        <value>计划重置</value>
+    </data>
+    <data name="ButtonDeletePlayout" xml:space="preserve">
+        <value>删除播放</value>
+    </data>
+    <data name="ButtonCopyPlayout" xml:space="preserve">
+        <value>复制播放</value>
+    </data>
+    <data name="DialogDeletePlayout" xml:space="preserve">
+        <value>删除播放</value>
+    </data>
+    <data name="ButtonAddClassicPlayout" xml:space="preserve">
+        <value>添加经典播放</value>
+    </data>
+    <data name="ButtonAddBlockPlayout" xml:space="preserve">
+        <value>添加模块播放</value>
+    </data>
+    <data name="ButtonAddSequentialPlayout" xml:space="preserve">
+        <value>添加顺序播放</value>
+    </data>
+    <data name="ButtonAddScriptedPlayout" xml:space="preserve">
+        <value>添加脚本播放</value>
+    </data>
+    <data name="ButtonAddJsonPlayout" xml:space="preserve">
+        <value>添加 JSON (dizqueTV) 播放</value>
+    </data>
 </root>

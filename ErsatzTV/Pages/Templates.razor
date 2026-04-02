@@ -6,29 +6,30 @@
 @inject IMediator Mediator
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Templates> Loc
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Template Groups</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelTemplateGroups"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Template Group Name</MudText>
+                    <MudText>@Loc["LabelTemplateGroupName"]</MudText>
                 </div>
                 <MudTextField @bind-Value="_templateGroupName" For="@(() => _templateGroupName)"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex"></div>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddTemplateGroup())" StartIcon="@Icons.Material.Filled.Add">
-                    Add Template Group
+                    @Loc["ButtonAddTemplateGroup"]
                 </MudButton>
             </MudStack>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Templates</MudText>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">@Loc["LabelTemplates"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Template Group</MudText>
+                    <MudText>@Loc["LabelTemplateGroup"]</MudText>
                 </div>
                 <MudSelect T="string" ValueChanged="@UpdateSelectedTemplateGroup">
                     @foreach (TemplateGroupViewModel templateGroup in _templateGroups)
@@ -39,14 +40,14 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Template Name</MudText>
+                    <MudText>@Loc["LabelTemplateName"]</MudText>
                 </div>
                 <MudTextField @bind-Value="_templateName" For="@(() => _templateName)"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex"></div>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddTemplate())" StartIcon="@Icons.Material.Filled.Add">
-                    Add Template
+                    @Loc["ButtonAddTemplate"]
                 </MudButton>
             </MudStack>
             <MudTable Hover="true"

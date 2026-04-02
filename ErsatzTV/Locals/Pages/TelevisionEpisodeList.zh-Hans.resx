@@ -1,24 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <root>
-    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-        <xsd:element name="root" msdata:IsDataSet="true">
-
-        </xsd:element>
-    </xsd:schema>
-    <resheader name="resmimetype">
-        <value>text/microsoft-resx</value>
-    </resheader>
-    <resheader name="version">
-        <value>1.3</value>
-    </resheader>
-    <resheader name="reader">
-        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    </resheader>
-    <resheader name="writer">
-        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    </resheader>
-    <data name="LabelEpisodes" xml:space="preserve">
-        <value>剧集</value>
-    </data>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LabelEpisodes" xml:space="preserve">
+    <value>剧集</value>
+  </data>
+  <data name="ButtonAddToCollection" xml:space="preserve">
+    <value>添加到合集</value>
+  </data>
+  <data name="ButtonAddToPlaylist" xml:space="preserve">
+    <value>添加到播放列表</value>
+  </data>
+  <data name="ButtonAddToSchedule" xml:space="preserve">
+    <value>添加到播出计划</value>
+  </data>
+  <data name="LabelAddTo" xml:space="preserve">
+    <value>添加到 ...</value>
+  </data>
+  <data name="ButtonShowMediaInfo" xml:space="preserve">
+    <value>显示媒体信息</value>
+  </data>
+  <data name="ButtonTroubleshootPlayback" xml:space="preserve">
+    <value>排查播放问题</value>
+  </data>
+  <data name="LabelFileNotFound" xml:space="preserve">
+    <value>文件未找到：</value>
+  </data>
+  <data name="LabelUnavailable" xml:space="preserve">
+    <value>不可用：</value>
+  </data>
+  <data name="LabelReleased" xml:space="preserve">
+    <value>首播日期：</value>
+  </data>
+  <data name="LabelDirectors" xml:space="preserve">
+    <value>导演：</value>
+  </data>
+  <data name="LabelWriters" xml:space="preserve">
+    <value>编剧：</value>
+  </data>
+  <data name="ErrorAddingEpisodeToCollection" xml:space="preserve">
+    <value>添加剧集到合集时发生意外错误</value>
+  </data>
+  <data name="ErrorAddingEpisodeToPlaylist" xml:space="preserve">
+    <value>添加剧集到播放列表时发生意外错误</value>
+  </data>
+  <data name="ErrorLoadingMediaInfo" xml:space="preserve">
+    <value>加载媒体信息时发生意外错误</value>
+  </data>
+  <data name="MessageAddedToCollection" xml:space="preserve">
+    <value>已添加到合集</value>
+  </data>
+  <data name="MessageAddedToPlaylist" xml:space="preserve">
+    <value>已添加到播放列表</value>
+  </data>
 </root>

@@ -7,18 +7,19 @@
 @using ErsatzTV.Core.Domain.CopyPrep
 @implements IDisposable
 @inject IMediator Mediator
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.CopyPrep> Loc
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.False" Class="pt-8 px-6">
-            <MudText Typo="Typo.h5" Class="mb-2">Copy Prep</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelCopyPrep"]</MudText>
             <MudDivider Class="mb-6" />
 
             <MudGrid Class="mb-2">
                 <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
                     <MudCard Class="mb-4">
                         <MudCardContent>
-                            <MudText Typo="Typo.caption">Queued</MudText>
+                            <MudText Typo="Typo.caption">@Loc["LabelQueued"]</MudText>
                             <MudText Typo="Typo.h4">@_summary.Queued</MudText>
                         </MudCardContent>
                     </MudCard>
@@ -26,7 +27,7 @@
                 <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
                     <MudCard Class="mb-4">
                         <MudCardContent>
-                            <MudText Typo="Typo.caption">Running</MudText>
+                            <MudText Typo="Typo.caption">@Loc["LabelRunning"]</MudText>
                             <MudText Typo="Typo.h4">@_summary.Running</MudText>
                         </MudCardContent>
                     </MudCard>
@@ -34,7 +35,7 @@
                 <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
                     <MudCard Class="mb-4">
                         <MudCardContent>
-                            <MudText Typo="Typo.caption">Failed</MudText>
+                            <MudText Typo="Typo.caption">@Loc["LabelFailed"]</MudText>
                             <MudText Typo="Typo.h4">@_summary.Failed</MudText>
                         </MudCardContent>
                     </MudCard>
@@ -42,7 +43,7 @@
                 <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
                     <MudCard Class="mb-4">
                         <MudCardContent>
-                            <MudText Typo="Typo.caption">Completed Today</MudText>
+                            <MudText Typo="Typo.caption">@Loc["LabelCompletedToday"]</MudText>
                             <MudText Typo="Typo.h4">@_summary.CompletedToday</MudText>
                         </MudCardContent>
                     </MudCard>
@@ -50,7 +51,7 @@
                 <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
                     <MudCard Class="mb-4">
                         <MudCardContent>
-                            <MudText Typo="Typo.caption">Avg Duration</MudText>
+                            <MudText Typo="Typo.caption">@Loc["LabelAvgDuration"]</MudText>
                             <MudText Typo="Typo.h4">@CopyPrepPageState.FormatDuration(_summary.AverageDuration)</MudText>
                         </MudCardContent>
                     </MudCard>
@@ -63,23 +64,23 @@
                         <MudTextField T="string"
                                       Value="@_search"
                                       ValueChanged="OnSearchChanged"
-                                      Label="Search"
-                                      Placeholder="Name or source path"
+                                      Label="@Loc["LabelSearch"]"
+                                      Placeholder="@Loc["PlaceholderNameOrSourcePath"]"
                                       Adornment="Adornment.Start"
                                       AdornmentIcon="@Icons.Material.Filled.Search"
                                       Immediate="true"
                                       Clearable="true" />
                     </MudItem>
                     <MudItem xs="12" sm="6" md="3">
-                        <MudSelect T="string" Label="Status" Value="@_statusFilter" ValueChanged="OnStatusChanged" Clearable="true">
+                        <MudSelect T="string" Label="@Loc["LabelStatus"]" Value="@_statusFilter" ValueChanged="OnStatusChanged" Clearable="true">
                             @foreach (var status in _statuses)
                             {
-                                <MudSelectItem T="string" Value="@status.ToString()">@status</MudSelectItem>
+                                <MudSelectItem T="string" Value="@status.ToString()">@Loc[$"Status{status.ToString()}"]</MudSelectItem>
                             }
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6" md="3">
-                        <MudSelect T="string" Label="Library" Value="@_libraryFilter" ValueChanged="OnLibraryChanged" Clearable="true">
+                        <MudSelect T="string" Label="@Loc["LabelLibrary"]" Value="@_libraryFilter" ValueChanged="OnLibraryChanged" Clearable="true">
                             @foreach (string library in _libraries)
                             {
                                 <MudSelectItem T="string" Value="@library">@library</MudSelectItem>
@@ -87,7 +88,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" md="1" Class="d-flex justify-end">
-                        <MudTooltip Text="Refresh">
+                        <MudTooltip Text="@Loc["TooltipRefresh"]">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                            Color="Color.Primary"
                                            Disabled="@_isBusy"
@@ -96,7 +97,7 @@
                     </MudItem>
                 </MudGrid>
                 <MudText Typo="Typo.caption" Class="mud-text-secondary mt-2 d-block">
-                    Auto-refreshing every 5 seconds while this page is open.
+                    @Loc["LabelAutoRefresh"]
                 </MudText>
             </MudPaper>
 
@@ -113,21 +114,21 @@
                                   SelectedItemChanged="OnSelectedItemChanged"
                                   RowClassFunc="SelectedRowClassFunc">
                             <HeaderContent>
-                                <MudTh>Media</MudTh>
-                                <MudTh>Status</MudTh>
-                                <MudTh>Progress</MudTh>
-                                <MudTh>Updated</MudTh>
-                                <MudTh>Action</MudTh>
+                                <MudTh>@Loc["LabelMedia"]</MudTh>
+                                <MudTh>@Loc["LabelStatus"]</MudTh>
+                                <MudTh>@Loc["LabelProgress"]</MudTh>
+                                <MudTh>@Loc["LabelUpdated"]</MudTh>
+                                <MudTh>@Loc["LabelAction"]</MudTh>
                             </HeaderContent>
                             <RowTemplate>
                                 @{ 
                                     CopyPrepDisplayStatus displayStatus = CopyPrepPageState.GetDisplayStatus(context, _nowUtc);
                                     bool isPossiblyStalled = CopyPrepPageState.IsPossiblyStalled(context, _nowUtc);
                                 }
-                                <MudTd DataLabel="Media">
+                                <MudTd DataLabel="@Loc["LabelMedia"]">
                                     <MudText Typo="Typo.body1">@context.DisplayName</MudText>
                                     <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                        @context.LibraryName · ID @context.MediaItemId
+                                        @context.LibraryName · @Loc["LabelId"] @context.MediaItemId
                                     </MudText>
                                 </MudTd>
                                 <MudTd DataLabel="Status">
@@ -141,7 +142,7 @@
                                         @if (isPossiblyStalled)
                                         {
                                             <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block mt-1">
-                                                Possibly stalled · @CopyPrepPageState.FormatLastProgressAge(context, _nowUtc)
+                                                @Loc["LabelPossiblyStalled"] · @CopyPrepPageState.FormatLastProgressAge(context, _nowUtc)
                                             </MudText>
                                         }
                                     </div>
@@ -160,10 +161,10 @@
                                                            Color="@GetStatusColor(displayStatus)"
                                                            Value="@CopyPrepPageState.GetProgressBarValue(context, _nowUtc)" />
                                         <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:4px 12px;">
-                                            <MudText Typo="Typo.caption">ETA: @CopyPrepPageState.FormatEta(context)</MudText>
-                                            <MudText Typo="Typo.caption">Speed: @CopyPrepPageState.FormatSpeed(context)</MudText>
-                                            <MudText Typo="Typo.caption">Frames: @CopyPrepPageState.FormatFrames(context)</MudText>
-                                            <MudText Typo="Typo.caption">Output: @CopyPrepPageState.FormatOutputSize(context)</MudText>
+                                            <MudText Typo="Typo.caption">@Loc["LabelETA"]: @CopyPrepPageState.FormatEta(context)</MudText>
+                                            <MudText Typo="Typo.caption">@Loc["LabelSpeed"]: @CopyPrepPageState.FormatSpeed(context)</MudText>
+                                            <MudText Typo="Typo.caption">@Loc["LabelFrames"]: @CopyPrepPageState.FormatFrames(context)</MudText>
+                                            <MudText Typo="Typo.caption">@Loc["LabelOutput"]: @CopyPrepPageState.FormatOutputSize(context)</MudText>
                                         </div>
                                     </div>
                                 </MudTd>
@@ -172,7 +173,7 @@
                                     <div style="align-items: center; display: flex;">
                                         @if (CopyPrepPageState.CanRetry(context.Status))
                                         {
-                                            <MudTooltip Text="Retry">
+                                            <MudTooltip Text="@Loc["TooltipRetry"]">
                                                 <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                                Color="Color.Primary"
                                                                Disabled="@_isBusy"
@@ -186,7 +187,7 @@
 
                                         @if (CopyPrepPageState.CanCancel(context.Status))
                                         {
-                                            <MudTooltip Text="Cancel">
+                                            <MudTooltip Text="@Loc["TooltipCancel"]">
                                                 <MudIconButton Icon="@Icons.Material.Filled.Cancel"
                                                                Color="Color.Warning"
                                                                Disabled="@_isBusy"
@@ -201,10 +202,10 @@
                                 </MudTd>
                             </RowTemplate>
                             <NoRecordsContent>
-                                <MudText>No matching queue items</MudText>
+                                <MudText>@Loc["LabelNoMatchingItems"]</MudText>
                             </NoRecordsContent>
                             <LoadingContent>
-                                <MudText>Loading...</MudText>
+                                <MudText>@Loc["LabelLoading"]</MudText>
                             </LoadingContent>
                         </MudTable>
                     </MudPaper>
@@ -214,8 +215,8 @@
                     <MudPaper Class="pa-4" Style="height: 700px; overflow-y: auto;">
                         @if (_selectedItem is null)
                         {
-                            <MudText Typo="Typo.h6" Class="mb-2">Details</MudText>
-                            <MudText>Select a queue item to inspect current activity, live metrics, and recent events.</MudText>
+                            <MudText Typo="Typo.h6" Class="mb-2">@Loc["LabelDetails"]</MudText>
+                            <MudText>@Loc["LabelSelectItem"]</MudText>
                         }
                         else
                         {
@@ -224,36 +225,36 @@
                             <MudText Typo="Typo.h6">@_selectedItem.DisplayName</MudText>
                             <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">@_selectedItem.LibraryName</MudText>
 
-                            <MudText Typo="Typo.subtitle1" Class="mb-2">Current Activity</MudText>
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">@Loc["LabelCurrentActivity"]</MudText>
                             <MudDivider Class="mb-3" />
                             <MudSimpleTable Dense="true" Class="mb-6">
                                 <tbody>
-                                <tr><td>Status</td><td>@FormatDisplayStatus(displayStatus)</td></tr>
-                                <tr><td>Progress</td><td>@CopyPrepPageState.FormatProgressPercent(_selectedItem, _nowUtc)</td></tr>
-                                <tr><td>Processed</td><td>@CopyPrepPageState.FormatProcessedDuration(_selectedItem)</td></tr>
-                                <tr><td>Last Progress</td><td>@CopyPrepPageState.FormatLastProgressAge(_selectedItem, _nowUtc)</td></tr>
-                                <tr><td>Updated</td><td>@FormatDateTime(_selectedItem.UpdatedAt)</td></tr>
+                                <tr><td>@Loc["LabelStatus"]</td><td>@FormatDisplayStatus(displayStatus)</td></tr>
+                                <tr><td>@Loc["LabelProgress"]</td><td>@CopyPrepPageState.FormatProgressPercent(_selectedItem, _nowUtc)</td></tr>
+                                <tr><td>@Loc["LabelProcessed"]</td><td>@CopyPrepPageState.FormatProcessedDuration(_selectedItem)</td></tr>
+                                <tr><td>@Loc["LabelLastProgress"]</td><td>@CopyPrepPageState.FormatLastProgressAge(_selectedItem, _nowUtc)</td></tr>
+                                <tr><td>@Loc["LabelUpdated"]</td><td>@FormatDateTime(_selectedItem.UpdatedAt)</td></tr>
                                 </tbody>
                             </MudSimpleTable>
 
-                            <MudText Typo="Typo.subtitle1" Class="mb-2">Realtime Metrics</MudText>
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">@Loc["LabelRealtimeMetrics"]</MudText>
                             <MudDivider Class="mb-3" />
                             <MudSimpleTable Dense="true" Class="mb-6">
                                 <tbody>
-                                <tr><td>ETA</td><td>@CopyPrepPageState.FormatEta(_selectedItem)</td></tr>
-                                <tr><td>Speed</td><td>@CopyPrepPageState.FormatSpeed(_selectedItem)</td></tr>
-                                <tr><td>Frames</td><td>@CopyPrepPageState.FormatFrames(_selectedItem)</td></tr>
-                                <tr><td>Output</td><td>@CopyPrepPageState.FormatOutputSize(_selectedItem)</td></tr>
-                                <tr><td>Reason</td><td>@NullToDash(_selectedItem.Reason)</td></tr>
-                                <tr><td>Last Error</td><td>@NullToDash(_selectedItem.LastError)</td></tr>
+                                <tr><td>@Loc["LabelETA"]</td><td>@CopyPrepPageState.FormatEta(_selectedItem)</td></tr>
+                                <tr><td>@Loc["LabelSpeed"]</td><td>@CopyPrepPageState.FormatSpeed(_selectedItem)</td></tr>
+                                <tr><td>@Loc["LabelFrames"]</td><td>@CopyPrepPageState.FormatFrames(_selectedItem)</td></tr>
+                                <tr><td>@Loc["LabelOutput"]</td><td>@CopyPrepPageState.FormatOutputSize(_selectedItem)</td></tr>
+                                <tr><td>@Loc["LabelReason"]</td><td>@NullToDash(_selectedItem.Reason)</td></tr>
+                                <tr><td>@Loc["LabelLastError"]</td><td>@NullToDash(_selectedItem.LastError)</td></tr>
                                 </tbody>
                             </MudSimpleTable>
 
-                            <MudText Typo="Typo.subtitle1" Class="mb-2">Recent Events</MudText>
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">@Loc["LabelRecentEvents"]</MudText>
                             <MudDivider Class="mb-3" />
                             @if (_selectedItem.LogEntries.Count == 0)
                             {
-                                <MudText>No log entries</MudText>
+                                <MudText>@Loc["LabelNoLogEntries"]</MudText>
                             }
                             else
                             {
@@ -458,15 +459,7 @@
 
     private static string NullToDash(string value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
 
-    private static string FormatDisplayStatus(CopyPrepDisplayStatus status) => status switch
-    {
-        CopyPrepDisplayStatus.Queued => "Queued",
-        CopyPrepDisplayStatus.Starting => "Starting",
-        CopyPrepDisplayStatus.Running => "Running",
-        CopyPrepDisplayStatus.Done => "Done",
-        CopyPrepDisplayStatus.Failed => "Failed",
-        _ => status.ToString()
-    };
+    private string FormatDisplayStatus(CopyPrepDisplayStatus status) => Loc[$"Status{status.ToString()}"];
 
     private static Color GetStatusColor(CopyPrepDisplayStatus status) => status switch
     {

@@ -1,18 +1,19 @@
-﻿@page "/system/logs"
+@page "/system/logs"
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Logs
 @implements IDisposable
 @inject IMediator Mediator
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Logs> Loc
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Logs</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelLogs"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Search</MudText>
+                    <MudText>@Loc["LabelSearch"]</MudText>
                 </div>
                 <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"/>
@@ -26,15 +27,15 @@
                 <HeaderContent>
                     <MudTh>
                         <MudTableSortLabel T="LogEntryViewModel" SortLabel="Timestamp">
-                            Timestamp
+                            @Loc["LabelTimestamp"]
                         </MudTableSortLabel>
                     </MudTh>
                     <MudTh>
                         <MudTableSortLabel T="LogEntryViewModel" SortLabel="Level">
-                            Level
+                            @Loc["LabelLevel"]
                         </MudTableSortLabel>
                     </MudTh>
-                    <MudTh>Message</MudTh>
+                    <MudTh>@Loc["LabelMessage"]</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.Timestamp.ToString("G", _dtf)</MudTd>
@@ -42,10 +43,10 @@
                     <MudTd>@context.Message</MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
-                    <MudText>No matching records found</MudText>
+                    <MudText>@Loc["LabelNoRecordsFound"]</MudText>
                 </NoRecordsContent>
                 <LoadingContent>
-                    <MudText>Loading...</MudText>
+                    <MudText>@Loc["LabelLoading"]</MudText>
                 </LoadingContent>
                 <PagerContent>
                     <MudTablePager/>

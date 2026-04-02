@@ -1,4 +1,4 @@
-﻿@page "/media/remote/streams"
+@page "/media/remote/streams"
 @page "/media/remote/streams/page/{PageNumber:int}"
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
@@ -6,6 +6,7 @@
 @using ErsatzTV.Extensions
 @inherits MultiSelectBase<RemoteStreamList>
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.RemoteStreamList> Loc
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100;">
@@ -111,10 +112,10 @@
     {
         if (card is RemoteStreamCardViewModel remoteStream)
         {
-            var parameters = new DialogParameters { { "EntityType", "remote stream" }, { "EntityName", remoteStream.Title } };
+            var parameters = new DialogParameters { { "EntityType", Loc["EntityTypeRemoteStream"] }, { "EntityName", remoteStream.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>(Loc["DialogAddToCollection"], parameters, options);
             DialogResult result = await dialog.Result;
             if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
             {
@@ -123,10 +124,10 @@
                 addResult.Match(
                     Left: error =>
                     {
-                        Snackbar.Add($"Unexpected error adding remote stream to collection: {error.Value}");
+                        Snackbar.Add(string.Format(Loc["MessageUnexpectedErrorAddingRemoteStreamToCollection"].Value, error.Value));
                         Logger.LogError("Unexpected error adding remote stream to collection: {Error}", error.Value);
                     },
-                    Right: _ => Snackbar.Add($"Added {remoteStream.Title} to collection {collection.Name}", Severity.Success));
+                    Right: _ => Snackbar.Add(string.Format(Loc["MessageAddedRemoteStreamToCollection"].Value, remoteStream.Title, collection.Name), Severity.Success));
             }
         }
     }

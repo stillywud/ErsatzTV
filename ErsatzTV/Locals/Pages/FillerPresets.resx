@@ -48,4 +48,13 @@
     <data name="LabelNone" xml:space="preserve">
         <value>None</value>
     </data>
+    <data name="TooltipEditFillerPreset" xml:space="preserve">
+        <value>Edit Filler Preset</value>
+    </data>
+    <data name="TooltipDeleteFillerPreset" xml:space="preserve">
+        <value>Delete Filler Preset</value>
+    </data>
+    <data name="DialogDeleteFillerPreset" xml:space="preserve">
+        <value>Delete Filler Preset</value>
+    </data>
 </root>

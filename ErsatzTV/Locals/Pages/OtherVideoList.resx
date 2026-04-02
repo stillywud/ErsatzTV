@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
         <xsd:element name="root" msdata:IsDataSet="true">
-
         </xsd:element>
     </xsd:schema>
     <resheader name="resmimetype">
@@ -20,5 +18,17 @@
     </resheader>
     <data name="LabelOtherVideos" xml:space="preserve">
         <value>Other Videos</value>
+    </data>
+    <data name="DialogAddToCollection" xml:space="preserve">
+        <value>Add To Collection</value>
+    </data>
+    <data name="EntityTypeOtherVideo" xml:space="preserve">
+        <value>other video</value>
+    </data>
+    <data name="MessageUnexpectedErrorAddingToCollection" xml:space="preserve">
+        <value>Unexpected error adding other video to collection: {0}</value>
+    </data>
+    <data name="MessageAddedToCollection" xml:space="preserve">
+        <value>Added {0} to collection {1}</value>
     </data>
 </root>

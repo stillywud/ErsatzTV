@@ -19,6 +19,15 @@
     <data name="LabelSongs" xml:space="preserve">
         <value>歌曲</value>
     </data>
+    <data name="DialogAddToCollection" xml:space="preserve">
+        <value>添加到收藏</value>
+    </data>
+    <data name="MessageAddedSongToCollection" xml:space="preserve">
+        <value>已将 {0} 添加到收藏 {1}</value>
+    </data>
+    <data name="MessageUnexpectedErrorAddingSongToCollection" xml:space="preserve">
+        <value>将歌曲添加到收藏时出现意外错误：{0}</value>
+    </data>
     <data name="ButtonAddSong" xml:space="preserve">
         <value>添加歌曲</value>
     </data>

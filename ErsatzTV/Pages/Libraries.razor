@@ -14,11 +14,12 @@
 @inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
 @inject ICourier Courier
 @inject IScannerProxyService ScannerProxyService
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Libraries> Loc
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Libraries</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelLibraries"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudTable Hover="true" Items="_libraries" Dense="true" Class="mb-5">
                 <ColGroup>
@@ -34,13 +35,13 @@
                     </MudHidden>
                 </ColGroup>
                 <HeaderContent>
-                    <MudTh>Library Kind</MudTh>
+                    <MudTh>@Loc["LabelLibraryKind"]</MudTh>
                     @if (_showServerNames)
                     {
-                        <MudTh>Server Name</MudTh>
+                        <MudTh>@Loc["LabelServerName"]</MudTh>
                     }
-                    <MudTh>Library Name</MudTh>
-                    <MudTh>Media Kind</MudTh>
+                    <MudTh>@Loc["LabelLibraryName"]</MudTh>
+                    <MudTh>@Loc["LabelMediaKind"]</MudTh>
                     <MudTh/>
                 </HeaderContent>
                 <RowTemplate>
@@ -54,13 +55,13 @@
                         @switch (context.MediaKind)
                         {
                             case LibraryMediaKind.MusicVideos:
-                                @:Music Videos
+                                @Loc["LabelMusicVideos"]
                                 break;
                             case LibraryMediaKind.OtherVideos:
-                                @:Other Videos
+                                @Loc["LabelOtherVideos"]
                                 break;
                             case LibraryMediaKind.RemoteStreams:
-                                @:Remote Streams
+                                @Loc["LabelRemoteStreams"]
                                 break;
                             default:
                                 @(context.MediaKind)
@@ -87,7 +88,7 @@
                             {
                                 if (context is PlexLibraryViewModel or EmbyLibraryViewModel or JellyfinLibraryViewModel)
                                 {
-                                    <MudTooltip Text="Deep Scan Library">
+                                    <MudTooltip Text="@Loc["ButtonDeepScanLibrary"]">
                                         <MudIconButton Icon="@Icons.Material.Filled.FindReplace"
                                                        Disabled="@Locker.IsLibraryLocked(context.Id)"
                                                        OnClick="@(_ => ScanLibrary(context, true))">
@@ -99,14 +100,14 @@
                                     <div style="width: 48px"></div>
                                 }
 
-                                <MudTooltip Text="Scan Library">
+                                <MudTooltip Text="@Loc["ButtonScanLibrary"]">
                                     <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                    Disabled="@Locker.IsLibraryLocked(context.Id)"
                                                    OnClick="@(_ => ScanLibrary(context))">
                                     </MudIconButton>
                                 </MudTooltip>
                             }
-                            <MudTooltip Text="Search Library">
+                            <MudTooltip Text="@Loc["ButtonSearchLibrary"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Search"
                                                Href="@($"search?query=library_id%3a{context.Id}")">
                                 </MudIconButton>
@@ -115,7 +116,7 @@
                     </MudTd>
                 </RowTemplate>
             </MudTable>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">External Collections</MudText>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">@Loc["LabelExternalCollections"]</MudText>
             <MudDivider Class="mb-6"/>
             @if (_externalCollections.Any())
             {
@@ -127,7 +128,7 @@
                         </MudHidden>
                     </ColGroup>
                     <HeaderContent>
-                        <MudTh>Library Kind</MudTh>
+                        <MudTh>@Loc["LabelLibraryKind"]</MudTh>
                         <MudTh/>
                     </HeaderContent>
                     <RowTemplate>
@@ -145,7 +146,7 @@
                                 {
                                     if (context.LibraryKind is "Plex" or "Emby" or "Jellyfin")
                                     {
-                                        <MudTooltip Text="Deep Scan Collections">
+                                        <MudTooltip Text="@Loc["ButtonDeepScanCollections"]">
                                             <MudIconButton Icon="@Icons.Material.Filled.FindReplace"
                                                            Disabled="@AreCollectionsLocked(context.LibraryKind)"
                                                            OnClick="@(_ => ScanExternalCollections(context, true))">
@@ -156,7 +157,7 @@
                                     {
                                         <div style="width: 48px"></div>
                                     }
-                                    <MudTooltip Text="Scan Collections">
+                                    <MudTooltip Text="@Loc["ButtonScanCollections"]">
                                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                        Disabled="@AreCollectionsLocked(context.LibraryKind)"
                                                        OnClick="@(_ => ScanExternalCollections(context))">

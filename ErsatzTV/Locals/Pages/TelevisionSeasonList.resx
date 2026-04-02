@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <root>
     <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
         <xsd:element name="root" msdata:IsDataSet="true">
-
         </xsd:element>
     </xsd:schema>
     <resheader name="resmimetype">
@@ -20,5 +18,68 @@
     </resheader>
     <data name="LabelSeasons" xml:space="preserve">
         <value>Seasons</value>
+    </data>
+    <data name="LabelActors" xml:space="preserve">
+        <value>Actors</value>
+    </data>
+    <data name="LabelContentRatings" xml:space="preserve">
+        <value>Content Ratings:</value>
+    </data>
+    <data name="LabelLanguages" xml:space="preserve">
+        <value>Languages:</value>
+    </data>
+    <data name="LabelStudios" xml:space="preserve">
+        <value>Studios:</value>
+    </data>
+    <data name="LabelNetworks" xml:space="preserve">
+        <value>Networks:</value>
+    </data>
+    <data name="LabelGenres" xml:space="preserve">
+        <value>Genres:</value>
+    </data>
+    <data name="LabelTags" xml:space="preserve">
+        <value>Tags:</value>
+    </data>
+    <data name="LabelAddTo" xml:space="preserve">
+        <value>Add To</value>
+    </data>
+    <data name="ButtonScan" xml:space="preserve">
+        <value>Scan</value>
+    </data>
+    <data name="ButtonQuickScan" xml:space="preserve">
+        <value>Quick Scan</value>
+    </data>
+    <data name="ButtonDeepScan" xml:space="preserve">
+        <value>Deep Scan</value>
+    </data>
+    <data name="ButtonCollection" xml:space="preserve">
+        <value>Collection</value>
+    </data>
+    <data name="ButtonPlaylist" xml:space="preserve">
+        <value>Playlist</value>
+    </data>
+    <data name="ButtonSchedule" xml:space="preserve">
+        <value>Schedule</value>
+    </data>
+    <data name="ButtonAddToCollection" xml:space="preserve">
+        <value>Add To Collection</value>
+    </data>
+    <data name="ButtonAddToPlaylist" xml:space="preserve">
+        <value>Add To Playlist</value>
+    </data>
+    <data name="ButtonAddToSchedule" xml:space="preserve">
+        <value>Add To Schedule</value>
+    </data>
+    <data name="ErrorAddingSeasonToCollection" xml:space="preserve">
+        <value>Unexpected error adding season to collection</value>
+    </data>
+    <data name="MessageAddedSeasonToCollection" xml:space="preserve">
+        <value>Added to collection</value>
+    </data>
+    <data name="ErrorScanningShow" xml:space="preserve">
+        <value>Unable to scan show</value>
+    </data>
+    <data name="MessageScanningShowComplete" xml:space="preserve">
+        <value>Done scanning show</value>
     </data>
 </root>

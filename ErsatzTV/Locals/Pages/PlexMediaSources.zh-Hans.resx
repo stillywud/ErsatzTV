@@ -70,4 +70,16 @@
     <data name="LabelDisconnected" xml:space="preserve">
         <value>已断开</value>
     </data>
+    <data name="ButtonSignOut" xml:space="preserve">
+        <value>断开 Plex</value>
+    </data>
+    <data name="ButtonSignIn" xml:space="preserve">
+        <value>连接 Plex</value>
+    </data>
+    <data name="ButtonFixCredentials" xml:space="preserve">
+        <value>修复 Plex 凭据</value>
+    </data>
+    <data name="DialogSignOut" xml:space="preserve">
+        <value>断开 Plex</value>
+    </data>
 </root>

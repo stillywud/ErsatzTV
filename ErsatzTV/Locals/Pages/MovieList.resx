@@ -18,70 +18,25 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="ButtonAddChannel" xml:space="preserve">
-        <value>Add Channel</value>
+    <data name="LabelMovies" xml:space="preserve">
+        <value>Movies</value>
     </data>
-    <data name="ButtonEditChannelNumbers" xml:space="preserve">
-        <value>Edit Channel Numbers</value>
+    <data name="ButtonAddToCollection" xml:space="preserve">
+        <value>Add To Collection</value>
     </data>
-    <data name="LabelChannels" xml:space="preserve">
-        <value>Channels</value>
+    <data name="ErrorAddingMovieToCollection" xml:space="preserve">
+        <value>Unexpected error adding movie to collection</value>
     </data>
-    <data name="ButtonShowDisabled" xml:space="preserve">
-        <value>Show Disabled</value>
+    <data name="AddedMovieToCollection" xml:space="preserve">
+        <value>Added {0} to collection {1}</value>
     </data>
-    <data name="LabelNumber" xml:space="preserve">
-        <value>Number</value>
+    <data name="LabelItem" xml:space="preserve">
+        <value>Item</value>
     </data>
-    <data name="LabelLogo" xml:space="preserve">
-        <value>Logo</value>
+    <data name="LabelItems" xml:space="preserve">
+        <value>Items</value>
     </data>
-    <data name="LabelName" xml:space="preserve">
-        <value>Name</value>
-    </data>
-    <data name="LabelLanguage" xml:space="preserve">
-        <value>Language</value>
-    </data>
-    <data name="LabelStreamingMode" xml:space="preserve">
-        <value>Mode</value>
-    </data>
-    <data name="LabelFFmpegProfile" xml:space="preserve">
-        <value>FFmpeg Profile</value>
-    </data>
-    <data name="LabelChannelDisabledHelp" xml:space="preserve">
-        <value>Channel is disabled</value>
-    </data>
-    <data name="LabelChannelHiddenHelp" xml:space="preserve">
-        <value>Channel is hidden from EPG</value>
-    </data>
-    <data name="LabelChannelHiddenAbbreviation" xml:space="preserve">
-        <value>H</value>
-    </data>
-    <data name="LabelChannelDisabledAbbreviation" xml:space="preserve">
-        <value>D</value>
-    </data>
-    <data name="ButtonPreviewChannelHelp" xml:space="preserve">
-        <value>Preview Channel</value>
-    </data>
-    <data name="ButtonPreviewChannelHelpNormalize" xml:space="preserve">
-        <value>Preview Channel; audio and/or video may not work without normalization</value>
-    </data>
-    <data name="ButtonPreviewChannelHelpBrowser" xml:space="preserve">
-        <value>Channel preview requires FFmpeg Profile compatible with this browser</value>
-    </data>
-    <data name="ButtonPreviewChannelHelpSettings" xml:space="preserve">
-        <value>Channel preview requires playout, MPEG-TS/HLS Segmenter, and compatible FFmpeg Profile</value>
-    </data>
-    <data name="ButtonStopTranscodeHelp" xml:space="preserve">
-        <value>Stop Transcode Session</value>
-    </data>
-    <data name="ButtonEditChannelHelp" xml:space="preserve">
-        <value>Edit Channel</value>
-    </data>
-    <data name="ButtonTroubleshootChannelHelp" xml:space="preserve">
-        <value>Troubleshoot Channel</value>
-    </data>
-    <data name="ButtonDeleteChannelHelp" xml:space="preserve">
-        <value>Delete Channel</value>
+    <data name="LabelSelected" xml:space="preserve">
+        <value>Selected</value>
     </data>
 </root>

@@ -1,4 +1,4 @@
-﻿@page "/media/trash"
+@page "/media/trash"
 @using ErsatzTV.Application.Maintenance
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.Search
@@ -7,6 +7,7 @@
 @inherits MultiSelectBase<Search>
 @inject NavigationManager NavigationManager
 @inject PersistentComponentState ApplicationState
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Trash> Loc
 
 <MudForm Style="max-height: 100%">
 <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100;">
@@ -21,21 +22,21 @@
                            Color="Color.Error"
                            StartIcon="@Icons.Material.Filled.Delete"
                            OnClick="@(_ => DeleteFromDatabase())">
-                    Delete From Database
+                    @Loc["ButtonDeleteFromDatabase"]
                 </MudButton>
                 <MudButton Class="ml-3"
                            Variant="Variant.Filled"
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.Check"
                            OnClick="@(_ => ClearSelection())">
-                    Clear Selection
+                    @Loc["ButtonClearSelection"]
                 </MudButton>
             </div>
             <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
                 <div class="flex-grow-1"></div>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" Label="Delete From Database" OnClick="DeleteFromDatabase"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Check" Label="Clear Selection" OnClick="ClearSelection"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" Label="@Loc["ButtonDeleteFromDatabase"]" OnClick="DeleteFromDatabase"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Check" Label="@Loc["ButtonClearSelection"]" OnClick="ClearSelection"/>
                 </MudMenu>
             </div>
         }
@@ -44,52 +45,52 @@
             <div style="align-items: center; display: flex; width: 100%" class="d-none d-md-flex">
                 @if (_movies?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count @Loc["LabelMovies"]</MudLink>
                 }
 
                 @if (_shows?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count @Loc["LabelShows"]</MudLink>
                 }
 
                 @if (_seasons?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#seasons")" Style="margin-bottom: auto; margin-top: auto">@_seasons.Count Seasons</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#seasons")" Style="margin-bottom: auto; margin-top: auto">@_seasons.Count @Loc["LabelSeasons"]</MudLink>
                 }
 
                 @if (_episodes?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#episodes")" Style="margin-bottom: auto; margin-top: auto">@_episodes.Count Episodes</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#episodes")" Style="margin-bottom: auto; margin-top: auto">@_episodes.Count @Loc["LabelEpisodes"]</MudLink>
                 }
 
                 @if (_artists?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count @Loc["LabelArtists"]</MudLink>
                 }
 
                 @if (_musicVideos?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count @Loc["LabelMusicVideos"]</MudLink>
                 }
 
                 @if (_otherVideos?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#other_videos")" Style="margin-bottom: auto; margin-top: auto">@_otherVideos.Count Other Videos</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#other_videos")" Style="margin-bottom: auto; margin-top: auto">@_otherVideos.Count @Loc["LabelOtherVideos"]</MudLink>
                 }
 
                 @if (_songs?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#songs")" Style="margin-bottom: auto; margin-top: auto">@_songs.Count Songs</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#songs")" Style="margin-bottom: auto; margin-top: auto">@_songs.Count @Loc["LabelSongs"]</MudLink>
                 }
 
                 @if (_images?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#images")" Style="margin-bottom: auto; margin-top: auto">@_images.Count Images</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#images")" Style="margin-bottom: auto; margin-top: auto">@_images.Count @Loc["LabelImages"]</MudLink>
                 }
 
                 @if (_remoteStreams?.Cards.Count > 0)
                 {
-                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#remote_streams")" Style="margin-bottom: auto; margin-top: auto">@_remoteStreams.Count Remote Streams</MudLink>
+                    <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#remote_streams")" Style="margin-bottom: auto; margin-top: auto">@_remoteStreams.Count @Loc["LabelRemoteStreams"]</MudLink>
                 }
                 <div class="flex-grow-1 d-none d-md-flex"></div>
                 <MudButton Variant="@Variant.Filled"
@@ -97,14 +98,14 @@
                            StartIcon="@Icons.Material.Filled.SelectAll"
                            Disabled="@(!IsNotEmpty)"
                            OnClick="@(_ => SelectAllPageItems(AllCardsOnPage()))">
-                    Select All
+                    @Loc["ButtonSelectAll"]
                 </MudButton>
                 <MudButton Class="ml-3"
                            Variant="@Variant.Filled"
                            Color="@Color.Error"
                            StartIcon="@Icons.Material.Filled.DeleteForever"
                            OnClick="@(_ => EmptyTrash())">
-                    Empty Trash
+                    @Loc["ButtonEmptyTrash"]
                 </MudButton>
             </div>
             <div style="align-items: center; display: flex; width: 100%" class="d-md-none">
@@ -114,20 +115,20 @@
                            StartIcon="@Icons.Material.Filled.SelectAll"
                            Disabled="@(!IsNotEmpty)"
                            OnClick="@(_ => SelectAllPageItems(AllCardsOnPage()))">
-                    Select All
+                    @Loc["ButtonSelectAll"]
                 </MudButton>
                 <MudButton Class="ml-2"
                            Variant="@Variant.Filled"
                            Color="@Color.Error"
                            StartIcon="@Icons.Material.Filled.DeleteForever"
                            OnClick="@(_ => EmptyTrash())">
-                    Empty Trash
+                    @Loc["ButtonEmptyTrash"]
                 </MudButton>
             </div>
         }
         else
         {
-            <MudText>Nothing to see here...</MudText>
+            <MudText>@Loc["LabelNothingToSee"]</MudText>
         }
     </div>
 </MudPaper>
@@ -137,11 +138,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
-                    Movies
+                    @Loc["LabelMovies"]
                 </MudText>
                 @if (_movies.Count > 50)
                 {
-                    <MudLink Href="@GetMoviesLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetMoviesLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -164,11 +165,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
-                    Shows
+                    @Loc["LabelShows"]
                 </MudText>
                 @if (_shows.Count > 50)
                 {
-                    <MudLink Href="@GetShowsLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetShowsLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -191,11 +192,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "seasons" } })">
-                    Seasons
+                    @Loc["LabelSeasons"]
                 </MudText>
                 @if (_seasons.Count > 50)
                 {
-                    <MudLink Href="@GetSeasonsLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetSeasonsLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -218,11 +219,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "episodes" } })">
-                    Episodes
+                    @Loc["LabelEpisodes"]
                 </MudText>
                 @if (_episodes.Count > 50)
                 {
-                    <MudLink Href="@GetEpisodesLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetEpisodesLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -246,11 +247,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "artists" } })">
-                    Artists
+                    @Loc["LabelArtists"]
                 </MudText>
                 @if (_artists.Count > 50)
                 {
-                    <MudLink Href="@GetArtistsLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetArtistsLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -274,11 +275,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "music_videos" } })">
-                    Music Videos
+                    @Loc["LabelMusicVideos"]
                 </MudText>
                 @if (_musicVideos.Count > 50)
                 {
-                    <MudLink Href="@GetMusicVideosLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetMusicVideosLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -302,11 +303,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "other_videos" } })">
-                    Other Videos
+                    @Loc["LabelOtherVideos"]
                 </MudText>
                 @if (_otherVideos.Count > 50)
                 {
-                    <MudLink Href="@GetOtherVideosLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetOtherVideosLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -330,11 +331,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "songs" } })">
-                    Songs
+                    @Loc["LabelSongs"]
                 </MudText>
                 @if (_songs.Count > 50)
                 {
-                    <MudLink Href="@GetSongsLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetSongsLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -358,11 +359,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "images" } })">
-                    Images
+                    @Loc["LabelImages"]
                 </MudText>
                 @if (_images.Count > 50)
                 {
-                    <MudLink Href="@GetImagesLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetImagesLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -386,11 +387,11 @@
         {
             <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4" UserAttributes="@(new Dictionary<string, object> { { "id", "remote_streams" } })">
-                    Remote Streams
+                    @Loc["LabelRemoteStreams"]
                 </MudText>
                 @if (_remoteStreams.Count > 50)
                 {
-                    <MudLink Href="@GetRemoteStreamsLink()" Class="ml-4">See All >></MudLink>
+                    <MudLink Href="@GetRemoteStreamsLink()" Class="ml-4">@Loc["LabelSeeAll"]</MudLink>
                 }
             </div>
             <MudDivider Class="mb-6"/>
@@ -708,7 +709,7 @@
             { { "EntityType", count.ToString() }, { "EntityName", entityName } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>(Loc["DialogDeleteFromDatabase"], parameters, options);
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false })
         {
@@ -800,7 +801,7 @@
         var parameters = new DialogParameters { { "EntityType", entityType }, { "EntityName", entityName } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>(Loc["DialogDeleteFromDatabase"], parameters, options);
         DialogResult result = await dialog.Result;
         if (result is not null && !result.Canceled)
         {
@@ -819,7 +820,7 @@
         var parameters = new DialogParameters { { "EntityType", count.ToString() }, { "EntityName", "missing items" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>(Loc["DialogDeleteFromDatabase"], parameters, options);
         DialogResult result = await dialog.Result;
         if (result is not null && !result.Canceled)
         {

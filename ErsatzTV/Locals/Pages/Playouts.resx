@@ -18,70 +18,85 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-    <data name="ButtonAddChannel" xml:space="preserve">
-        <value>Add Channel</value>
+    <data name="ButtonAddPlayout" xml:space="preserve">
+        <value>Add Playout</value>
     </data>
-    <data name="ButtonEditChannelNumbers" xml:space="preserve">
-        <value>Edit Channel Numbers</value>
+    <data name="ButtonAddClassic" xml:space="preserve">
+        <value>Classic Schedule</value>
     </data>
-    <data name="LabelChannels" xml:space="preserve">
-        <value>Channels</value>
+    <data name="ButtonAddBlock" xml:space="preserve">
+        <value>Block Schedule</value>
     </data>
-    <data name="ButtonShowDisabled" xml:space="preserve">
-        <value>Show Disabled</value>
+    <data name="ButtonAddSequential" xml:space="preserve">
+        <value>Sequential Schedule</value>
     </data>
-    <data name="LabelNumber" xml:space="preserve">
-        <value>Number</value>
+    <data name="ButtonAddScripted" xml:space="preserve">
+        <value>Scripted Schedule</value>
     </data>
-    <data name="LabelLogo" xml:space="preserve">
-        <value>Logo</value>
+    <data name="ButtonAddJson" xml:space="preserve">
+        <value>JSON (dizqueTV) Schedule</value>
     </data>
-    <data name="LabelName" xml:space="preserve">
-        <value>Name</value>
+    <data name="ButtonResetAllPlayouts" xml:space="preserve">
+        <value>Reset All Playouts</value>
     </data>
-    <data name="LabelLanguage" xml:space="preserve">
-        <value>Language</value>
+    <data name="LabelPlayouts" xml:space="preserve">
+        <value>Playouts</value>
     </data>
-    <data name="LabelStreamingMode" xml:space="preserve">
-        <value>Mode</value>
+    <data name="PlaceholderSearchPlayouts" xml:space="preserve">
+        <value>Search for playouts</value>
     </data>
-    <data name="LabelFFmpegProfile" xml:space="preserve">
-        <value>FFmpeg Profile</value>
+    <data name="LabelChannel" xml:space="preserve">
+        <value>Channel</value>
     </data>
-    <data name="LabelChannelDisabledHelp" xml:space="preserve">
-        <value>Channel is disabled</value>
+    <data name="LabelDefaultSchedule" xml:space="preserve">
+        <value>Default Schedule</value>
     </data>
-    <data name="LabelChannelHiddenHelp" xml:space="preserve">
-        <value>Channel is hidden from EPG</value>
+    <data name="LabelScheduleKind" xml:space="preserve">
+        <value>Schedule Kind</value>
     </data>
-    <data name="LabelChannelHiddenAbbreviation" xml:space="preserve">
-        <value>H</value>
+    <data name="LabelBlock" xml:space="preserve">
+        <value>Block</value>
     </data>
-    <data name="LabelChannelDisabledAbbreviation" xml:space="preserve">
-        <value>D</value>
+    <data name="LabelSequential" xml:space="preserve">
+        <value>Sequential</value>
     </data>
-    <data name="ButtonPreviewChannelHelp" xml:space="preserve">
-        <value>Preview Channel</value>
+    <data name="LabelScripted" xml:space="preserve">
+        <value>Scripted</value>
     </data>
-    <data name="ButtonPreviewChannelHelpNormalize" xml:space="preserve">
-        <value>Preview Channel; audio and/or video may not work without normalization</value>
+    <data name="LabelJsonDizqueTV" xml:space="preserve">
+        <value>JSON (dizqueTV)</value>
     </data>
-    <data name="ButtonPreviewChannelHelpBrowser" xml:space="preserve">
-        <value>Channel preview requires FFmpeg Profile compatible with this browser</value>
+    <data name="ButtonEditPlayout" xml:space="preserve">
+        <value>Edit Playout</value>
     </data>
-    <data name="ButtonPreviewChannelHelpSettings" xml:space="preserve">
-        <value>Channel preview requires playout, MPEG-TS/HLS Segmenter, and compatible FFmpeg Profile</value>
+    <data name="ButtonRefreshPlayout" xml:space="preserve">
+        <value>Refresh Playout</value>
     </data>
-    <data name="ButtonStopTranscodeHelp" xml:space="preserve">
-        <value>Stop Transcode Session</value>
+    <data name="ButtonScheduleReset" xml:space="preserve">
+        <value>Schedule Reset</value>
     </data>
-    <data name="ButtonEditChannelHelp" xml:space="preserve">
-        <value>Edit Channel</value>
+    <data name="ButtonDeletePlayout" xml:space="preserve">
+        <value>Delete Playout</value>
     </data>
-    <data name="ButtonTroubleshootChannelHelp" xml:space="preserve">
-        <value>Troubleshoot Channel</value>
+    <data name="ButtonCopyPlayout" xml:space="preserve">
+        <value>Copy Playout</value>
     </data>
-    <data name="ButtonDeleteChannelHelp" xml:space="preserve">
-        <value>Delete Channel</value>
+    <data name="DialogDeletePlayout" xml:space="preserve">
+        <value>Delete Playout</value>
+    </data>
+    <data name="ButtonAddClassicPlayout" xml:space="preserve">
+        <value>Add Classic Playout</value>
+    </data>
+    <data name="ButtonAddBlockPlayout" xml:space="preserve">
+        <value>Add Block Playout</value>
+    </data>
+    <data name="ButtonAddSequentialPlayout" xml:space="preserve">
+        <value>Add Sequential Playout</value>
+    </data>
+    <data name="ButtonAddScriptedPlayout" xml:space="preserve">
+        <value>Add Scripted Playout</value>
+    </data>
+    <data name="ButtonAddJsonPlayout" xml:space="preserve">
+        <value>Add JSON (dizqueTV) Playout</value>
     </data>
 </root>

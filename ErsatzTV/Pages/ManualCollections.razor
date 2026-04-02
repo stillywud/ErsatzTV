@@ -1,29 +1,30 @@
-﻿@page "/media/collections"
+@page "/media/collections"
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.MediaCollections
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.ManualCollections> Loc
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
         <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
             <div style="margin-right: auto" class="d-none d-md-flex">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="media/collections/add">
-                    Add Collection
+                    @Loc["ButtonAddCollection"]
                 </MudButton>
             </div>
             <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
                 <div class="flex-grow-1"></div>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Collection" Href="media/collections/add"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="@Loc["ButtonAddCollection"]" Href="media/collections/add"/>
                 </MudMenu>
             </div>
         </div>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Manual Collections</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelManualCollections"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudTable Hover="true"
                       @bind-RowsPerPage="@_collectionsRowsPerPage"
@@ -39,7 +40,7 @@
                 <ToolBarContent>
                     <MudTextField T="string"
                                   ValueChanged="@(s => OnSearch(s))"
-                                  Placeholder="Search for manual collections"
+                                  Placeholder="@Loc["LabelSearchManualCollections"]"
                                   Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.FilterList"
                                   Clearable="true">
@@ -49,12 +50,12 @@
                     <MudTd DataLabel="Name">@context.Name</MudTd>
                     <MudTd>
                         <div style="align-items: center; display: flex;">
-                            <MudTooltip Text="Edit Collection">
+                            <MudTooltip Text="@Loc["TooltipEditCollection"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                Href="@($"media/collections/{context.Id}")">
                                 </MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Delete Collection">
+                            <MudTooltip Text="@Loc["TooltipDeleteCollection"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                OnClick="@(_ => DeleteMediaCollection(context))">
                                 </MudIconButton>
@@ -108,7 +109,7 @@
         var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Collection", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>(Loc["LabelDeleteCollection"], parameters, options);
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false })
         {

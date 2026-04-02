@@ -30,6 +30,9 @@
     <data name="TooltipEditSmartCollection" xml:space="preserve">
         <value>Edit Smart Collection</value>
     </data>
+    <data name="TooltipSearchSmartCollection" xml:space="preserve">
+        <value>Search Smart Collection</value>
+    </data>
     <data name="TooltipDeleteSmartCollection" xml:space="preserve">
         <value>Delete Smart Collection</value>
     </data>

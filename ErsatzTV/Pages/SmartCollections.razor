@@ -1,15 +1,16 @@
-﻿@page "/media/smart-collections"
+@page "/media/smart-collections"
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Extensions
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.SmartCollections> Loc
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Smart Collections</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelSmartCollections"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudTable Hover="true"
                       @bind-RowsPerPage="@_smartCollectionsRowsPerPage"
@@ -25,27 +26,27 @@
                 <ToolBarContent>
                     <MudTextField T="string"
                                   ValueChanged="@(s => OnSearch(s))"
-                                  Placeholder="Search for smart collections"
+                                  Placeholder="@Loc["LabelSearchSmartCollections"]"
                                   Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.FilterList"
                                   Clearable="true">
                     </MudTextField>
                 </ToolBarContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="@Loc["LabelName"]">@context.Name</MudTd>
                     <MudTd>
                         <div style="align-items: center; display: flex;">
-                            <MudTooltip Text="Edit Smart Collection">
+                            <MudTooltip Text="@Loc["TooltipEditSmartCollection"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                Href="@($"/media/smart-collections/{context.Id}/edit")">
                                 </MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Search Smart Collection">
+                            <MudTooltip Text="@Loc["TooltipSearchSmartCollection"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Search"
                                                Href="@context.Query.GetRelativeSearchQuery()">
                                 </MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Delete Smart Collection">
+                            <MudTooltip Text="@Loc["TooltipDeleteSmartCollection"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                OnClick="@(_ => DeleteSmartCollection(context))">
                                 </MudIconButton>

@@ -21,4 +21,13 @@
     <data name="LabelSongs" xml:space="preserve">
         <value>Songs</value>
     </data>
+    <data name="DialogAddToCollection" xml:space="preserve">
+        <value>Add To Collection</value>
+    </data>
+    <data name="MessageAddedSongToCollection" xml:space="preserve">
+        <value>Added {0} to collection {1}</value>
+    </data>
+    <data name="MessageUnexpectedErrorAddingSongToCollection" xml:space="preserve">
+        <value>Unexpected error adding song to collection: {0}</value>
+    </data>
 </root>

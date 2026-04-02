@@ -16,6 +16,33 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
+    <data name="LabelPlaylistGroups" xml:space="preserve">
+        <value>播放列表组</value>
+    </data>
+    <data name="LabelPlaylistGroupName" xml:space="preserve">
+        <value>播放列表组名称</value>
+    </data>
+    <data name="ButtonAddPlaylistGroup" xml:space="preserve">
+        <value>添加播放列表组</value>
+    </data>
+    <data name="LabelPlaylists" xml:space="preserve">
+        <value>播放列表</value>
+    </data>
+    <data name="LabelPlaylistGroup" xml:space="preserve">
+        <value>播放列表组</value>
+    </data>
+    <data name="LabelPlaylistName" xml:space="preserve">
+        <value>播放列表名称</value>
+    </data>
+    <data name="ButtonAddPlaylist" xml:space="preserve">
+        <value>添加播放列表</value>
+    </data>
+    <data name="DialogDeletePlaylistGroup" xml:space="preserve">
+        <value>删除播放列表组</value>
+    </data>
+    <data name="DialogDeletePlaylist" xml:space="preserve">
+        <value>删除播放列表</value>
+    </data>
     <data name="LabelPlaylists" xml:space="preserve">
         <value>播放列表</value>
     </data>

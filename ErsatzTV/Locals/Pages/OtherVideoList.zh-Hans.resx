@@ -19,25 +19,16 @@
     <data name="LabelOtherVideos" xml:space="preserve">
         <value>其他视频</value>
     </data>
-    <data name="ButtonScanLibrary" xml:space="preserve">
-        <value>扫描媒体库</value>
+    <data name="DialogAddToCollection" xml:space="preserve">
+        <value>添加到收藏</value>
     </data>
-    <data name="ButtonDeepScan" xml:space="preserve">
-        <value>深度扫描</value>
+    <data name="EntityTypeOtherVideo" xml:space="preserve">
+        <value>其他视频</value>
     </data>
-    <data name="LabelTitle" xml:space="preserve">
-        <value>标题</value>
+    <data name="MessageUnexpectedErrorAddingToCollection" xml:space="preserve">
+        <value>将其他视频添加到收藏时出现意外错误：{0}</value>
     </data>
-    <data name="LabelDateAdded" xml:space="preserve">
-        <value>添加日期</value>
-    </data>
-    <data name="ButtonPlay" xml:space="preserve">
-        <value>播放</value>
-    </data>
-    <data name="ButtonEdit" xml:space="preserve">
-        <value>编辑</value>
-    </data>
-    <data name="ButtonDelete" xml:space="preserve">
-        <value>删除</value>
+    <data name="MessageAddedToCollection" xml:space="preserve">
+        <value>已将 {0} 添加到收藏 {1}</value>
     </data>
 </root>

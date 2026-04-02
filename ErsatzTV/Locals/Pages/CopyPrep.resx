@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="LabelCopyPrep" xml:space="preserve">
+        <value>Copy Prep</value>
+    </data>
+    <data name="LabelQueued" xml:space="preserve">
+        <value>Queued</value>
+    </data>
+    <data name="LabelRunning" xml:space="preserve">
+        <value>Running</value>
+    </data>
+    <data name="LabelFailed" xml:space="preserve">
+        <value>Failed</value>
+    </data>
+    <data name="LabelCompletedToday" xml:space="preserve">
+        <value>Completed Today</value>
+    </data>
+    <data name="LabelAvgDuration" xml:space="preserve">
+        <value>Avg Duration</value>
+    </data>
+    <data name="LabelSearch" xml:space="preserve">
+        <value>Search</value>
+    </data>
+    <data name="PlaceholderNameOrSourcePath" xml:space="preserve">
+        <value>Name or source path</value>
+    </data>
+    <data name="LabelStatus" xml:space="preserve">
+        <value>Status</value>
+    </data>
+    <data name="LabelLibrary" xml:space="preserve">
+        <value>Library</value>
+    </data>
+    <data name="TooltipRefresh" xml:space="preserve">
+        <value>Refresh</value>
+    </data>
+    <data name="LabelAutoRefresh" xml:space="preserve">
+        <value>Auto-refreshing every 5 seconds while this page is open.</value>
+    </data>
+    <data name="LabelMedia" xml:space="preserve">
+        <value>Media</value>
+    </data>
+    <data name="LabelProgress" xml:space="preserve">
+        <value>Progress</value>
+    </data>
+    <data name="LabelUpdated" xml:space="preserve">
+        <value>Updated</value>
+    </data>
+    <data name="LabelAction" xml:space="preserve">
+        <value>Action</value>
+    </data>
+    <data name="LabelId" xml:space="preserve">
+        <value>ID</value>
+    </data>
+    <data name="LabelPossiblyStalled" xml:space="preserve">
+        <value>Possibly stalled</value>
+    </data>
+    <data name="LabelETA" xml:space="preserve">
+        <value>ETA</value>
+    </data>
+    <data name="LabelSpeed" xml:space="preserve">
+        <value>Speed</value>
+    </data>
+    <data name="LabelFrames" xml:space="preserve">
+        <value>Frames</value>
+    </data>
+    <data name="LabelOutput" xml:space="preserve">
+        <value>Output</value>
+    </data>
+    <data name="TooltipRetry" xml:space="preserve">
+        <value>Retry</value>
+    </data>
+    <data name="TooltipCancel" xml:space="preserve">
+        <value>Cancel</value>
+    </data>
+    <data name="LabelNoMatchingItems" xml:space="preserve">
+        <value>No matching queue items</value>
+    </data>
+    <data name="LabelLoading" xml:space="preserve">
+        <value>Loading...</value>
+    </data>
+    <data name="LabelDetails" xml:space="preserve">
+        <value>Details</value>
+    </data>
+    <data name="LabelSelectItem" xml:space="preserve">
+        <value>Select a queue item to inspect current activity, live metrics, and recent events.</value>
+    </data>
+    <data name="LabelCurrentActivity" xml:space="preserve">
+        <value>Current Activity</value>
+    </data>
+    <data name="LabelProcessed" xml:space="preserve">
+        <value>Processed</value>
+    </data>
+    <data name="LabelLastProgress" xml:space="preserve">
+        <value>Last Progress</value>
+    </data>
+    <data name="LabelRealtimeMetrics" xml:space="preserve">
+        <value>Realtime Metrics</value>
+    </data>
+    <data name="LabelReason" xml:space="preserve">
+        <value>Reason</value>
+    </data>
+    <data name="LabelLastError" xml:space="preserve">
+        <value>Last Error</value>
+    </data>
+    <data name="LabelRecentEvents" xml:space="preserve">
+        <value>Recent Events</value>
+    </data>
+    <data name="LabelNoLogEntries" xml:space="preserve">
+        <value>No log entries</value>
+    </data>
+    <data name="StatusQueued" xml:space="preserve">
+        <value>Queued</value>
+    </data>
+    <data name="StatusStarting" xml:space="preserve">
+        <value>Starting</value>
+    </data>
+    <data name="StatusRunning" xml:space="preserve">
+        <value>Running</value>
+    </data>
+    <data name="StatusDone" xml:space="preserve">
+        <value>Done</value>
+    </data>
+    <data name="StatusFailed" xml:space="preserve">
+        <value>Failed</value>
+    </data>
+    <data name="LabelDash" xml:space="preserve">
+        <value>—</value>
+    </data>
+</root>

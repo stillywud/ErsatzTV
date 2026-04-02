@@ -1,8 +1,9 @@
-﻿@page "/media/movies"
+@page "/media/movies"
 @page "/media/movies/page/{PageNumber:int}"
 @inherits MultiSelectBase<MovieList>
 @inject NavigationManager NavigationManager
 @inject PersistentComponentState ApplicationState
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.MovieList> Loc
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
@@ -143,7 +144,7 @@
             var parameters = new DialogParameters { { "EntityType", "movie" }, { "EntityName", movie.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>(Loc["ButtonAddToCollection"], parameters, options);
             DialogResult result = await dialog.Result;
             if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
             {
@@ -152,10 +153,10 @@
                 addResult.Match(
                     Left: error =>
                     {
-                        Snackbar.Add($"Unexpected error adding movie to collection: {error.Value}");
+                        Snackbar.Add(Loc["ErrorAddingMovieToCollection"]);
                         Logger.LogError("Unexpected error adding movie to collection: {Error}", error.Value);
                     },
-                    Right: _ => Snackbar.Add($"Added {movie.Title} to collection {collection.Name}", Severity.Success));
+                    Right: _ => Snackbar.Add(string.Format(Loc["AddedMovieToCollection"].Value, movie.Title, collection.Name), Severity.Success));
             }
         }
     }

@@ -61,4 +61,22 @@
     <data name="ButtonDelete" xml:space="preserve">
         <value>删除</value>
     </data>
+    <data name="ButtonAddToCollection" xml:space="preserve">
+        <value>添加到收藏</value>
+    </data>
+    <data name="ErrorAddingMovieToCollection" xml:space="preserve">
+        <value>添加电影到收藏时发生意外错误</value>
+    </data>
+    <data name="AddedMovieToCollection" xml:space="preserve">
+        <value>已将 {0} 添加到收藏 {1}</value>
+    </data>
+    <data name="LabelItem" xml:space="preserve">
+        <value>项</value>
+    </data>
+    <data name="LabelItems" xml:space="preserve">
+        <value>项</value>
+    </data>
+    <data name="LabelSelected" xml:space="preserve">
+        <value>已选择</value>
+    </data>
 </root>

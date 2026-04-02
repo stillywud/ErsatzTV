@@ -1,4 +1,4 @@
-﻿@page "/media/tv/shows/{ShowId:int}"
+@page "/media/tv/shows/{ShowId:int}"
 @using System.Globalization
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.MediaCards
@@ -12,6 +12,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.TelevisionSeasonList> Loc
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
@@ -51,23 +52,23 @@
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="mb-6">
                 <MudMenu>
                     <ActivatorContent>
-                        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary">Add To</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled" Color="Color.Primary">@Loc["LabelAddTo"]</MudButton>
                     </ActivatorContent>
                     <ChildContent>
-                        <MudMenuItem Label="Collection" Icon="@Icons.Material.Filled.Add" OnClick="@AddToCollection"/>
-                        <MudMenuItem Label="Playlist" Icon="@Icons.Material.Filled.PlaylistAdd" OnClick="@AddToPlaylist"/>
-                        <MudMenuItem Label="Schedule" Icon="@Icons.Material.Filled.Schedule" OnClick="@AddToSchedule"/>
+                        <MudMenuItem Label="@Loc["ButtonCollection"]" Icon="@Icons.Material.Filled.Add" OnClick="@AddToCollection"/>
+                        <MudMenuItem Label="@Loc["ButtonPlaylist"]" Icon="@Icons.Material.Filled.PlaylistAdd" OnClick="@AddToPlaylist"/>
+                        <MudMenuItem Label="@Loc["ButtonSchedule"]" Icon="@Icons.Material.Filled.Schedule" OnClick="@AddToSchedule"/>
                     </ChildContent>
                 </MudMenu>
                 @if (_show?.MediaSourceKind is MediaSourceKind.Plex or MediaSourceKind.Jellyfin or MediaSourceKind.Emby)
                 {
                     <MudMenu>
                         <ActivatorContent>
-                            <MudButton StartIcon="@Icons.Material.Filled.Search" Variant="Variant.Filled" Color="Color.Primary">Scan</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.Search" Variant="Variant.Filled" Color="Color.Primary">@Loc["ButtonScan"]</MudButton>
                         </ActivatorContent>
                         <ChildContent>
-                            <MudMenuItem Label="Quick Scan" Icon="@Icons.Material.Filled.Search" OnClick="@(_ => ScanShow(false))"/>
-                            <MudMenuItem Label="Deep Scan" Icon="@Icons.Material.Filled.ManageSearch" OnClick="@(_ => ScanShow(true))"/>
+                            <MudMenuItem Label="@Loc["ButtonQuickScan"]" Icon="@Icons.Material.Filled.Search" OnClick="@(_ => ScanShow(false))"/>
+                            <MudMenuItem Label="@Loc["ButtonDeepScan"]" Icon="@Icons.Material.Filled.ManageSearch" OnClick="@(_ => ScanShow(true))"/>
                         </ChildContent>
                     </MudMenu>
                 }
@@ -79,7 +80,7 @@
             @if (_sortedContentRatings.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
-                    <MudText GutterBottom="true">Content Ratings:&nbsp;</MudText>
+                    <MudText GutterBottom="true">@Loc["LabelContentRatings"]&nbsp;</MudText>
                     <MudLink Href="@(@$"content_rating:""{_sortedContentRatings.Head()}""".GetRelativeSearchQuery())">@_sortedContentRatings.Head()</MudLink>
                     @foreach (string contentRating in _sortedContentRatings.Skip(1))
                     {
@@ -91,7 +92,7 @@
             @if (_sortedLanguages.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
-                    <MudText GutterBottom="true">Languages:&nbsp;</MudText>
+                    <MudText GutterBottom="true">@Loc["LabelLanguages"]&nbsp;</MudText>
                     <MudLink Href="@(@$"language:""{_sortedLanguages.Head().EnglishName.ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedLanguages.Head().EnglishName</MudLink>
                     @foreach (CultureInfo language in _sortedLanguages.Skip(1))
                     {
@@ -103,7 +104,7 @@
             @if (_sortedStudios.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
-                    <MudText GutterBottom="true">Studios:&nbsp;</MudText>
+                    <MudText GutterBottom="true">@Loc["LabelStudios"]&nbsp;</MudText>
                     <MudLink Href="@(@$"studio:""{_sortedStudios.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedStudios.Head()</MudLink>
                     @foreach (string studio in _sortedStudios.Skip(1))
                     {
@@ -115,7 +116,7 @@
             @if (_sortedNetworks.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
-                    <MudText GutterBottom="true">Networks:&nbsp;</MudText>
+                    <MudText GutterBottom="true">@Loc["LabelNetworks"]&nbsp;</MudText>
                     <MudLink Href="@(@$"network:""{_sortedNetworks.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedNetworks.Head()</MudLink>
                     @foreach (string network in _sortedNetworks.Skip(1))
                     {
@@ -127,7 +128,7 @@
             @if (_sortedGenres.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
-                    <MudText GutterBottom="true">Genres:&nbsp;</MudText>
+                    <MudText GutterBottom="true">@Loc["LabelGenres"]&nbsp;</MudText>
                     <MudLink Href="@(@$"genre:""{_sortedGenres.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedGenres.Head()</MudLink>
                     @foreach (string genre in _sortedGenres.Skip(1))
                     {
@@ -139,7 +140,7 @@
             @if (_sortedTags.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
-                    <MudText GutterBottom="true">Tags:&nbsp;</MudText>
+                    <MudText GutterBottom="true">@Loc["LabelTags"]&nbsp;</MudText>
                     <MudLink Href="@(@$"tag:""{_sortedTags.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedTags.Head()</MudLink>
                     @foreach (string tag in _sortedTags.Skip(1))
                     {
@@ -152,7 +153,7 @@
     </MudCard>
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large">
-    <MudText Class="mb-4">Seasons</MudText>
+    <MudText Class="mb-4">@Loc["LabelSeasons"]</MudText>
     <MudStack Row="true" Wrap="Wrap.Wrap">
         @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
         {
@@ -163,7 +164,7 @@
     </MudStack>
     @if ((_show?.Actors?.Count ?? 0) > 0)
     {
-        <MudText Class="mb-4">Actors</MudText>
+        <MudText Class="mb-4">@Loc["LabelActors"]</MudText>
         <MudStack Row="true" Wrap="Wrap.Wrap">
             @foreach (ActorCardViewModel actor in _show.Actors)
             {
@@ -234,7 +235,7 @@
         var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>(Loc["ButtonAddToCollection"], parameters, options);
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
         {
@@ -248,7 +249,7 @@
         var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await Dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<AddToPlaylistDialog>(Loc["ButtonAddToPlaylist"], parameters, options);
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false, Data: PlaylistViewModel playlist })
         {
@@ -262,7 +263,7 @@
         var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await Dialog.ShowAsync<AddToScheduleDialog>("Add To Schedule", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<AddToScheduleDialog>(Loc["ButtonAddToSchedule"], parameters, options);
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false, Data: ProgramScheduleViewModel schedule })
         {
@@ -278,7 +279,7 @@
             var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", season.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>(Loc["ButtonAddToCollection"], parameters, options);
             DialogResult result = await dialog.Result;
             if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
             {
@@ -287,10 +288,10 @@
                 addResult.Match(
                     Left: error =>
                     {
-                        Snackbar.Add($"Unexpected error adding season to collection: {error.Value}", Severity.Error);
+                        Snackbar.Add($"{Loc["ErrorAddingSeasonToCollection"]}: {error.Value}", Severity.Error);
                         Logger.LogError("Unexpected error adding season to collection: {Error}", error.Value);
                     },
-                    Right: _ => Snackbar.Add($"Added {season.Title} to collection {collection.Name}", Severity.Success));
+                    Right: _ => Snackbar.Add($"{Loc["MessageAddedSeasonToCollection"]} {season.Title}", Severity.Success));
             }
         }
     }
@@ -310,11 +311,11 @@
         bool result = await Mediator.Send(new QueueShowScanByLibraryId(_show.LibraryId, _show.Id, _show.Title, deepScan));
         if (!result)
         {
-            Snackbar.Add($"Unable to scan show {_show.Title}", Severity.Error);
+            Snackbar.Add($"{Loc["ErrorScanningShow"]} {_show.Title}", Severity.Error);
         }
         else
         {
-            Snackbar.Add($"Done scanning show {_show.Title}", Severity.Success);
+            Snackbar.Add($"{Loc["MessageScanningShowComplete"]} {_show.Title}", Severity.Success);
             StateHasChanged();
         }
     }

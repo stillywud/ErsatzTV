@@ -4,6 +4,7 @@
 @using ErsatzTV.Core.Interfaces.Emby
 @inject IEmbySecretStore EmbySecretStore
 @inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.EmbyMediaSources> Loc
 
 <RemoteMediaSources
     TViewModel="EmbyMediaSourceViewModel"

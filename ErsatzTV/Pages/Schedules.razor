@@ -5,11 +5,12 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Schedules> Loc
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" StartIcon="@Icons.Material.Filled.Add" Href="schedules/add">
-            Add Schedule
+            @Loc["ButtonAddSchedule"]
         </MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">

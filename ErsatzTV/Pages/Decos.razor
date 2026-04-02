@@ -6,29 +6,30 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IDialogService Dialog
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Decos> Loc
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Deco Groups</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelDecoGroups"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Deco Group Name</MudText>
+                    <MudText>@Loc["LabelDecoGroupName"]</MudText>
                 </div>
                 <MudTextField @bind-Value="_decoGroupName" For="@(() => _decoGroupName)"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex"></div>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDecoGroup())" StartIcon="@Icons.Material.Filled.Add">
-                    Add Deco Group
+                    @Loc["ButtonAddDecoGroup"]
                 </MudButton>
             </MudStack>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Decos</MudText>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">@Loc["LabelDecos"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Deco Group</MudText>
+                    <MudText>@Loc["LabelDecoGroup"]</MudText>
                 </div>
                 <MudSelect @bind-Value="_selectedDecoGroup">
                     @foreach (DecoGroupViewModel decoGroup in _decoGroups)
@@ -39,14 +40,14 @@
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Deco Name</MudText>
+                    <MudText>@Loc["LabelDecoName"]</MudText>
                 </div>
                 <MudTextField @bind-Value="_decoName" For="@(() => _decoName)"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex"></div>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDeco())" StartIcon="@Icons.Material.Filled.Add">
-                    Add Deco
+                    @Loc["ButtonAddDeco"]
                 </MudButton>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">

@@ -1,24 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <root>
-    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-        <xsd:element name="root" msdata:IsDataSet="true">
-
-        </xsd:element>
-    </xsd:schema>
-    <resheader name="resmimetype">
-        <value>text/microsoft-resx</value>
-    </resheader>
-    <resheader name="version">
-        <value>1.3</value>
-    </resheader>
-    <resheader name="reader">
-        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    </resheader>
-    <resheader name="writer">
-        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    </resheader>
-    <data name="LabelEpisodes" xml:space="preserve">
-        <value>Episodes</value>
-    </data>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LabelEpisodes" xml:space="preserve">
+    <value>Episodes</value>
+  </data>
+  <data name="ButtonAddToCollection" xml:space="preserve">
+    <value>Add To Collection</value>
+  </data>
+  <data name="ButtonAddToPlaylist" xml:space="preserve">
+    <value>Add To Playlist</value>
+  </data>
+  <data name="ButtonAddToSchedule" xml:space="preserve">
+    <value>Add To Schedule</value>
+  </data>
+  <data name="LabelAddTo" xml:space="preserve">
+    <value>Add To ...</value>
+  </data>
+  <data name="ButtonShowMediaInfo" xml:space="preserve">
+    <value>Show Media Info</value>
+  </data>
+  <data name="ButtonTroubleshootPlayback" xml:space="preserve">
+    <value>Troubleshoot Playback</value>
+  </data>
+  <data name="LabelFileNotFound" xml:space="preserve">
+    <value>File Not Found:</value>
+  </data>
+  <data name="LabelUnavailable" xml:space="preserve">
+    <value>Unavailable:</value>
+  </data>
+  <data name="LabelReleased" xml:space="preserve">
+    <value>Released:</value>
+  </data>
+  <data name="LabelDirectors" xml:space="preserve">
+    <value>Directors:</value>
+  </data>
+  <data name="LabelWriters" xml:space="preserve">
+    <value>Writers:</value>
+  </data>
+  <data name="ErrorAddingEpisodeToCollection" xml:space="preserve">
+    <value>Unexpected error adding episode to collection</value>
+  </data>
+  <data name="ErrorAddingEpisodeToPlaylist" xml:space="preserve">
+    <value>Unexpected error adding episode to playlist</value>
+  </data>
+  <data name="ErrorLoadingMediaInfo" xml:space="preserve">
+    <value>Unexpected error loading media info</value>
+  </data>
+  <data name="MessageAddedToCollection" xml:space="preserve">
+    <value>Added to collection</value>
+  </data>
+  <data name="MessageAddedToPlaylist" xml:space="preserve">
+    <value>Added to playlist</value>
+  </data>
 </root>

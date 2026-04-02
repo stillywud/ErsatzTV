@@ -1,20 +1,21 @@
-﻿@page "/media/filler/presets"
+@page "/media/filler/presets"
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Filler
 @using ErsatzTV.Core.Domain.Filler
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.FillerPresets> Loc
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" StartIcon="@Icons.Material.Filled.Add" Href="media/filler/presets/add">
-            Add Filler Preset
+            @Loc["ButtonAddFillerPreset"]
         </MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Filler Presets</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelFillerPresets"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudTable Hover="true"
                       @bind-RowsPerPage="@_fillerPresetsRowsPerPage"
@@ -29,8 +30,8 @@
                     </MudHidden>
                 </ColGroup>
                 <HeaderContent>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Filler Kind</MudTh>
+                    <MudTh>@Loc["LabelName"]</MudTh>
+                    <MudTh>@Loc["LabelFillerKind"]</MudTh>
                     <MudTh/>
                 </HeaderContent>
                 <RowTemplate>
@@ -39,23 +40,23 @@
                         @(
                         context.FillerKind switch
                         {
-                            FillerKind.PreRoll => "Pre-Roll",
-                            FillerKind.MidRoll => "Mid-Roll",
-                            FillerKind.PostRoll => "Post-Roll",
-                            FillerKind.Fallback => "Fallback",
-                            FillerKind.Tail => "Tail",
-                            _ => "None"
+                            FillerKind.PreRoll => Loc["LabelPreRoll"].Value,
+                            FillerKind.MidRoll => Loc["LabelMidRoll"].Value,
+                            FillerKind.PostRoll => Loc["LabelPostRoll"].Value,
+                            FillerKind.Fallback => Loc["LabelFallback"].Value,
+                            FillerKind.Tail => Loc["LabelTail"].Value,
+                            _ => Loc["LabelNone"].Value
                         }
                         )
                     </MudTd>
                     <MudTd>
                         <div style="align-items: center; display: flex;">
-                            <MudTooltip Text="Edit Filler Preset">
+                            <MudTooltip Text="@Loc["TooltipEditFillerPreset"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                Href="@($"media/filler/presets/{context.Id}/edit")">
                                 </MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Delete Filler Preset">
+                            <MudTooltip Text="@Loc["TooltipDeleteFillerPreset"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                OnClick="@(_ => DeleteFillerPreset(context))">
                                 </MudIconButton>
@@ -104,10 +105,10 @@
 
     private async Task DeleteFillerPreset(FillerPresetViewModel fillerPreset)
     {
-        var parameters = new DialogParameters { { "EntityType", "filler preset" }, { "EntityName", fillerPreset.Name } };
+        var parameters = new DialogParameters { { "EntityType", Loc["TooltipDeleteFillerPreset"].Value }, { "EntityName", fillerPreset.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Filler Preset", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>(Loc["DialogDeleteFillerPreset"].Value, parameters, options);
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false })
         {

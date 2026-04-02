@@ -46,25 +46,13 @@
     <data name="LabelNone" xml:space="preserve">
         <value>无</value>
     </data>
-    <data name="ButtonAddPreset" xml:space="preserve">
-        <value>添加预设</value>
+    <data name="TooltipEditFillerPreset" xml:space="preserve">
+        <value>编辑填充预设</value>
     </data>
-    <data name="LabelPresetName" xml:space="preserve">
-        <value>预设名称</value>
+    <data name="TooltipDeleteFillerPreset" xml:space="preserve">
+        <value>删除填充预设</value>
     </data>
-    <data name="LabelCount" xml:space="preserve">
-        <value>数量</value>
-    </data>
-    <data name="LabelCollection" xml:space="preserve">
-        <value>收藏</value>
-    </data>
-    <data name="LabelSmartCollection" xml:space="preserve">
-        <value>智能收藏</value>
-    </data>
-    <data name="LabelDuration" xml:space="preserve">
-        <value>时长</value>
-    </data>
-    <data name="LabelFallback" xml:space="preserve">
-        <value>后备</value>
+    <data name="DialogDeleteFillerPreset" xml:space="preserve">
+        <value>删除填充预设</value>
     </data>
 </root>

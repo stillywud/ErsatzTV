@@ -1,4 +1,4 @@
-﻿@page "/media/sources/plex"
+@page "/media/sources/plex"
 @using ErsatzTV.Application.Plex
 @using ErsatzTV.Core.Interfaces.Plex
 @implements IDisposable
@@ -10,6 +10,7 @@
 @inject IJSRuntime JsRuntime
 @inject IPlexSecretStore PlexSecretStore
 @inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.PlexMediaSources> Loc
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
@@ -20,7 +21,7 @@
                        OnClick="@(_ => SignOutOfPlex())"
                        Disabled="@Locker.IsPlexLocked()"
                        Class="ml-8">
-                Sign out of plex
+                @Loc["ButtonSignOut"]
             </MudButton>
         }
         else
@@ -30,7 +31,7 @@
                        OnClick="@(_ => AddPlexMediaSource())"
                        Disabled="@Locker.IsPlexLocked()"
                        Class="ml-8">
-                Sign in to plex
+                @Loc["ButtonSignIn"]
             </MudButton>
         }
 
@@ -41,13 +42,13 @@
                        OnClick="@(_ => AddPlexMediaSource())"
                        Disabled="@Locker.IsPlexLocked()"
                        Class="ml-4">
-                Fix Plex Credentials
+                @Loc["ButtonFixCredentials"]
             </MudButton>
         }
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Plex Media Sources</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelPlexMediaSources"]</MudText>
             <MudDivider Class="mb-6"/>
             <MudTable T="PlexMediaSourceViewModel" Hover="true" Dense="true" Items="_mediaSources">
                 <ColGroup>
@@ -58,8 +59,8 @@
                     </MudHidden>
                 </ColGroup>
                 <HeaderContent>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Address</MudTh>
+                    <MudTh>@Loc["LabelName"]</MudTh>
+                    <MudTh>@Loc["LabelAddress"]</MudTh>
                     <MudTh/>
                 </HeaderContent>
                 <RowTemplate>
@@ -67,18 +68,18 @@
                     <MudTd Style="overflow-wrap: anywhere;">@context.Address</MudTd>
                     <MudTd>
                         <div style="align-items: center; display: flex;">
-                            <MudTooltip Text="Refresh Libraries">
+                            <MudTooltip Text="@Loc["TooltipRefreshLibraries"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                Disabled="@(Locker.IsPlexLocked())"
                                                OnClick="@(_ => RefreshLibraries(context.Id))">
                                 </MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Edit Libraries">
+                            <MudTooltip Text="@Loc["TooltipEditLibraries"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
                                                Href="@($"media/sources/plex/{context.Id}/libraries")">
                                 </MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Edit Path Replacements">
+                            <MudTooltip Text="@Loc["TooltipEditPathReplacements"]">
                                 <MudIconButton Icon="@Icons.Material.Filled.Folder"
                                                Href="@($"media/sources/plex/{context.Id}/paths")">
                                 </MudIconButton>
@@ -110,7 +111,7 @@
     private async Task SignOutOfPlex()
     {
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
-        IDialogReference dialog = await Dialog.ShowAsync<SignOutOfPlexDialog>("Sign out of Plex", options);
+        IDialogReference dialog = await Dialog.ShowAsync<SignOutOfPlexDialog>(Loc["DialogSignOut"], options);
         DialogResult result = await dialog.Result;
         if (result is { Canceled: false })
         {

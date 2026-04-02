@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @page "/system/health"
 @using System.Reflection
 @using ErsatzTV.Application.Health
@@ -10,6 +10,7 @@
 @inject IMemoryCache MemoryCache
 @inject IMediator Mediator
 @inject SystemStartup SystemStartup;
+@inject IStringLocalizer<ErsatzTV.Locals.Pages.Index> Loc
 
 <MudForm Style="max-height: 100%">
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
@@ -19,12 +20,12 @@
                 <MudCard>
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h4">Database is initializing</MudText>
+                            <MudText Typo="Typo.h4">@Loc["LabelDatabaseInitializing"]</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent>
-                        <MudText>Please wait, this may take a few minutes.</MudText>
-                        <MudText>This page will automatically refresh when the database is ready.</MudText>
+                        <MudText>@Loc["LabelPleaseWait"]</MudText>
+                        <MudText>@Loc["LabelDatabaseWillRefresh"]</MudText>
                     </MudCardContent>
                     <MudCardActions>
                         <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
@@ -36,12 +37,12 @@
                 <MudCard>
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h4">Search Index is initializing</MudText>
+                            <MudText Typo="Typo.h4">@Loc["LabelSearchIndexInitializing"]</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent>
-                        <MudText>Please wait, this may take a few minutes.</MudText>
-                        <MudText>This page will automatically refresh when the search index is ready.</MudText>
+                        <MudText>@Loc["LabelPleaseWait"]</MudText>
+                        <MudText>@Loc["LabelSearchIndexWillRefresh"]</MudText>
                     </MudCardContent>
                     <MudCardActions>
                         <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
@@ -50,15 +51,15 @@
             }
             else
             {
-                <MudText Typo="Typo.h5" Class="mb-2">Health Checks</MudText>
+                <MudText Typo="Typo.h5" Class="mb-2">@Loc["LabelHealthChecks"]</MudText>
                 <MudDivider Class="mb-6"/>
                 <MudTable Hover="true"
                           Dense="true"
                           Breakpoint="Breakpoint.None"
                           ServerData="@(new Func<TableState, CancellationToken, Task<TableData<HealthCheckResult>>>(ServerReload))">
                     <HeaderContent>
-                        <MudTh>Check</MudTh>
-                        <MudTh>Message</MudTh>
+                        <MudTh>@Loc["LabelCheck"]</MudTh>
+                        <MudTh>@Loc["LabelMessage"]</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>
@@ -131,7 +132,7 @@
                 </MudTable>
                 <MudCard Class="mt-6">
                     <MudCardHeader>
-                        <MudText Class="mt-6">Full changelog is available on <MudLink Href="https://github.com/ErsatzTV/ErsatzTV/blob/main/CHANGELOG.md" Target="_blank">GitHub</MudLink></MudText>
+                        <MudText Class="mt-6">@Loc["LabelFullChangelogOnGitHub"] <MudLink Href="https://github.com/ErsatzTV/ErsatzTV/blob/main/CHANGELOG.md" Target="_blank">GitHub</MudLink></MudText>
                     </MudCardHeader>
                     <MudCardContent Class="release-notes mud-typography mud-typography-body1">
                         <MarkdownView Content="@_releaseNotes"/>

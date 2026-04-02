@@ -30,6 +30,9 @@
     <data name="TooltipEditSmartCollection" xml:space="preserve">
         <value>编辑智能收藏</value>
     </data>
+    <data name="TooltipSearchSmartCollection" xml:space="preserve">
+        <value>搜索智能收藏</value>
+    </data>
     <data name="TooltipDeleteSmartCollection" xml:space="preserve">
         <value>删除智能收藏</value>
     </data>

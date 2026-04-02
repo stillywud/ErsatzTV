@@ -51,4 +51,19 @@
     <data name="DialogDisconnect" xml:space="preserve">
         <value>Disconnect {0}</value>
     </data>
+    <data name="LabelPlexMediaSources" xml:space="preserve">
+        <value>Plex Media Sources</value>
+    </data>
+    <data name="ButtonSignOut" xml:space="preserve">
+        <value>Sign out of plex</value>
+    </data>
+    <data name="ButtonSignIn" xml:space="preserve">
+        <value>Sign in to plex</value>
+    </data>
+    <data name="ButtonFixCredentials" xml:space="preserve">
+        <value>Fix Plex Credentials</value>
+    </data>
+    <data name="DialogSignOut" xml:space="preserve">
+        <value>Sign out of Plex</value>
+    </data>
 </root>
