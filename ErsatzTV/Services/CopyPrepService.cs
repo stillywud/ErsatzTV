@@ -95,7 +95,7 @@ public class CopyPrepService(
 
         bool enabled = await configElementRepository
             .GetValue<bool>(ConfigElementKey.FFmpegCopyPrepEnabled, cancellationToken)
-            .IfNoneAsync(false);
+            .IfNoneAsync(true);
 
         int cpuTargetPercent = await configElementRepository
             .GetValue<int>(ConfigElementKey.FFmpegCopyPrepCpuTargetPercent, cancellationToken)

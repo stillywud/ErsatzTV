@@ -79,7 +79,7 @@ public class GetFFmpegSettingsHandler(IConfigElementRepository configElementRepo
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
             InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1),
-            CopyPrepEnabled = await copyPrepEnabled.IfNoneAsync(false),
+            CopyPrepEnabled = await copyPrepEnabled.IfNoneAsync(true),
             CopyPrepCpuTargetPercent = await copyPrepCpuTargetPercent.IfNoneAsync(50),
             CopyPrepMaxConcurrentJobs = await copyPrepMaxConcurrentJobs.IfNoneAsync(1),
             CopyPrepThreads = await copyPrepThreads.IfNoneAsync(0),
