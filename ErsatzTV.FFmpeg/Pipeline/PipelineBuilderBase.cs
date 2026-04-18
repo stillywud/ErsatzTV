@@ -222,6 +222,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         {
             pipelineSteps.Add(new ClosedGopOutputOption());
         }
+        else
+        {
+            // copy mode: avoid negative timestamps when switching between source files
+            pipelineSteps.Add(new AvoidNegativeTsOutputOption());
+        }
 
         if (desiredState.VideoFormat != VideoFormat.Copy && !desiredState.AllowBFrames)
         {
@@ -671,7 +676,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             _fontsFolder,
             pipelineSteps);
 
-        SetOutputTsOffset(isFmp4Hls, ffmpegState, desiredState, pipelineSteps);
+        SetOutputTsOffset(isFmp4Hls, ffmpegState, pipelineSteps);
 
         return new FilterChainAndState(filterChain, ffmpegState);
     }
@@ -754,14 +759,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     private static void SetOutputTsOffset(
         bool isFmp4Hls,
         FFmpegState ffmpegState,
-        FrameState desiredState,
         List<IPipelineStep> pipelineSteps)
     {
-        if (desiredState.VideoFormat == VideoFormat.Copy)
-        {
-            return;
-        }
-
+        // apply -output_ts_offset for both transcode and copy mode (not fmp4 hls)
+        // copy mode needs this to align PTS across episode transitions in HLS
         if (ffmpegState.PtsOffset > TimeSpan.Zero && !isFmp4Hls)
         {
             pipelineSteps.Add(new OutputTsOffsetOption(ffmpegState.PtsOffset));
