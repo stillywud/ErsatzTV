@@ -465,7 +465,13 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             TimeSpan ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
 
-            _logger.LogDebug("HLS session state: {State}", _state);
+            _logger.LogInformation(
+                "HLS session state: {State} - PtsOffset: {PtsOffset}s - startAtZero: {StartAtZero} - wasSeekAndWorkAhead: {WasSeekAndWorkAhead}",
+                _state,
+                ptsOffset.TotalSeconds,
+                _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime
+                    or HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime,
+                wasSeekAndWorkAhead);
 
             DateTimeOffset now = wasSeekAndWorkAhead ? DateTimeOffset.Now : _transcodedUntil;
             bool startAtZero = _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime
@@ -525,7 +531,11 @@ public class HlsSessionWorker : IHlsSessionWorker
                 {
                     _discontinuitySequence++;
                     _discontinuityMap.TryAdd(segmentKey, _discontinuitySequence);
-                    //_logger.LogDebug("DISCONTINUITY MAP {Map}", _discontinuityMap);
+                    _logger.LogInformation(
+                        "HLS discontinuity sequence incremented to {Seq} for segment key {Key} on channel {Channel}",
+                        _discontinuitySequence,
+                        segmentKey,
+                        _channelNumber);
                 }
 
                 Option<Pipe> maybePipe = Option<Pipe>.None;
@@ -533,7 +543,10 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 Command process = processModel.Process;
 
-                _logger.LogDebug("ffmpeg hls arguments {FFmpegArguments}", process.Arguments);
+                _logger.LogInformation(
+                    "ffmpeg hls arguments for channel {Channel}: {FFmpegArguments}",
+                    _channelNumber,
+                    process.Arguments);
 
                 try
                 {
@@ -830,7 +843,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             foreach (PtsTime pts in queryResult.RightToSeq())
             {
-                _logger.LogDebug("Last pts offset is {Pts}", pts.Value);
+                _logger.LogInformation("Last pts offset is {Pts}s for channel {Channel}", pts.Value, _channelNumber);
                 result = pts.Value;
             }
 
