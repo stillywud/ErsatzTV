@@ -169,6 +169,7 @@ public class IptvController : StreamingControllerBase
             Option<TrimPlaylistResult> maybePlaylist = await worker.TrimPlaylist(now, cancellationToken);
             foreach (TrimPlaylistResult result in maybePlaylist)
             {
+                Response.Headers.CacheControl = "no-cache, no-store, max-age=0";
                 return Content(result.Playlist, "application/vnd.apple.mpegurl");
             }
 

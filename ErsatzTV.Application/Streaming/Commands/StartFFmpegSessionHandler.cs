@@ -112,7 +112,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 
         int initialSegmentCount = await _configElementRepository
             .GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount, cancellationToken)
-            .Map(maybeCount => maybeCount.Match(identity, () => 1));
+            .Map(maybeCount => maybeCount.Match(identity, () => 3));
 
         await worker.WaitForPlaylistSegments(initialSegmentCount, cancellationToken);
 

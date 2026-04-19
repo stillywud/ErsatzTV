@@ -797,11 +797,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetVideoTrackTimescaleOutput(FrameState desiredState, List<IPipelineStep> pipelineSteps)
     {
-        if (desiredState.VideoFormat == VideoFormat.Copy)
-        {
-            return;
-        }
-
+        // apply video_track_timescale for both transcode and copy mode
+        // copy mode needs this for correct HLS segment timing with MPEG-TS output
         foreach (int desiredTimeScale in desiredState.VideoTrackTimeScale)
         {
             pipelineSteps.Add(new VideoTrackTimescaleOutputOption(desiredTimeScale));
