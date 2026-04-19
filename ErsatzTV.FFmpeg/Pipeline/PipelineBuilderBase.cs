@@ -850,7 +850,9 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             return;
         }
 
-        double readRate = desiredState.VideoFormat == VideoFormat.Copy ? 1.0 : 1.05;
+        // use same readrate for copy and transcode; copy at 1.0 causes slow buffer fill
+        // and stuttering at session start and episode transitions
+        double readRate = 1.05;
         _audioInputFile.Iter(a => a.AddOption(new ReadrateInputOption(readRate)));
         videoInputFile.AddOption(new ReadrateInputOption(readRate));
     }
