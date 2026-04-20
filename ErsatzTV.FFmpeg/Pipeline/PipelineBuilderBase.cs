@@ -137,8 +137,21 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         pipelineSteps.AddRange(ffmpegState.MetadataServiceName.Map(sn => new MetadataServiceNameOutputOption(sn)));
 
-        pipelineSteps.Add(new OutputFormatMpegTs());
-        pipelineSteps.Add(new PipeProtocol());
+        if (ffmpegState.OutputFormat is OutputFormatKind.Hls or OutputFormatKind.HlsMp4)
+        {
+            foreach (string segmentTemplate in ffmpegState.HlsSegmentTemplate)
+            {
+                foreach (string playlistPath in ffmpegState.HlsPlaylistPath)
+                {
+                    pipelineSteps.Add(new OutputFormatConcatHls(segmentTemplate, playlistPath));
+                }
+            }
+        }
+        else
+        {
+            pipelineSteps.Add(new OutputFormatMpegTs());
+            pipelineSteps.Add(new PipeProtocol());
+        }
 
         if (ffmpegState.SaveReport)
         {

@@ -210,6 +210,9 @@ public class IptvController : StreamingControllerBase
                     case StreamingMode.HttpLiveStreamingSegmenter:
                         mode = "segmenter";
                         break;
+                    case StreamingMode.HttpLiveStreamingConcat:
+                        mode = "segmenter-concat";
+                        break;
                     default:
                         return Redirect($"~/iptv/channel/{channelNumber}.ts{AccessTokenQuery()}");
                 }
@@ -221,6 +224,7 @@ public class IptvController : StreamingControllerBase
             case "segmenter":
             case "segmenter-v2":
             case "segmenter-fmp4":
+            case "segmenter-concat":
                 _logger.LogDebug(
                     "Maybe starting ffmpeg session for channel {Channel}, mode {Mode}",
                     channelNumber,

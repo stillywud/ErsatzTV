@@ -55,6 +55,17 @@ public class HlsSessionWorker : IHlsSessionWorker
     private string _workingDirectory;
     private Option<double> _slugSeconds;
 
+    // Pre-fetch: next playout command built while current ffmpeg is still running
+    private int _preFetchTriggered;
+    private Task<PreFetchResult> _preFetchTask;
+    private CancellationTokenSource _preFetchCts;
+
+    private record PreFetchResult(
+        PlayoutItemProcessModel ProcessModel,
+        HlsSessionState NextState,
+        DateTimeOffset Now,
+        HlsSessionState StateAtPreFetch);
+
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
         IGraphicsEngine graphicsEngine,
@@ -417,6 +428,150 @@ public class HlsSessionWorker : IHlsSessionWorker
         return result;
     }
 
+    private void TryStartPreFetch(
+        FFmpegProgress progress,
+        PlayoutItemProcessModel currentProcessModel,
+        double durationSeconds,
+        CancellationTokenSource currentCts)
+    {
+        // Only trigger once using atomic compare-exchange
+        if (Interlocked.CompareExchange(ref _preFetchTriggered, 1, 0) != 0)
+        {
+            return;
+        }
+
+        // Only pre-fetch when current item is completing (not a work-ahead chunk)
+        if (!currentProcessModel.IsComplete)
+        {
+            Volatile.Write(ref _preFetchTriggered, 0);
+            return;
+        }
+
+        // Check if we're close enough to the end (within 8 seconds)
+        foreach (double outTimeSeconds in progress.OutTimeSeconds)
+        {
+            double remainingSeconds = durationSeconds - outTimeSeconds;
+            if (remainingSeconds <= 8.0 && remainingSeconds >= 0)
+            {
+                _logger.LogInformation(
+                    "Pre-fetching next playout item for channel {Channel} - {Remaining:F1}s remaining",
+                    _channelNumber,
+                    remainingSeconds);
+
+                _preFetchCts = CancellationTokenSource.CreateLinkedTokenSource(currentCts.Token);
+                var task = StartPreFetch(currentProcessModel, _preFetchCts.Token);
+                Volatile.Write(ref _preFetchTask, task);
+                return;
+            }
+        }
+
+        // Not close enough yet, roll back the trigger
+        Volatile.Write(ref _preFetchTriggered, 0);
+    }
+
+    private async Task<PreFetchResult> StartPreFetch(
+        PlayoutItemProcessModel currentProcessModel,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            HlsSessionState nextState = NextState(_state, currentProcessModel);
+
+            DateTimeOffset nextNow = currentProcessModel.Until;
+
+            bool nextStartAtZero = nextState is HlsSessionState.ZeroAndWorkAhead
+                or HlsSessionState.ZeroAndRealtime
+                or HlsSessionState.SlugAndWorkAhead
+                or HlsSessionState.SlugAndRealtime;
+
+            bool nextIsSlug = nextState is HlsSessionState.SlugAndWorkAhead
+                or HlsSessionState.SlugAndRealtime;
+
+            bool nextRealtime = _state is HlsSessionState.SeekAndRealtime
+                or HlsSessionState.ZeroAndRealtime
+                or HlsSessionState.SlugAndRealtime;
+
+            // Use estimated PTS offset for pre-fetch (ffprobe would be wrong anyway
+            // since current process hasn't finished writing segments yet)
+            TimeSpan ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
+
+            FFmpegProcessRequest request = nextIsSlug
+                ? new GetSlugProcessByChannelNumber(
+                    _channelNumber,
+                    StreamingMode.HttpLiveStreamingSegmenter,
+                    nextNow,
+                    nextRealtime,
+                    _channelStart,
+                    ptsOffset,
+                    _targetFramerate,
+                    _slugSeconds)
+                : new GetPlayoutItemProcessByChannelNumber(
+                    _channelNumber,
+                    StreamingMode.HttpLiveStreamingSegmenter,
+                    nextNow,
+                    nextStartAtZero,
+                    nextRealtime,
+                    _channelStart,
+                    ptsOffset,
+                    _targetFramerate,
+                    IsTroubleshooting: false,
+                    Option<int>.None);
+
+            Either<BaseError, PlayoutItemProcessModel> result = await _mediator.Send(
+                request, cancellationToken);
+
+            foreach (PlayoutItemProcessModel nextProcessModel in result.RightAsEnumerable())
+            {
+                _logger.LogInformation(
+                    "Pre-fetch: built next playout command for channel {Channel}",
+                    _channelNumber);
+
+                return new PreFetchResult(
+                    nextProcessModel,
+                    nextState,
+                    nextNow,
+                    _state);
+            }
+
+            foreach (BaseError error in result.LeftAsEnumerable())
+            {
+                _logger.LogWarning(
+                    "Pre-fetch failed for channel {Channel}: {Error}",
+                    _channelNumber,
+                    error.ToString());
+            }
+
+            return null;
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogDebug("Pre-fetch cancelled for channel {Channel}", _channelNumber);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Pre-fetch error for channel {Channel}: {Message}",
+                _channelNumber,
+                ex.Message);
+            return null;
+        }
+    }
+
+    private void CleanupPreFetch()
+    {
+        Interlocked.Exchange(ref _preFetchTriggered, 0);
+        _preFetchTask = null;
+
+        if (_preFetchCts is not null)
+        {
+            try { _preFetchCts.Cancel(); } catch { }
+            _preFetchCts.Dispose();
+            _preFetchCts = null;
+        }
+    }
+
     private async Task<bool> Transcode(bool realtime, CancellationToken cancellationToken)
     {
         try
@@ -473,39 +628,69 @@ public class HlsSessionWorker : IHlsSessionWorker
                     or HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime,
                 wasSeekAndWorkAhead);
 
-            DateTimeOffset now = wasSeekAndWorkAhead ? DateTimeOffset.Now : _transcodedUntil;
-            bool startAtZero = _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime
-                or HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime;
+            // Check if we have a valid pre-fetched result we can use
+            Option<PlayoutItemProcessModel> maybePreFetchedModel = Option<PlayoutItemProcessModel>.None;
+            Task<PreFetchResult> preFetchTask = Volatile.Read(ref _preFetchTask);
+            if (preFetchTask is not null && preFetchTask.IsCompletedSuccessfully)
+            {
+                PreFetchResult preFetchResult = await preFetchTask;
+                // Validate: state must match and the pre-fetched "now" must match _transcodedUntil
+                if (preFetchResult.StateAtPreFetch == _state &&
+                    preFetchResult.Now == _transcodedUntil)
+                {
+                    _logger.LogInformation(
+                        "Using pre-fetched playout item for channel {Channel}", _channelNumber);
+                    maybePreFetchedModel = preFetchResult.ProcessModel;
+                }
+                else
+                {
+                    _logger.LogDebug(
+                        "Pre-fetch result invalidated for channel {Channel} - state or time mismatch",
+                        _channelNumber);
+                }
+            }
 
-            bool isSlug = _state is HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime;
+            // Clean up pre-fetch state
+            CleanupPreFetch();
 
-            FFmpegProcessRequest request = isSlug
-                ? new GetSlugProcessByChannelNumber(
-                    _channelNumber,
-                    StreamingMode.HttpLiveStreamingSegmenter,
-                    now,
-                    realtime,
-                    _channelStart,
-                    ptsOffset,
-                    _targetFramerate,
-                    _slugSeconds)
-                : new GetPlayoutItemProcessByChannelNumber(
-                    _channelNumber,
-                    StreamingMode.HttpLiveStreamingSegmenter,
-                    now,
-                    startAtZero,
-                    realtime,
-                    _channelStart,
-                    ptsOffset,
-                    _targetFramerate,
-                    IsTroubleshooting: false,
-                    Option<int>.None);
+            Either<BaseError, PlayoutItemProcessModel> result;
 
-            // _logger.LogInformation("Request {@Request}", request);
+            if (maybePreFetchedModel.IsSome)
+            {
+                result = maybePreFetchedModel.ToEither(BaseError.New("pre-fetch validation failed"));
+            }
+            else
+            {
+                DateTimeOffset now = wasSeekAndWorkAhead ? DateTimeOffset.Now : _transcodedUntil;
+                bool startAtZero = _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime
+                    or HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime;
 
-            Either<BaseError, PlayoutItemProcessModel> result = await _mediator.Send(request, cancellationToken);
+                bool isSlug = _state is HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime;
 
-            // _logger.LogInformation("Result {Result}", result.ToString());
+                FFmpegProcessRequest request = isSlug
+                    ? new GetSlugProcessByChannelNumber(
+                        _channelNumber,
+                        StreamingMode.HttpLiveStreamingSegmenter,
+                        now,
+                        realtime,
+                        _channelStart,
+                        ptsOffset,
+                        _targetFramerate,
+                        _slugSeconds)
+                    : new GetPlayoutItemProcessByChannelNumber(
+                        _channelNumber,
+                        StreamingMode.HttpLiveStreamingSegmenter,
+                        now,
+                        startAtZero,
+                        realtime,
+                        _channelStart,
+                        ptsOffset,
+                        _targetFramerate,
+                        IsTroubleshooting: false,
+                        Option<int>.None);
+
+                result = await _mediator.Send(request, cancellationToken);
+            }
 
             foreach (BaseError error in result.LeftAsEnumerable())
             {
@@ -568,10 +753,20 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                     var progressParser = new FFmpegProgress();
 
+                    double durationSeconds = processModel.MaybeDuration.Match(
+                        d => d.TotalSeconds,
+                        () => 0);
+
+                    Interlocked.Exchange(ref _preFetchTriggered, 0);
+
                     CommandResult commandResult = await processWithPipe
                         .WithWorkingDirectory(_workingDirectory)
                         .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
-                        .WithStandardOutputPipe(PipeTarget.ToDelegate(progressParser.ParseLine))
+                        .WithStandardOutputPipe(PipeTarget.ToDelegate(line =>
+                        {
+                            progressParser.ParseLine(line);
+                            TryStartPreFetch(progressParser, processModel, durationSeconds, linkedCts);
+                        }))
                         .WithValidation(CommandResultValidation.None)
                         .ExecuteAsync(linkedCts.Token);
 
@@ -683,6 +878,8 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 // do nothing
             }
+
+            CleanupPreFetch();
 
             if (!realtime)
             {

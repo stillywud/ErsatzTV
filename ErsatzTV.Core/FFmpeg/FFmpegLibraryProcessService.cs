@@ -1009,6 +1009,52 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetCommand(ffmpegPath, None, None, None, concatInputFile, None, pipeline);
     }
 
+    public async Task<Command> ConcatHlsChannel(
+        string ffmpegPath,
+        bool saveReports,
+        Channel channel,
+        string scheme,
+        string host,
+        CancellationToken cancellationToken)
+    {
+        var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
+
+        var concatInputFile = new ConcatInputFile(
+            $"http://localhost:{Settings.StreamingPort}/ffmpeg/concat/{channel.Number}?mode=ts-legacy",
+            resolution);
+
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            HardwareAccelerationMode.None,
+            Option<VideoInputFile>.None,
+            Option<AudioInputFile>.None,
+            Option<WatermarkInputFile>.None,
+            Option<SubtitleInputFile>.None,
+            concatInputFile,
+            Option<GraphicsEngineInput>.None,
+            Option<string>.None,
+            Option<string>.None,
+            Option<string>.None,
+            FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
+            ffmpegPath,
+            cancellationToken);
+
+        HlsOptions hlsOptions = GetHlsOptions(channel, DateTimeOffset.Now, TimeSpan.Zero, string.Empty);
+
+        FFmpegPipeline pipeline = pipelineBuilder.Concat(
+            concatInputFile,
+            FFmpegState.ConcatWithHls(
+                saveReports,
+                channel.Name,
+                hlsOptions.OutputFormat,
+                hlsOptions.HlsPlaylistPath,
+                hlsOptions.HlsSegmentTemplate,
+                hlsOptions.HlsInitTemplate,
+                hlsOptions.HlsSegmentOptions));
+
+        return GetCommand(ffmpegPath, None, None, None, concatInputFile, None, pipeline);
+    }
+
     public async Task<Command> WrapSegmenter(
         string ffmpegPath,
         bool saveReports,
@@ -1395,6 +1441,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         switch (channel.StreamingMode)
         {
             case StreamingMode.HttpLiveStreamingSegmenter:
+            case StreamingMode.HttpLiveStreamingConcat:
                 outputFormat = OutputFormatKind.Hls;
                 break;
         }

@@ -33,6 +33,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
     private readonly IMediator _mediator;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<HlsSessionWorker> _sessionWorkerLogger;
+    private readonly ILogger<HlsConcatSessionWorker> _concatSessionWorkerLogger;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public StartFFmpegSessionHandler(
@@ -44,6 +45,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         ILocalFileSystem localFileSystem,
         ILogger<StartFFmpegSessionHandler> logger,
         ILogger<HlsSessionWorker> sessionWorkerLogger,
+        ILogger<HlsConcatSessionWorker> concatSessionWorkerLogger,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IConfigElementRepository configElementRepository,
         IGraphicsEngine graphicsEngine,
@@ -58,6 +60,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         _localFileSystem = localFileSystem;
         _logger = logger;
         _sessionWorkerLogger = sessionWorkerLogger;
+        _concatSessionWorkerLogger = concatSessionWorkerLogger;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _configElementRepository = configElementRepository;
         _graphicsEngine = graphicsEngine;
@@ -93,7 +96,9 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 
         await _mediator.Send(new RefreshGraphicsElements(), cancellationToken);
 
-        HlsSessionWorker worker = GetSessionWorker(request, targetFramerate);
+        IHlsSessionWorker worker = request.Mode == "segmenter-concat"
+            ? GetConcatSessionWorker(request)
+            : GetSessionWorker(request, targetFramerate);
 
         _ffmpegSegmenterService.AddOrUpdateWorker(request.ChannelNumber, worker);
 
@@ -122,6 +127,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
     private HlsSessionWorker GetSessionWorker(StartFFmpegSession request, Option<FrameRate> targetFramerate) =>
         request.Mode switch
         {
+            "segmenter-concat" => throw new NotSupportedException("Use GetConcatSessionWorker for concat mode"),
             _ => new HlsSessionWorker(
                 _serviceScopeFactory,
                 _graphicsEngine,
@@ -134,6 +140,15 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
                 _sessionWorkerLogger,
                 targetFramerate)
         };
+
+    private HlsConcatSessionWorker GetConcatSessionWorker(StartFFmpegSession request) =>
+        new HlsConcatSessionWorker(
+            _serviceScopeFactory,
+            _configElementRepository,
+            _fileSystem,
+            _localFileSystem,
+            _concatSessionWorkerLogger,
+            _hlsPlaylistFilter);
 
     private Task<Validation<BaseError, Unit>> Validate(StartFFmpegSession request) =>
         SessionMustBeInactive(request)

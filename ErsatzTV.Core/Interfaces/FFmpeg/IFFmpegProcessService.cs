@@ -76,6 +76,14 @@ public interface IFFmpegProcessService
         string host,
         CancellationToken cancellationToken);
 
+    Task<Command> ConcatHlsChannel(
+        string ffmpegPath,
+        bool saveReports,
+        Channel channel,
+        string scheme,
+        string host,
+        CancellationToken cancellationToken);
+
     Task<Command> WrapSegmenter(
         string ffmpegPath,
         bool saveReports,

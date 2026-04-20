@@ -58,4 +58,39 @@ public record FFmpegState(
             false,
             "linear",
             false);
+
+    public static FFmpegState ConcatWithHls(
+        bool saveReport,
+        string channelName,
+        OutputFormatKind outputFormat,
+        Option<string> hlsPlaylistPath,
+        Option<string> hlsSegmentTemplate,
+        Option<string> hlsInitTemplate,
+        Option<string> hlsSegmentOptions) =>
+        new(
+            saveReport,
+            HardwareAccelerationMode.None,
+            HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
+            true, // do not map metadata
+            "ErsatzTV",
+            channelName,
+            Option<string>.None,
+            Option<string>.None,
+            Option<string>.None,
+            outputFormat,
+            hlsPlaylistPath,
+            hlsSegmentTemplate,
+            hlsInitTemplate,
+            hlsSegmentOptions,
+            TimeSpan.Zero,
+            Option<int>.None,
+            Option<int>.None,
+            false,
+            false,
+            "linear",
+            false);
 }

@@ -7,6 +7,7 @@ public enum StreamingMode
 
     HttpLiveStreamingSegmenter = 4,
     TransportStreamHybrid = 5,
+    HttpLiveStreamingConcat = 6,
 
     // HttpLiveStreamingSegmenterLegacy = 999
 }

@@ -6,6 +6,7 @@ namespace ErsatzTV.Core.FFmpeg;
 public partial class FFmpegProgress
 {
     public Option<double> Speed { get; private set; } = Option<double>.None;
+    public Option<double> OutTimeSeconds { get; private set; } = Option<double>.None;
 
     public void ParseLine(string line)
     {
@@ -13,6 +14,12 @@ public partial class FFmpegProgress
         if (match.Success && double.TryParse(match.Groups[1].Value, out double speed))
         {
             Speed = speed;
+        }
+
+        Match outTimeMatch = FFmpegOutTimeMs().Match(line);
+        if (outTimeMatch.Success && long.TryParse(outTimeMatch.Groups[1].Value, out long outTimeMs))
+        {
+            OutTimeSeconds = outTimeMs / 1_000_000.0;
         }
     }
 
@@ -52,4 +59,7 @@ public partial class FFmpegProgress
 
     [GeneratedRegex(@"speed=\s*([\d\.]+)x", RegexOptions.IgnoreCase)]
     private static partial Regex FFmpegSpeed();
+
+    [GeneratedRegex(@"out_time_ms=(\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex FFmpegOutTimeMs();
 }
