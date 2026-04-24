@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using Serilog;
 
 namespace ErsatzTV.Core;
@@ -71,6 +72,17 @@ public static class FileSystemLayout
 
     public static readonly string DefaultMpegTsScriptFolder;
 
+    private static readonly string[] CommonMountPoints = new[]
+    {
+        "/mnt",
+        "/media",
+        "/data",
+        "/storage",
+        "/opt",
+        "/var/lib",
+        "/home"
+    };
+
     public static readonly string MacOsOldAppDataFolder = Path.Combine(
         Environment.GetEnvironmentVariable("HOME") ?? string.Empty,
         ".local",
@@ -133,6 +145,19 @@ public static class FileSystemLayout
 
                 // ignore custom config folder
                 useCustomTranscodeFolder = false;
+            }
+        }
+
+        if (!useCustomTranscodeFolder && !isDocker && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            // Auto-detect disk with most available space on Linux
+            string bestTranscodePath = FindBestTranscodePath();
+            if (!string.IsNullOrWhiteSpace(bestTranscodePath))
+            {
+                defaultTranscodeFolder = bestTranscodePath;
+                Log.Logger.Information(
+                    "Auto-selected transcode folder with most available space: {Folder}",
+                    defaultTranscodeFolder);
             }
         }
 
@@ -200,5 +225,96 @@ public static class FileSystemLayout
 
         MpegTsScriptsFolder = Path.Combine(ScriptsFolder, "mpegts");
         DefaultMpegTsScriptFolder = Path.Combine(MpegTsScriptsFolder, "default");
+    }
+
+    /// <summary>
+    /// Finds the disk with the most available space for the transcode folder.
+    /// Checks common mount points like /vol*, /mnt, /media, /data.
+    /// Returns null if no suitable disk is found.
+    /// </summary>
+    private static string FindBestTranscodePath()
+    {
+        try
+        {
+            long maxAvailableSpace = 0;
+            string bestPath = null;
+
+            // Common mount point patterns to check
+            var candidates = new List<string>();
+
+            // Add /vol* directories (like /vol1, /vol2, /vol3)
+            if (Directory.Exists("/vol"))
+            {
+                candidates.AddRange(Directory.GetDirectories("/vol"));
+            }
+
+            // Add numbered vol directories directly under root
+            for (int i = 1; i <= 10; i++)
+            {
+                string volPath = $"/vol{i}";
+                if (Directory.Exists(volPath))
+                {
+                    candidates.Add(volPath);
+                }
+            }
+
+            // Other common mount points
+            candidates.AddRange(CommonMountPoints.Where(Directory.Exists));
+
+            // Also check the default temp location
+            string tempPath = Path.GetTempPath();
+            if (Directory.Exists(tempPath))
+            {
+                candidates.Add(tempPath);
+            }
+
+            foreach (string candidate in candidates)
+            {
+                try
+                {
+                    // Skip if not a mount point and not a subdirectory of a mount point we already check
+                    var driveInfo = new DriveInfo(candidate);
+                    if (driveInfo.IsReady)
+                    {
+                        long availableSpace = driveInfo.AvailableFreeSpace;
+                        Log.Logger.Debug(
+                            "Checking transcode candidate {Path}: {AvailableGB:F1} GB available",
+                            candidate,
+                            availableSpace / (1024.0 * 1024 * 1024));
+
+                        if (availableSpace > maxAvailableSpace)
+                        {
+                            maxAvailableSpace = availableSpace;
+                            bestPath = candidate;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger.Debug(ex, "Failed to check disk space for {Path}", candidate);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(bestPath))
+            {
+                // Create etv-transcode subdirectory
+                string transcodePath = Path.Combine(bestPath, "etv-transcode");
+                try
+                {
+                    Directory.CreateDirectory(transcodePath);
+                    return transcodePath;
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger.Warning(ex, "Failed to create transcode directory at {Path}", transcodePath);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Logger.Warning(ex, "Failed to find best transcode path");
+        }
+
+        return string.Empty;
     }
 }

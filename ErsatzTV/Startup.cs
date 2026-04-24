@@ -880,6 +880,7 @@ public class Startup
         services.AddHostedService<FFmpegWorkerService>();
         services.AddHostedService<CopyPrepService>();
         services.AddHostedService<SearchIndexService>();
+        services.AddHostedService<TranscodeCleanupService>();
     }
 
     private ServerVersion ResolveMySqlServerVersion(string mySqlConnectionString)
