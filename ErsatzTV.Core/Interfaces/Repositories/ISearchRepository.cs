@@ -12,4 +12,7 @@ public interface ISearchRepository
     Task<List<string>> GetLanguagesForArtist(Artist artist);
     Task<List<string>> GetSubLanguagesForArtist(Artist artist);
     IAsyncEnumerable<MediaItem> GetAllMediaItems(CancellationToken cancellationToken);
+
+    // 新增：获取媒体项总数
+    Task<int> GetAllMediaItemsCount(CancellationToken cancellationToken);
 }

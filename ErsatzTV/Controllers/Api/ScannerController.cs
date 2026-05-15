@@ -1,6 +1,4 @@
-using System.Threading.Channels;
-using ErsatzTV.Application;
-using ErsatzTV.Application.Search;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +9,7 @@ namespace ErsatzTV.Controllers.Api;
 [Route("api/scan/{scanId:guid}")]
 public class ScannerController(
     IScannerProxyService scannerProxyService,
-    ChannelWriter<ISearchIndexBackgroundServiceRequest> channelWriter)
+    ISearchIndexQueueRepository searchIndexQueueRepository)
 {
     [HttpPost("progress")]
     [EndpointSummary("Scanner progress update")]
@@ -30,7 +28,7 @@ public class ScannerController(
     {
         if (scannerProxyService.IsActive(scanId))
         {
-            await channelWriter.WriteAsync(new ReindexMediaItems(itemsToUpdate), cancellationToken);
+            await searchIndexQueueRepository.EnqueueReindexRequest(itemsToUpdate, cancellationToken);
         }
 
         return new OkResult();
@@ -45,7 +43,7 @@ public class ScannerController(
     {
         if (scannerProxyService.IsActive(scanId))
         {
-            await channelWriter.WriteAsync(new RemoveMediaItems(itemsToRemove), cancellationToken);
+            await searchIndexQueueRepository.EnqueueRemoveRequest(itemsToRemove, cancellationToken);
         }
 
         return new OkResult();

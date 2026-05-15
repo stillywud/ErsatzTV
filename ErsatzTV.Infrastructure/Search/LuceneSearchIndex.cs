@@ -115,8 +115,13 @@ public sealed class LuceneSearchIndex : ISearchIndex
         bool directoryExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
         bool fileExists = File.Exists(_cleanShutdownPath);
 
+        _logger.LogInformation("[SearchIndex] IndexExists check - DirectoryExists: {DirectoryExists}, CleanShutdownFileExists: {FileExists}, Path: {Path}",
+            directoryExists, fileExists, FileSystemLayout.SearchIndexFolder);
+
         if (!directoryExists || !fileExists)
         {
+            _logger.LogWarning("[SearchIndex] Index does not exist - DirectoryExists: {DirectoryExists}, FileExists: {FileExists}",
+                directoryExists, fileExists);
             return Task.FromResult(false);
         }
 
@@ -129,16 +134,38 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 { OpenMode = OpenMode.CREATE_OR_APPEND };
             using var tempWriter = new IndexWriter(tempDir, indexConfig);
             bool hasDocs = tempWriter.MaxDoc > 0;
+            _logger.LogInformation("[SearchIndex] Index document count check - MaxDoc: {MaxDoc}, HasDocs: {HasDocs}",
+                tempWriter.MaxDoc, hasDocs);
             tempWriter.Dispose(false);
             return Task.FromResult(hasDocs);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "[SearchIndex] Error checking index document count");
             return Task.FromResult(false);
         }
     }
 
     public int Version => 50;
+
+    // 新增：获取索引文档数量
+    public int GetDocumentCount()
+    {
+        if (!_initialized || _writer == null)
+        {
+            return 0;
+        }
+
+        try
+        {
+            return _writer.MaxDoc;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[SearchIndex] Error getting document count");
+            return 0;
+        }
+    }
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -256,6 +283,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         if (string.IsNullOrWhiteSpace(query.Replace("*", string.Empty).Replace("?", string.Empty)) ||
             _writer.MaxDoc == 0)
         {
+            _logger.LogWarning("[SearchIndex] Search returned empty result - Query: {Query}, MaxDoc: {MaxDoc}", query, _writer?.MaxDoc ?? -1);
             return new SearchResult([], 0);
         }
 

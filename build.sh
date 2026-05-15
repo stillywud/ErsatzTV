@@ -1,15 +1,26 @@
 #!/bin/bash
 # ErsatzTV Build & Publish Script
-# Usage: 
+# Usage:
 #   ./build.sh           - 仅构建 (debug)
-#   ./build.sh release   - 仅构建 (release)  
+#   ./build.sh release   - 仅构建 (release)
 #   ./build.sh publish   - 构建并发布 (release)
 #   ./build.sh publish debug - 构建并发布 (debug)
 
 set -e
 
+# 确保 dotnet 在 PATH 中
+if ! command -v dotnet &> /dev/null; then
+    export PATH="/usr/share/dotnet:$PATH"
+fi
+
 MODE="${1:-debug}"
 ACTION="${2:-build}"
+
+# 支持快捷方式: ./build.sh publish 等同于 ./build.sh release publish
+if [[ "$MODE" == "publish" ]]; then
+    MODE="release"
+    ACTION="publish"
+fi
 
 PARALLELISM="-p:MaxParallelism=1"
 
@@ -34,7 +45,7 @@ publish() {
         -o "$out" \
         -p:PublishSingleFile=true \
         -p:SelfContained=true \
-        -p:MaxParallelism=2 \
+        -p:MaxParallelism=1 \
         -v q
     
     echo ""

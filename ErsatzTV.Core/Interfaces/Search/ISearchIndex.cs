@@ -10,6 +10,9 @@ public interface ISearchIndex : IDisposable
     int Version { get; }
     Task<bool> IndexExists();
 
+    // 新增：获取索引文档数量
+    int GetDocumentCount();
+
     Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
         IConfigElementRepository configElementRepository,

@@ -225,6 +225,25 @@ public class ElasticSearchIndex : ISearchIndex
         // do nothing
     }
 
+    public int GetDocumentCount()
+    {
+        try
+        {
+            _client ??= CreateClient();
+            var response = _client.CountAsync<ElasticSearchItem>(c => c.Indices(IndexName)).Result;
+            if (response.IsValidResponse)
+            {
+                return (int)response.Count;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get document count from Elasticsearch");
+        }
+
+        return 0;
+    }
+
     private static ES.ElasticsearchClient CreateClient()
     {
         ES.ElasticsearchClientSettings settings = new ES.ElasticsearchClientSettings(Uri).DefaultIndex(IndexName);

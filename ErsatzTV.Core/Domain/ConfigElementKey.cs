@@ -33,6 +33,12 @@ public class ConfigElementKey
     public static ConfigElementKey FFmpegCopyPrepMaxConcurrentJobs => new("ffmpeg.copy_prep.max_concurrent_jobs");
     public static ConfigElementKey FFmpegCopyPrepThreads => new("ffmpeg.copy_prep.threads_per_job");
     public static ConfigElementKey SearchIndexVersion => new("search_index.version");
+    public static ConfigElementKey SearchIndexLastRebuild => new("search_index.last_rebuild");
+    public static ConfigElementKey SearchIndexAutoRebuildEnabled => new("search_index.auto_rebuild.enabled");
+    public static ConfigElementKey SearchIndexAutoRebuildThreshold => new("search_index.auto_rebuild.threshold");
+    public static ConfigElementKey SearchIndexHealthCheckInterval => new("search_index.health_check.interval_hours");
+    public static ConfigElementKey ScannerReindexRetryCount => new("scanner.reindex.retry_count");
+    public static ConfigElementKey ScannerReindexTimeout => new("scanner.reindex.timeout_seconds");
     public static ConfigElementKey HDHRTunerCount => new("hdhr.tuner_count");
     public static ConfigElementKey HDHRUUID => new("hdhr.uuid");
     public static ConfigElementKey PagesIsDarkMode => new("pages.is_dark_mode");

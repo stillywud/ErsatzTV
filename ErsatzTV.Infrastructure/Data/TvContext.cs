@@ -130,6 +130,7 @@ public class TvContext : DbContext
     public DbSet<GraphicsElement> GraphicsElements { get; set; }
     public DbSet<CopyPrepQueueItem> CopyPrepQueueItems { get; set; }
     public DbSet<CopyPrepQueueLogEntry> CopyPrepQueueLogEntries { get; set; }
+    public DbSet<SearchIndexQueueItem> SearchIndexQueue { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

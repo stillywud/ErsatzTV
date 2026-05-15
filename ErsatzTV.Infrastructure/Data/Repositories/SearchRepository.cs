@@ -394,8 +394,7 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
         }
     }
 
-    private async IAsyncEnumerable<RemoteStream> GetAllRemoteStreams(
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+    private async IAsyncEnumerable<RemoteStream> GetAllRemoteStreams([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -411,5 +410,11 @@ public class SearchRepository(IDbContextFactory<TvContext> dbContextFactory) : I
         {
             yield return movie;
         }
+    }
+
+    public async Task<int> GetAllMediaItemsCount(CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await dbContext.MediaItems.CountAsync(cancellationToken);
     }
 }

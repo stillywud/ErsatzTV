@@ -48,18 +48,49 @@ public class ScannerProxy(IHttpClientFactory httpClientFactory, ILogger<ScannerP
             return true;
         }
 
-        try
+        // 添加重试逻辑，最多重试3次
+        for (int attempt = 1; attempt <= 3; attempt++)
         {
-            using var httpClient = httpClientFactory.CreateClient();
-            var url = $"{_baseUrl}/items/reindex";
-            await httpClient.PostAsJsonAsync(url, mediaItemIds, cancellationToken);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "[ScannerProxy] Reindex failed for IDs: {Ids}", string.Join(",", mediaItemIds));
+            try
+            {
+                using var httpClient = httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(30); // 增加超时到30秒
+                var url = $"{_baseUrl}/items/reindex";
+
+                logger.LogDebug("[ScannerProxy] Sending reindex request for {Count} items (attempt {Attempt})",
+                    mediaItemIds.Length, attempt);
+
+                var response = await httpClient.PostAsJsonAsync(url, mediaItemIds, cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    logger.LogDebug("[ScannerProxy] Reindex request succeeded for {Count} items", mediaItemIds.Length);
+                    return true;
+                }
+
+                logger.LogWarning("[ScannerProxy] Reindex request failed with status {StatusCode} (attempt {Attempt})",
+                    response.StatusCode, attempt);
+            }
+            catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+            {
+                logger.LogWarning("[ScannerProxy] Reindex request timed out (attempt {Attempt})", attempt);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "[ScannerProxy] Reindex failed for IDs: {Ids} (attempt {Attempt})",
+                    string.Join(",", mediaItemIds), attempt);
+            }
+
+            // 指数退避重试
+            if (attempt < 3)
+            {
+                var delayMs = 1000 * attempt; // 1s, 2s
+                logger.LogDebug("[ScannerProxy] Retrying in {DelayMs}ms", delayMs);
+                await Task.Delay(delayMs, cancellationToken);
+            }
         }
 
+        logger.LogError("[ScannerProxy] Reindex failed after all retries for {Count} items", mediaItemIds.Length);
         return false;
     }
 
@@ -67,6 +98,7 @@ public class ScannerProxy(IHttpClientFactory httpClientFactory, ILogger<ScannerP
     {
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
+            logger.LogWarning("[ScannerProxy] RemoveMediaItems failed: _baseUrl is null or empty!");
             return false;
         }
 
@@ -75,18 +107,48 @@ public class ScannerProxy(IHttpClientFactory httpClientFactory, ILogger<ScannerP
             return true;
         }
 
-        try
+        // 添加重试逻辑，最多重试3次
+        for (int attempt = 1; attempt <= 3; attempt++)
         {
-            using var httpClient = httpClientFactory.CreateClient();
-            var url = $"{_baseUrl}/items/remove";
-            await httpClient.PostAsJsonAsync(url, mediaItemIds, cancellationToken);
-            return true;
-        }
-        catch
-        {
-            // do nothing
+            try
+            {
+                using var httpClient = httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(30);
+                var url = $"{_baseUrl}/items/remove";
+
+                logger.LogDebug("[ScannerProxy] Sending remove request for {Count} items (attempt {Attempt})",
+                    mediaItemIds.Length, attempt);
+
+                var response = await httpClient.PostAsJsonAsync(url, mediaItemIds, cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    logger.LogDebug("[ScannerProxy] Remove request succeeded for {Count} items", mediaItemIds.Length);
+                    return true;
+                }
+
+                logger.LogWarning("[ScannerProxy] Remove request failed with status {StatusCode} (attempt {Attempt})",
+                    response.StatusCode, attempt);
+            }
+            catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+            {
+                logger.LogWarning("[ScannerProxy] Remove request timed out (attempt {Attempt})", attempt);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "[ScannerProxy] Remove failed for IDs: {Ids} (attempt {Attempt})",
+                    string.Join(",", mediaItemIds), attempt);
+            }
+
+            if (attempt < 3)
+            {
+                var delayMs = 1000 * attempt;
+                logger.LogDebug("[ScannerProxy] Retrying in {DelayMs}ms", delayMs);
+                await Task.Delay(delayMs, cancellationToken);
+            }
         }
 
+        logger.LogError("[ScannerProxy] Remove failed after all retries for {Count} items", mediaItemIds.Length);
         return false;
     }
 
@@ -94,18 +156,48 @@ public class ScannerProxy(IHttpClientFactory httpClientFactory, ILogger<ScannerP
     {
         if (string.IsNullOrWhiteSpace(_baseUrl))
         {
+            logger.LogWarning("[ScannerProxy] NotifyScanComplete failed: _baseUrl is null or empty!");
             return;
         }
 
-        try
+        // 添加重试逻辑
+        for (int attempt = 1; attempt <= 3; attempt++)
         {
-            using var httpClient = httpClientFactory.CreateClient();
-            var url = $"{_baseUrl}/scan-complete";
-            await httpClient.PostAsync(url, null, cancellationToken);
+            try
+            {
+                using var httpClient = httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(30);
+                var url = $"{_baseUrl}/scan-complete";
+
+                logger.LogDebug("[ScannerProxy] Sending scan-complete notification (attempt {Attempt})", attempt);
+
+                var response = await httpClient.PostAsync(url, null, cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    logger.LogInformation("[ScannerProxy] Scan complete notification sent successfully");
+                    return;
+                }
+
+                logger.LogWarning("[ScannerProxy] Scan-complete failed with status {StatusCode} (attempt {Attempt})",
+                    response.StatusCode, attempt);
+            }
+            catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+            {
+                logger.LogWarning("[ScannerProxy] Scan-complete request timed out (attempt {Attempt})", attempt);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "[ScannerProxy] Failed to notify scan complete (attempt {Attempt})", attempt);
+            }
+
+            if (attempt < 3)
+            {
+                var delayMs = 1000 * attempt;
+                await Task.Delay(delayMs, cancellationToken);
+            }
         }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "[ScannerProxy] Failed to notify scan complete");
-        }
+
+        logger.LogError("[ScannerProxy] Failed to notify scan complete after all retries");
     }
 }

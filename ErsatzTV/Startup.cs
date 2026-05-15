@@ -768,6 +768,7 @@ public class Startup
         services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
         services.AddScoped<ITelevisionRepository, TelevisionRepository>();
         services.AddScoped<ISearchRepository, SearchRepository>();
+        services.AddScoped<ISearchIndexQueueRepository, SearchIndexQueueRepository>();
         services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<IArtistRepository, ArtistRepository>();
         services.AddScoped<IMusicVideoRepository, MusicVideoRepository>();
@@ -880,6 +881,7 @@ public class Startup
         services.AddHostedService<FFmpegWorkerService>();
         services.AddHostedService<CopyPrepService>();
         services.AddHostedService<SearchIndexService>();
+        services.AddHostedService<SearchIndexHealthCheckService>();
         services.AddHostedService<TranscodeCleanupService>();
     }
 

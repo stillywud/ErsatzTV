@@ -1,30 +1,29 @@
-using System.Threading.Channels;
-using ErsatzTV.Application;
 using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Repositories;
 using MediatR;
 
 namespace ErsatzTV.Services;
 
 public class SearchIndexService : BackgroundService
 {
-    private readonly ChannelReader<ISearchIndexBackgroundServiceRequest> _channel;
     private readonly ILogger<SearchIndexService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly SystemStartup _systemStartup;
 
     private const int MaxBatchSize = 100;
     private readonly TimeSpan _maxBatchTime = TimeSpan.FromSeconds(10);
+    private readonly TimeSpan _cleanupInterval = TimeSpan.FromHours(24);
+    private DateTime _lastCleanupTime = DateTime.MinValue;
 
     private enum SearchOperation { Reindex, Remove }
 
     public SearchIndexService(
-        ChannelReader<ISearchIndexBackgroundServiceRequest> channel,
         IServiceScopeFactory serviceScopeFactory,
         SystemStartup systemStartup,
         ILogger<SearchIndexService> logger)
     {
-        _channel = channel;
         _serviceScopeFactory = serviceScopeFactory;
         _systemStartup = systemStartup;
         _logger = logger;
@@ -37,35 +36,34 @@ public class SearchIndexService : BackgroundService
         await _systemStartup.WaitForDatabase(stoppingToken);
         try
         {
-            _logger.LogInformation("Search index worker service started");
-
-            var batch = new Dictionary<int, SearchOperation>();
+            _logger.LogInformation("Search index worker service started (using SQLite queue)");
 
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    var firstRequest = await _channel.ReadAsync(stoppingToken);
-                    AddRequestToBatch(firstRequest, batch);
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var queueRepository = scope.ServiceProvider.GetRequiredService<ISearchIndexQueueRepository>();
 
-                    using var timeoutCts = new CancellationTokenSource(_maxBatchTime);
-                    using var linkedCts =
-                        CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, timeoutCts.Token);
+                    // Periodic cleanup of old processed requests
+                    if (DateTime.UtcNow - _lastCleanupTime > _cleanupInterval)
+                    {
+                        await CleanupOldRequests(queueRepository, stoppingToken);
+                        _lastCleanupTime = DateTime.UtcNow;
+                    }
 
-                    try
+                    // Get pending requests from queue
+                    var pendingRequests = await queueRepository.GetPendingRequests(MaxBatchSize, stoppingToken);
+
+                    if (pendingRequests.Count == 0)
                     {
-                        while (batch.Count < MaxBatchSize && await _channel.WaitToReadAsync(linkedCts.Token))
-                        {
-                            if (_channel.TryRead(out var nextRequest))
-                            {
-                                AddRequestToBatch(nextRequest, batch);
-                            }
-                        }
+                        // No pending requests, wait a bit before checking again
+                        await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+                        continue;
                     }
-                    catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
-                    {
-                        // batch time expired.
-                    }
+
+                    // Process the batch
+                    await ProcessQueueBatchAsync(pendingRequests, stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -73,16 +71,10 @@ public class SearchIndexService : BackgroundService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error reading from search index channel.");
+                    _logger.LogError(ex, "Error processing search index queue");
 
                     // avoid fast-looping on error
                     await Task.Delay(1000, stoppingToken);
-                }
-
-                if (batch.Count > 0)
-                {
-                    await ProcessBatchAsync(batch, stoppingToken);
-                    batch.Clear();
                 }
             }
         }
@@ -92,31 +84,38 @@ public class SearchIndexService : BackgroundService
         }
     }
 
-    private static void AddRequestToBatch(
-        ISearchIndexBackgroundServiceRequest request,
-        IDictionary<int, SearchOperation> batch)
+    private async Task CleanupOldRequests(ISearchIndexQueueRepository queueRepository, CancellationToken stoppingToken)
     {
-        switch (request)
+        try
         {
-            case ReindexMediaItems reindex:
-                foreach (int id in reindex.MediaItemIds)
-                {
-                    batch[id] = SearchOperation.Reindex;
-                }
-
-                break;
-            case RemoveMediaItems remove:
-                foreach (int id in remove.MediaItemIds)
-                {
-                    batch[id] = SearchOperation.Remove;
-                }
-
-                break;
+            // Keep processed requests for 7 days
+            await queueRepository.CleanupProcessedRequests(TimeSpan.FromDays(7), stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error cleaning up old search index queue items");
         }
     }
 
-    private async Task ProcessBatchAsync(Dictionary<int, SearchOperation> batch, CancellationToken stoppingToken)
+    private async Task ProcessQueueBatchAsync(List<SearchIndexQueueItem> requests, CancellationToken stoppingToken)
     {
+        var batch = new Dictionary<int, SearchOperation>();
+        var requestIds = new List<int>();
+
+        foreach (var request in requests)
+        {
+            requestIds.Add(request.Id);
+            switch (request.Operation)
+            {
+                case SearchIndexOperation.Reindex:
+                    batch[request.MediaItemId] = SearchOperation.Reindex;
+                    break;
+                case SearchIndexOperation.Remove:
+                    batch[request.MediaItemId] = SearchOperation.Remove;
+                    break;
+            }
+        }
+
         var idsToReindex = new List<int>();
         var idsToRemove = new List<int>();
 
@@ -140,6 +139,7 @@ public class SearchIndexService : BackgroundService
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        ISearchIndexQueueRepository queueRepository = scope.ServiceProvider.GetRequiredService<ISearchIndexQueueRepository>();
 
         try
         {
@@ -152,6 +152,9 @@ public class SearchIndexService : BackgroundService
             {
                 await mediator.Send(new ReindexMediaItems(idsToReindex), stoppingToken);
             }
+
+            // Mark all requests as processed
+            await queueRepository.MarkAsProcessed(requestIds, stoppingToken);
         }
         catch (Exception ex)
         {
