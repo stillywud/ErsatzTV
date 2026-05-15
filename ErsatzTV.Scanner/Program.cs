@@ -186,6 +186,7 @@ public class Program
                 services.AddHttpClient("RefitCustomClient").AddHttpMessageHandler<SlowApiHandler>();
 
                 services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
+                services.AddScoped<ISearchIndexQueueRepository, SearchIndexQueueRepository>();
                 services.AddScoped<IMetadataRepository, MetadataRepository>();
                 services.AddScoped<IMediaSourceRepository, MediaSourceRepository>();
                 services.AddScoped<IMediaItemRepository, MediaItemRepository>();

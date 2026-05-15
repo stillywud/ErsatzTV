@@ -136,6 +136,7 @@ public class TvContext : DbContext
     {
         optionsBuilder.UseLoggerFactory(_loggerFactory);
         optionsBuilder.AddInterceptors(_slowQueryInterceptor);
+        optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
