@@ -236,10 +236,11 @@ public class HlsSessionWorker : IHlsSessionWorker
                     cancellationToken);
             }
 
-            bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit(cancellationToken);
-            _state = initialWorkAhead ? HlsSessionState.SeekAndWorkAhead : HlsSessionState.SeekAndRealtime;
+            // Disable WorkAhead mode to prevent segment filename collision
+            // between first and second FFmpeg processes
+            _state = HlsSessionState.SeekAndRealtime;
 
-            if (!await Transcode(!initialWorkAhead, cancellationToken))
+            if (!await Transcode(true, cancellationToken))
             {
                 return;
             }
@@ -711,22 +712,26 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 await TrimAndDelete(cancellationToken);
 
-                // For HLS-TS format, clean up old segments before starting new ffmpeg process
-                // to prevent segment filename collision and player buffering issues
+                // For HLS-TS format, rename old segments before starting new ffmpeg process
+                // to prevent overwriting segments that players may be buffering
                 if (_outputFormatKind is OutputFormatKind.Hls)
                 {
                     try
                     {
+                        // Rename old TS segments to .bak so they won't be overwritten
+                        // but players can still access them if needed
                         var oldSegments = _fileSystem.Directory.GetFiles(_workingDirectory, "live*.ts");
                         foreach (var segment in oldSegments)
                         {
-                            _fileSystem.File.Delete(segment);
+                            string bakPath = segment + ".bak";
+                            _fileSystem.File.Move(segment, bakPath);
                         }
-                        _logger.LogDebug("Cleaned up old TS segments in {Directory} before starting new ffmpeg process", _workingDirectory);
+
+                        _logger.LogDebug("Renamed {Count} old TS segments to .bak in {Directory}", oldSegments.Length, _workingDirectory);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to clean up old TS segments");
+                        _logger.LogWarning(ex, "Failed to rename old TS segments");
                     }
                 }
 
