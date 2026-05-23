@@ -264,11 +264,14 @@ public class HlsPlaylistFilter(ITempFilePool tempFilePool, ILogger<HlsPlaylistFi
             .Map(s => s.StartTime)
             .IfNone(DateTimeOffset.MaxValue);
 
+        var generatedAtValues = items.OfType<PlaylistSegment>().Select(s => s.GeneratedAt).ToList();
+        long playlistGeneratedAt = generatedAtValues.Count > 0 ? generatedAtValues.Min() : 0L;
+
         return Tuple(
             playlist,
             nextPlaylistStart,
             startSequence,
-            items.OfType<PlaylistSegment>().Min(s => s.GeneratedAt),
+            playlistGeneratedAt,
             allSegments.Count);
     }
 

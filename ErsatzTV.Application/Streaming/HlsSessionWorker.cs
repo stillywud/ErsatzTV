@@ -711,6 +711,25 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 await TrimAndDelete(cancellationToken);
 
+                // For HLS-TS format, clean up old segments before starting new ffmpeg process
+                // to prevent segment filename collision and player buffering issues
+                if (_outputFormatKind is OutputFormatKind.Hls)
+                {
+                    try
+                    {
+                        var oldSegments = _fileSystem.Directory.GetFiles(_workingDirectory, "live*.ts");
+                        foreach (var segment in oldSegments)
+                        {
+                            _fileSystem.File.Delete(segment);
+                        }
+                        _logger.LogDebug("Cleaned up old TS segments in {Directory} before starting new ffmpeg process", _workingDirectory);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to clean up old TS segments");
+                    }
+                }
+
                 // increment discontinuity sequence and store with segment key (generated at)
                 foreach (long segmentKey in processModel.SegmentKey)
                 {
