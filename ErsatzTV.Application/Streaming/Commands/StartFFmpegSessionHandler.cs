@@ -89,10 +89,8 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         // disable idle timeout when configured to keep running
         Option<ChannelViewModel> channel =
             await _mediator.Send(new GetChannelByNumber(request.ChannelNumber), cancellationToken);
-        if (await channel.Map(c => c.IdleBehavior is ChannelIdleBehavior.KeepRunning).IfNoneAsync(false))
-        {
-            idleTimeout = Option<TimeSpan>.None;
-        }
+        // Force all channels to keep running (pre-generate segments)
+        idleTimeout = Option<TimeSpan>.None;
 
         await _mediator.Send(new RefreshGraphicsElements(), cancellationToken);
 
