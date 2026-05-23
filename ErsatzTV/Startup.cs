@@ -879,6 +879,7 @@ public class Startup
         services.AddHostedService<WorkerService>();
         services.AddHostedService<SchedulerService>();
         services.AddHostedService<FFmpegWorkerService>();
+        services.AddHostedService<ChannelPreloadService>();
         services.AddHostedService<CopyPrepService>();
         services.AddHostedService<SearchIndexService>();
         services.AddHostedService<SearchIndexHealthCheckService>();
