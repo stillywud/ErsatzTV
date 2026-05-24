@@ -1,0 +1,1330 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "ErsatzTV | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/channels": {
+      "get": {
+        "tags": [
+          "Channel"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChannelResponseModel"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChannelResponseModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChannelResponseModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/channels/{channelNumber}/playout/reset": {
+      "post": {
+        "tags": [
+          "Channels"
+        ],
+        "summary": "Reset channel playout",
+        "parameters": [
+          {
+            "name": "channelNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ffmpeg/profiles": {
+      "get": {
+        "tags": [
+          "FFmpegProfile"
+        ],
+        "operationId": "GetFFmpegProfiles",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FFmpegFullProfileResponseModel"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FFmpegFullProfileResponseModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FFmpegFullProfileResponseModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ffmpeg/profiles/new": {
+      "post": {
+        "tags": [
+          "FFmpegProfile"
+        ],
+        "operationId": "CreateFFmpegProfile",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFFmpegProfile"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFFmpegProfile"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFFmpegProfile"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFFmpegProfile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ffmpeg/profiles/update": {
+      "put": {
+        "tags": [
+          "FFmpegProfile"
+        ],
+        "operationId": "UpdateFFmpegProfile",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFFmpegProfile"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFFmpegProfile"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFFmpegProfile"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFFmpegProfile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ffmpeg/delete/{id}": {
+      "delete": {
+        "tags": [
+          "FFmpegProfile"
+        ],
+        "operationId": "DeleteFFmpegProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/libraries/{id}/scan": {
+      "post": {
+        "tags": [
+          "Libraries"
+        ],
+        "summary": "Scan library",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/libraries/{id}/scan-show": {
+      "post": {
+        "tags": [
+          "Libraries"
+        ],
+        "summary": "Scan show",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanShowRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanShowRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanShowRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanShowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance/gc": {
+      "get": {
+        "tags": [
+          "Maintenance"
+        ],
+        "summary": "Garbage collect",
+        "parameters": [
+          {
+            "name": "force",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance/empty_trash": {
+      "post": {
+        "tags": [
+          "Maintenance"
+        ],
+        "summary": "Empty trash",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ffmpeg/resolution/by-name/{name}": {
+      "get": {
+        "tags": [
+          "Resolution"
+        ],
+        "operationId": "GetResolutionByName",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolutionViewModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolutionViewModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolutionViewModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sessions": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get sessions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HlsSessionModel"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HlsSessionModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HlsSessionModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/session/{channelNumber}": {
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Stop session",
+        "parameters": [
+          {
+            "name": "channelNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/collections/smart": {
+      "get": {
+        "tags": [
+          "SmartCollection"
+        ],
+        "operationId": "GetSmartCollections",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SmartCollectionResponseModel"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SmartCollectionResponseModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SmartCollectionResponseModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collections/smart/new": {
+      "post": {
+        "tags": [
+          "SmartCollection"
+        ],
+        "operationId": "CreateSmartCollection",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSmartCollection"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSmartCollection"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSmartCollection"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSmartCollection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/collections/smart/update": {
+      "put": {
+        "tags": [
+          "SmartCollection"
+        ],
+        "operationId": "UpdateSmartCollection",
+        "requestBody": {
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSmartCollection"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSmartCollection"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSmartCollection"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSmartCollection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/collections/smart/delete/{id}": {
+      "delete": {
+        "tags": [
+          "SmartCollection"
+        ],
+        "operationId": "DeleteSmartCollection",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/version": {
+      "get": {
+        "tags": [
+          "Version"
+        ],
+        "summary": "Get version",
+        "operationId": "GetVersion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CombinedVersion"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CombinedVersion"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CombinedVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChannelResponseModel": {
+        "required": [
+          "id",
+          "number",
+          "name",
+          "fFmpegProfile",
+          "language",
+          "streamingMode"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "number": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fFmpegProfile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "streamingMode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CombinedVersion": {
+        "required": [
+          "apiVersion",
+          "appVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "apiVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "appVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateFFmpegProfile": {
+        "required": [
+          "name",
+          "threadCount",
+          "hardwareAcceleration",
+          "vaapiDisplay",
+          "vaapiDriver",
+          "vaapiDevice",
+          "qsvExtraHardwareFrames",
+          "resolutionId",
+          "scalingBehavior",
+          "videoFormat",
+          "videoProfile",
+          "videoPreset",
+          "allowBFrames",
+          "bitDepth",
+          "videoBitrate",
+          "videoBufferSize",
+          "tonemapAlgorithm",
+          "audioFormat",
+          "audioBitrate",
+          "audioBufferSize",
+          "normalizeLoudnessMode",
+          "audioChannels",
+          "audioSampleRate",
+          "normalizeFramerate",
+          "deinterlaceVideo"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "threadCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hardwareAcceleration": {
+            "$ref": "#/components/schemas/HardwareAccelerationKind"
+          },
+          "vaapiDisplay": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vaapiDriver": {
+            "$ref": "#/components/schemas/VaapiDriver"
+          },
+          "vaapiDevice": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "qsvExtraHardwareFrames": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "resolutionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scalingBehavior": {
+            "$ref": "#/components/schemas/ScalingBehavior"
+          },
+          "videoFormat": {
+            "$ref": "#/components/schemas/FFmpegProfileVideoFormat"
+          },
+          "videoProfile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "videoPreset": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "allowBFrames": {
+            "type": "boolean"
+          },
+          "bitDepth": {
+            "$ref": "#/components/schemas/FFmpegProfileBitDepth"
+          },
+          "videoBitrate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "videoBufferSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tonemapAlgorithm": {
+            "$ref": "#/components/schemas/FFmpegProfileTonemapAlgorithm"
+          },
+          "audioFormat": {
+            "$ref": "#/components/schemas/FFmpegProfileAudioFormat"
+          },
+          "audioBitrate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "audioBufferSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "normalizeLoudnessMode": {
+            "$ref": "#/components/schemas/NormalizeLoudnessMode"
+          },
+          "audioChannels": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "audioSampleRate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "normalizeFramerate": {
+            "type": "boolean"
+          },
+          "deinterlaceVideo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateSmartCollection": {
+        "required": [
+          "query",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "FFmpegFullProfileResponseModel": {
+        "required": [
+          "id",
+          "name",
+          "threadCount",
+          "hardwareAcceleration",
+          "vaapiDisplay",
+          "vaapiDriver",
+          "vaapiDevice",
+          "qsvExtraHardwareFrames",
+          "resolution",
+          "scalingBehavior",
+          "videoFormat",
+          "videoProfile",
+          "videoPreset",
+          "allowBFrames",
+          "bitDepth",
+          "videoBitrate",
+          "videoBufferSize",
+          "tonemapAlgorithm",
+          "audioFormat",
+          "audioBitrate",
+          "audioBufferSize",
+          "normalizeLoudnessMode",
+          "audioChannels",
+          "audioSampleRate",
+          "normalizeFramerate",
+          "deinterlaceVideo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "threadCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hardwareAcceleration": {
+            "$ref": "#/components/schemas/HardwareAccelerationKind"
+          },
+          "vaapiDisplay": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vaapiDriver": {
+            "$ref": "#/components/schemas/VaapiDriver"
+          },
+          "vaapiDevice": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "qsvExtraHardwareFrames": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "resolution": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scalingBehavior": {
+            "$ref": "#/components/schemas/ScalingBehavior"
+          },
+          "videoFormat": {
+            "$ref": "#/components/schemas/FFmpegProfileVideoFormat"
+          },
+          "videoProfile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "videoPreset": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "allowBFrames": {
+            "type": "boolean"
+          },
+          "bitDepth": {
+            "$ref": "#/components/schemas/FFmpegProfileBitDepth"
+          },
+          "videoBitrate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "videoBufferSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tonemapAlgorithm": {
+            "$ref": "#/components/schemas/FFmpegProfileTonemapAlgorithm"
+          },
+          "audioFormat": {
+            "$ref": "#/components/schemas/FFmpegProfileAudioFormat"
+          },
+          "audioBitrate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "audioBufferSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "normalizeLoudnessMode": {
+            "$ref": "#/components/schemas/NormalizeLoudnessMode"
+          },
+          "audioChannels": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "audioSampleRate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "normalizeFramerate": {
+            "type": "boolean"
+          },
+          "deinterlaceVideo": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "FFmpegProfileAudioFormat": {
+        "enum": [
+          "None",
+          "Aac",
+          "Ac3",
+          "AacLatm",
+          "Copy"
+        ]
+      },
+      "FFmpegProfileBitDepth": {
+        "enum": [
+          "EightBit",
+          "TenBit"
+        ]
+      },
+      "FFmpegProfileTonemapAlgorithm": {
+        "enum": [
+          "Linear",
+          "Clip",
+          "Gamma",
+          "Reinhard",
+          "Mobius",
+          "Hable"
+        ]
+      },
+      "FFmpegProfileVideoFormat": {
+        "enum": [
+          "None",
+          "H264",
+          "Hevc",
+          "Mpeg2Video",
+          "Av1",
+          "Copy"
+        ]
+      },
+      "HardwareAccelerationKind": {
+        "enum": [
+          "None",
+          "Qsv",
+          "Nvenc",
+          "Vaapi",
+          "VideoToolbox",
+          "Amf",
+          "V4l2m2m",
+          "Rkmpp"
+        ]
+      },
+      "HlsSessionModel": {
+        "required": [
+          "channelNumber",
+          "state",
+          "transcodedUntil",
+          "lastAccess"
+        ],
+        "type": "object",
+        "properties": {
+          "channelNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "state": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "transcodedUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastAccess": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NormalizeLoudnessMode": {
+        "enum": [
+          "Off",
+          "LoudNorm"
+        ]
+      },
+      "ResolutionViewModel": {
+        "required": [
+          "id",
+          "name",
+          "width",
+          "height",
+          "isCustom"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isCustom": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ScalingBehavior": {
+        "enum": [
+          "ScaleAndPad",
+          "Stretch",
+          "Crop"
+        ]
+      },
+      "ScanShowRequest": {
+        "required": [
+          "showTitle"
+        ],
+        "type": "object",
+        "properties": {
+          "showTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deepScan": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "SmartCollectionResponseModel": {
+        "required": [
+          "id",
+          "name",
+          "query"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateFFmpegProfile": {
+        "required": [
+          "fFmpegProfileId",
+          "name",
+          "threadCount",
+          "hardwareAcceleration",
+          "vaapiDisplay",
+          "vaapiDriver",
+          "vaapiDevice",
+          "qsvExtraHardwareFrames",
+          "resolutionId",
+          "scalingBehavior",
+          "videoFormat",
+          "videoProfile",
+          "videoPreset",
+          "allowBFrames",
+          "bitDepth",
+          "videoBitrate",
+          "videoBufferSize",
+          "tonemapAlgorithm",
+          "audioFormat",
+          "audioBitrate",
+          "audioBufferSize",
+          "normalizeLoudnessMode",
+          "audioChannels",
+          "audioSampleRate",
+          "normalizeFramerate",
+          "deinterlaceVideo"
+        ],
+        "type": "object",
+        "properties": {
+          "fFmpegProfileId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "threadCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hardwareAcceleration": {
+            "$ref": "#/components/schemas/HardwareAccelerationKind"
+          },
+          "vaapiDisplay": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vaapiDriver": {
+            "$ref": "#/components/schemas/VaapiDriver"
+          },
+          "vaapiDevice": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "qsvExtraHardwareFrames": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "resolutionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "scalingBehavior": {
+            "$ref": "#/components/schemas/ScalingBehavior"
+          },
+          "videoFormat": {
+            "$ref": "#/components/schemas/FFmpegProfileVideoFormat"
+          },
+          "videoProfile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "videoPreset": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "allowBFrames": {
+            "type": "boolean"
+          },
+          "bitDepth": {
+            "$ref": "#/components/schemas/FFmpegProfileBitDepth"
+          },
+          "videoBitrate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "videoBufferSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tonemapAlgorithm": {
+            "$ref": "#/components/schemas/FFmpegProfileTonemapAlgorithm"
+          },
+          "audioFormat": {
+            "$ref": "#/components/schemas/FFmpegProfileAudioFormat"
+          },
+          "audioBitrate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "audioBufferSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "normalizeLoudnessMode": {
+            "$ref": "#/components/schemas/NormalizeLoudnessMode"
+          },
+          "audioChannels": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "audioSampleRate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "normalizeFramerate": {
+            "type": "boolean"
+          },
+          "deinterlaceVideo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateSmartCollection": {
+        "required": [
+          "id",
+          "name",
+          "query"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "query": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "VaapiDriver": {
+        "enum": [
+          "Default",
+          "iHD",
+          "i965",
+          "RadeonSI",
+          "Nouveau"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Channel"
+    },
+    {
+      "name": "Channels"
+    },
+    {
+      "name": "FFmpegProfile"
+    },
+    {
+      "name": "Libraries"
+    },
+    {
+      "name": "Maintenance"
+    },
+    {
+      "name": "Resolution"
+    },
+    {
+      "name": "Sessions"
+    },
+    {
+      "name": "SmartCollection"
+    },
+    {
+      "name": "Version"
+    }
+  ]
+}

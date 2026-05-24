@@ -350,7 +350,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
 
-                DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
+                DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-120);
                 Option<TrimPlaylistResult> maybeResult = await TrimPlaylist(now, cancellationToken);
                 foreach (TrimPlaylistResult result in maybeResult)
                 {

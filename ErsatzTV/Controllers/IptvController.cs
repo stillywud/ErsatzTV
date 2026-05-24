@@ -165,7 +165,7 @@ public class IptvController : StreamingControllerBase
         {
             // _logger.LogDebug("Trimming playlist for channel {Channel}", channelNumber);
 
-            DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
+            DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-120);
             Option<TrimPlaylistResult> maybePlaylist = await worker.TrimPlaylist(now, cancellationToken);
             foreach (TrimPlaylistResult result in maybePlaylist)
             {
