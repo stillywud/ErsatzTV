@@ -163,6 +163,10 @@ public class HlsSessionWorker : IHlsSessionWorker
                                 inputAfterDelete,
                                 maybeMaxSegments: 10);
                         }
+
+                        // After re-filtering, ensure MEDIA-SEQUENCE matches actual files on disk
+                        // This fixes the issue where FFmpeg's playlist contains references to deleted segments
+                        trimResult = AdjustPlaylistToMatchDiskFiles(trimResult);
                     }
 
                     return trimResult;
@@ -1113,6 +1117,140 @@ public class HlsSessionWorker : IHlsSessionWorker
     private async Task<int> GetWorkAheadLimit(CancellationToken cancellationToken) =>
         await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters, cancellationToken)
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
+
+    /// <summary>
+    /// Adjusts the playlist to match actual files on disk.
+    /// This fixes the issue where FFmpeg's playlist contains references to segments that have been deleted.
+    /// </summary>
+    private TrimPlaylistResult AdjustPlaylistToMatchDiskFiles(TrimPlaylistResult trimResult)
+    {
+        // Get all segment files on disk
+        var diskFiles = _fileSystem.Directory.GetFiles(_workingDirectory, "live*.ts")
+            .Append(_fileSystem.Directory.GetFiles(_workingDirectory, "live*.mp4"))
+            .Append(_fileSystem.Directory.GetFiles(_workingDirectory, "live*.m4s"))
+            .ToList();
+
+        if (diskFiles.Count == 0)
+        {
+            return trimResult;
+        }
+
+        // Extract sequence numbers from disk files
+        var diskSequences = diskFiles
+            .Select(file =>
+            {
+                string fileName = Path.GetFileName(file);
+                var sequenceNumber = long.Parse(
+                    fileName.Contains('_')
+                        ? fileName.Split('_')[2].Split('.')[0]
+                        : fileName.Replace("live", string.Empty).Split('.')[0],
+                    CultureInfo.InvariantCulture);
+                return sequenceNumber;
+            })
+            .ToHashSet();
+
+        // Parse the playlist and filter out segments that don't exist on disk
+        var lines = trimResult.Playlist.Split('\n');
+        var output = new StringBuilder();
+        long newMediaSequence = trimResult.Sequence;
+        bool foundFirstSegment = false;
+        int segmentCount = 0;
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+
+            // Check if this is a segment line (e.g., "live000123.ts")
+            if (line.Trim().StartsWith("live", StringComparison.OrdinalIgnoreCase) && line.Contains('.'))
+            {
+                // Extract sequence number from segment filename
+                string trimmedLine = line.Trim();
+                var match = System.Text.RegularExpressions.Regex.Match(trimmedLine, @"live(\d+)\.(ts|mp4|m4s)");
+                if (match.Success)
+                {
+                    long sequence = long.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+
+                    // Only include this segment if it exists on disk
+                    if (diskSequences.Contains(sequence))
+                    {
+                        if (!foundFirstSegment)
+                        {
+                            newMediaSequence = sequence;
+                            foundFirstSegment = true;
+                        }
+                        output.AppendLine(line);
+                        segmentCount++;
+                    }
+                    else
+                    {
+                        // Skip this segment and its preceding EXTINF and PROGRAM-DATE-TIME lines
+                        // Remove the last two lines if they were added (EXTINF and PROGRAM-DATE-TIME)
+                        string currentOutput = output.ToString();
+                        var outputLines = currentOutput.Split('\n').ToList();
+
+                        // Remove PROGRAM-DATE-TIME line if present
+                        if (outputLines.Count > 0 && outputLines[^1].Trim().StartsWith("#EXT-X-PROGRAM-DATE-TIME", StringComparison.OrdinalIgnoreCase))
+                        {
+                            outputLines.RemoveAt(outputLines.Count - 1);
+                        }
+
+                        // Remove EXTINF line if present
+                        if (outputLines.Count > 0 && outputLines[^1].Trim().StartsWith("#EXTINF:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            outputLines.RemoveAt(outputLines.Count - 1);
+                        }
+
+                        output.Clear();
+                        foreach (var outputLine in outputLines)
+                        {
+                            if (!string.IsNullOrEmpty(outputLine))
+                            {
+                                output.AppendLine(outputLine);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    output.AppendLine(line);
+                }
+            }
+            else if (line.Trim().StartsWith("#EXT-X-MEDIA-SEQUENCE:", StringComparison.OrdinalIgnoreCase))
+            {
+                // Don't write MEDIA-SEQUENCE yet, we'll write it at the end
+                continue;
+            }
+            else
+            {
+                output.AppendLine(line);
+            }
+        }
+
+        // Reconstruct the playlist with the correct MEDIA-SEQUENCE
+        string finalPlaylist = output.ToString();
+        finalPlaylist = finalPlaylist.Replace(
+            "#EXTM3U\n#EXT-X-VERSION:7\n",
+            $"#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-MEDIA-SEQUENCE:{newMediaSequence}\n");
+
+        // If MEDIA-SEQUENCE wasn't replaced (it was in a different position), do a more thorough replacement
+        if (!finalPlaylist.Contains($"#EXT-X-MEDIA-SEQUENCE:{newMediaSequence}"))
+        {
+            var finalLines = finalPlaylist.Split('\n').ToList();
+            var mediaSequenceIndex = finalLines.FindIndex(l => l.Trim().StartsWith("#EXT-X-MEDIA-SEQUENCE:", StringComparison.OrdinalIgnoreCase));
+            if (mediaSequenceIndex >= 0)
+            {
+                finalLines[mediaSequenceIndex] = $"#EXT-X-MEDIA-SEQUENCE:{newMediaSequence}";
+            }
+            finalPlaylist = string.Join('\n', finalLines.Where(l => !string.IsNullOrEmpty(l)));
+        }
+
+        return new TrimPlaylistResult(
+            trimResult.PlaylistStart,
+            newMediaSequence,
+            trimResult.GeneratedAt,
+            finalPlaylist,
+            segmentCount);
+    }
 
     private async Task<Option<string[]>> ReadPlaylistLines(CancellationToken cancellationToken)
     {
