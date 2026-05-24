@@ -148,6 +148,21 @@ public class HlsSessionWorker : IHlsSessionWorker
                     {
                         DeleteOldSegments(trimResult);
                         _lastDelete = DateTimeOffset.Now;
+
+                        // Re-read playlist and re-filter after deleting old segments
+                        // This ensures the returned playlist matches actual files on disk
+                        Option<string[]> maybeLinesAfterDelete = await ReadPlaylistLines(cancellationToken);
+                        foreach (string[] inputAfterDelete in maybeLinesAfterDelete)
+                        {
+                            trimResult = _hlsPlaylistFilter.TrimPlaylist(
+                                _discontinuityMap,
+                                _outputFormatKind,
+                                PlaylistStart,
+                                filterBefore,
+                                _hlsInitSegmentCache,
+                                inputAfterDelete,
+                                maybeMaxSegments: 10);
+                        }
                     }
 
                     return trimResult;
