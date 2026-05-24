@@ -712,26 +712,30 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 await TrimAndDelete(cancellationToken);
 
-                // For HLS-TS format, rename old segments before starting new ffmpeg process
-                // to prevent overwriting segments that players may be buffering
+                // For HLS-TS format, delete all old segments before starting new ffmpeg process
+                // to ensure clean state and continuous segment numbering
                 if (_outputFormatKind is OutputFormatKind.Hls)
                 {
                     try
                     {
-                        // Rename old TS segments to .bak so they won't be overwritten
-                        // but players can still access them if needed
+                        // Delete all old TS segments and .bak files to ensure clean state
                         var oldSegments = _fileSystem.Directory.GetFiles(_workingDirectory, "live*.ts");
+                        var oldBakFiles = _fileSystem.Directory.GetFiles(_workingDirectory, "live*.ts.bak");
                         foreach (var segment in oldSegments)
                         {
-                            string bakPath = segment + ".bak";
-                            _fileSystem.File.Move(segment, bakPath);
+                            _fileSystem.File.Delete(segment);
+                        }
+                        foreach (var bakFile in oldBakFiles)
+                        {
+                            _fileSystem.File.Delete(bakFile);
                         }
 
-                        _logger.LogDebug("Renamed {Count} old TS segments to .bak in {Directory}", oldSegments.Length, _workingDirectory);
+                        _logger.LogDebug("Deleted {Count} old TS segments and {BakCount} .bak files in {Directory}",
+                            oldSegments.Length, oldBakFiles.Length, _workingDirectory);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to rename old TS segments");
+                        _logger.LogWarning(ex, "Failed to delete old TS segments");
                     }
                 }
 
