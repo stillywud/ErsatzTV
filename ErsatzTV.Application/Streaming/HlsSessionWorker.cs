@@ -739,6 +739,10 @@ public class HlsSessionWorker : IHlsSessionWorker
                             _logger.LogDebug("Deleted old playlist file {PlaylistFile}", playlistFile);
                         }
 
+                        // Reset PlaylistStart to current time so it matches the new FFmpeg process
+                        // This prevents DateTime overflow in HlsPlaylistFilter when calculating segment times
+                        PlaylistStart = DateTimeOffset.Now;
+
                         _logger.LogDebug("Deleted {Count} old TS segments and {BakCount} .bak files in {Directory}",
                             oldSegments.Length, oldBakFiles.Length, _workingDirectory);
                     }
