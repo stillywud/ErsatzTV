@@ -730,6 +730,15 @@ public class HlsSessionWorker : IHlsSessionWorker
                             _fileSystem.File.Delete(bakFile);
                         }
 
+                        // Also delete the playlist file to force FFmpeg to create a fresh one
+                        // This prevents MEDIA-SEQUENCE mismatch between old playlist and new segments
+                        string playlistFile = Path.Combine(_workingDirectory, "live.m3u8");
+                        if (_fileSystem.File.Exists(playlistFile))
+                        {
+                            _fileSystem.File.Delete(playlistFile);
+                            _logger.LogDebug("Deleted old playlist file {PlaylistFile}", playlistFile);
+                        }
+
                         _logger.LogDebug("Deleted {Count} old TS segments and {BakCount} .bak files in {Directory}",
                             oldSegments.Length, oldBakFiles.Length, _workingDirectory);
                     }
