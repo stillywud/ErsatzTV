@@ -802,7 +802,9 @@ public class HlsSessionWorker : IHlsSessionWorker
                             processModel.Until,
                             processModel.Until.Subtract(DateTimeOffset.Now).TotalSeconds,
                             progressParser.Speed);
-                        _transcodedUntil = processModel.Until;
+                        // When FFmpeg completes normally (video finished), set _transcodedUntil to now
+                        // so the main loop immediately starts the next transcode without waiting
+                        _transcodedUntil = DateTimeOffset.Now;
                         _state = NextState(_state, processModel);
                         _hasWrittenSegments = true;
 
