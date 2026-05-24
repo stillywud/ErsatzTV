@@ -164,7 +164,7 @@ public class HlsPlaylistFilter(ITempFilePool tempFilePool, ILogger<HlsPlaylistFi
                 // if there are enough new segments after filtering, use those
                 // otherwise return the last maxSegments
                 allSegments = afterFilter.Count >= maxSegments
-                    ? afterFilter.Take(maxSegments).ToList()
+                    ? afterFilter.TakeLast(maxSegments).ToList()
                     : allSegments.TakeLast(maxSegments).ToList();
             }
         }

@@ -144,7 +144,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         _hlsInitSegmentCache,
                         input,
                         maybeMaxSegments: 10);
-                    if (DateTimeOffset.Now > _lastDelete.AddSeconds(30))
+                    if (DateTimeOffset.Now > _lastDelete.AddSeconds(300))
                     {
                         DeleteOldSegments(trimResult);
                         _lastDelete = DateTimeOffset.Now;
