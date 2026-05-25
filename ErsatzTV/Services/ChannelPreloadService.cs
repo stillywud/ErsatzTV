@@ -4,6 +4,7 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using MediatR;
 
@@ -144,11 +145,18 @@ public class ChannelPreloadService : BackgroundService
             _logger.LogDebug("Preloading channel {ChannelNumber} - {ChannelName}",
                 channel.Number, channel.Name);
 
+            // Determine mode based on channel's streaming mode
+            string mode = channel.StreamingMode switch
+            {
+                StreamingMode.HttpLiveStreamingConcat => "segmenter-concat",
+                _ => "segmenter"
+            };
+
             // Start FFmpeg session for this channel
             // Use "segmenter" mode and empty scheme/host (will be set on actual request)
             var request = new StartFFmpegSession(
                 channel.Number,
-                Mode: "segmenter",
+                Mode: mode,
                 Scheme: "http",
                 Host: "localhost");
 

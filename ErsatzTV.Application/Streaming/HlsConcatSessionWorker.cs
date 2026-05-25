@@ -88,8 +88,8 @@ public class HlsConcatSessionWorker : IHlsSessionWorker
                 bool success = await RunConcatProcess(cancellationToken);
                 if (!success && !cancellationToken.IsCancellationRequested)
                 {
-                    _logger.LogWarning("HLS concat process failed for channel {Channel}, restarting in 5s", channelNumber);
-                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                    _logger.LogWarning("HLS concat process failed for channel {Channel}, restarting immediately", channelNumber);
+                    // Don't wait, restart immediately for seamless episode transitions
                 }
             }
         }

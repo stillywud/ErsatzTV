@@ -116,7 +116,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         };
 
         concatInputFile.AddOption(new ConcatInputFormat());
-        concatInputFile.AddOption(new ReadrateInputOption(1.0));
+        concatInputFile.AddOption(new ReadrateInputOption(1.05));
         concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
 
         foreach (int threadCount in ffmpegState.ThreadCount)
@@ -181,7 +181,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             concatInputFile.AddOption(new DecoderAacLatm());
         }
 
-        concatInputFile.AddOption(new ReadrateInputOption(1.0));
+        concatInputFile.AddOption(new ReadrateInputOption(1.05));
 
         SetMetadataServiceProvider(ffmpegState, pipelineSteps);
         SetMetadataServiceName(ffmpegState, pipelineSteps);
