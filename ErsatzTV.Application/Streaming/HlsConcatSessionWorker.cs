@@ -110,6 +110,8 @@ public class HlsConcatSessionWorker : IHlsSessionWorker
     {
         try
         {
+            // Ensure working directory exists before starting FFmpeg
+            _localFileSystem.EnsureFolderExists(_workingDirectory);
             using var scope = _serviceScopeFactory.CreateScope();
             var channelRepository = scope.ServiceProvider.GetRequiredService<IChannelRepository>();
             var ffmpegProcessService = scope.ServiceProvider.GetRequiredService<IFFmpegProcessService>();
