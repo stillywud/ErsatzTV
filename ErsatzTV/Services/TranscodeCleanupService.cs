@@ -101,9 +101,13 @@ public class TranscodeCleanupService : BackgroundService
                     // Check if this is an active streaming session
                     // (we'll check for recent file modifications)
                     var dirInfo = new DirectoryInfo(channelDir);
-                    if (dirInfo.LastWriteTimeUtc > DateTime.UtcNow.AddMinutes(-5))
+
+                    // Also check if FFmpeg is still running for this channel
+                    bool hasActiveFFmpeg = HasActiveFFmpegProcess(dirName);
+
+                    if (dirInfo.LastWriteTimeUtc > DateTime.UtcNow.AddMinutes(-5) || hasActiveFFmpeg)
                     {
-                        // Directory was modified recently, likely an active session
+                        // Directory was modified recently or has active FFmpeg, likely an active session
                         // Only clean very old files (older than 1 hour) from active sessions
                         DateTimeOffset activeSessionCutoff = DateTimeOffset.Now.Subtract(TimeSpan.FromHours(1));
                         (int count, long bytes) = CleanupDirectory(
@@ -260,6 +264,41 @@ public class TranscodeCleanupService : BackgroundService
         catch (IOException)
         {
             return true;
+        }
+    }
+
+    private static bool HasActiveFFmpegProcess(string channelNumber)
+    {
+        try
+        {
+            // Check if there's an FFmpeg process writing to this channel's directory
+            string transcodeFolder = FileSystemLayout.TranscodeFolder;
+            string channelPath = Path.Combine(transcodeFolder, channelNumber);
+
+            // Simple check: see if any .ts files exist and are being written to
+            if (Directory.Exists(channelPath))
+            {
+                var tsFiles = Directory.GetFiles(channelPath, "*.ts");
+                if (tsFiles.Length > 0)
+                {
+                    // Check if the most recent file was modified in the last minute
+                    var mostRecent = tsFiles
+                        .Select(f => new FileInfo(f))
+                        .OrderByDescending(fi => fi.LastWriteTimeUtc)
+                        .FirstOrDefault();
+
+                    if (mostRecent != null && mostRecent.LastWriteTimeUtc > DateTime.UtcNow.AddMinutes(-1))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
         }
     }
 
