@@ -149,7 +149,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
         else
         {
-            pipelineSteps.Add(new OutputFormatMpegTs());
+            pipelineSteps.Add(new OutputFormatMpegTs(false));
             pipelineSteps.Add(new PipeProtocol());
         }
 

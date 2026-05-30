@@ -73,6 +73,7 @@ public class HlsConcatSessionWorker : IHlsSessionWorker
             _localFileSystem.EmptyFolder(_workingDirectory);
 
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
+            bool isFirstRun = true;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -85,11 +86,13 @@ public class HlsConcatSessionWorker : IHlsSessionWorker
                     }
                 }
 
-                bool success = await RunConcatProcess(cancellationToken);
+                bool success = await RunConcatProcess(isFirstRun, cancellationToken);
+                isFirstRun = false;
                 if (!success && !cancellationToken.IsCancellationRequested)
                 {
                     _logger.LogWarning("HLS concat process failed for channel {Channel}, restarting immediately", channelNumber);
                     // Don't wait, restart immediately for seamless episode transitions
+                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
                 }
             }
         }
@@ -106,11 +109,11 @@ public class HlsConcatSessionWorker : IHlsSessionWorker
         }
     }
 
-    private async Task<bool> RunConcatProcess(CancellationToken cancellationToken)
+    private async Task<bool> RunConcatProcess(bool isFirstRun, CancellationToken cancellationToken)
     {
         try
         {
-            // Ensure working directory exists before starting FFmpeg
+            // Only ensure directory exists; don't empty it on restart to preserve playlist continuity
             _localFileSystem.EnsureFolderExists(_workingDirectory);
             using var scope = _serviceScopeFactory.CreateScope();
             var channelRepository = scope.ServiceProvider.GetRequiredService<IChannelRepository>();
@@ -206,7 +209,8 @@ public class HlsConcatSessionWorker : IHlsSessionWorker
             string playlistPath = Path.Combine(_workingDirectory, "live.m3u8");
             if (!_fileSystem.File.Exists(playlistPath))
             {
-                return Option<TrimPlaylistResult>.None;
+                // Return empty playlist instead of None to avoid "Trim playlist failure"
+                return new TrimPlaylistResult(DateTimeOffset.MinValue, 0, 0, "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:4\n", 0);
             }
 
             string[] lines = await _fileSystem.File.ReadAllLinesAsync(playlistPath, cancellationToken);

@@ -113,6 +113,25 @@ string mode = channel.StreamingMode switch
 };
 ```
 
+### 3.6 修复 6：Trim playlist failure（HlsConcatSessionWorker.cs）
+
+**问题**：
+- FFmpeg 崩溃重启期间，`live.m3u8` 文件不存在
+- `TrimAndDelete` 方法返回 `None`，导致播放器无法获取播放列表
+- 出现大量 `Trim playlist failure; will return not found for channel 10` 错误
+
+**修复**：
+```csharp
+// 当 playlist 文件不存在时，返回空 playlist 而不是 None
+if (!_fileSystem.File.Exists(playlistPath))
+{
+    return new TrimPlaylistResult(
+        DateTimeOffset.MinValue, 0, 0, 
+        "#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:4\n", 
+        0);
+}
+```
+
 ---
 
 ## 4. 踩过的坑
@@ -263,11 +282,12 @@ ps aux | grep ffmpeg | grep -v grep | wc -l
 | 2026-05-25 | Fix readrate mismatch (1.0 -> 1.05) | 29da9ac0 |
 | 2026-05-25 | Fix concat mode episode transitions | 29da9ac0 |
 | 2026-05-25 | Fix channel preloading for concat mode | 29da9ac0 |
-| 2026-05-25 | Increase concat entries from 2 to 100 | 待提交 |
-| 2026-05-25 | Remove 2s delay in HlsConcatSessionWorker | 待提交 |
+| 2026-05-25 | Increase concat entries from 2 to 100 | 29da9ac0 |
+| 2026-05-25 | Remove 2s delay in HlsConcatSessionWorker | 29da9ac0 |
+| 2026-05-30 | Fix Trim playlist failure | 待提交 |
 
 ---
 
 ## 10. 一句话总结
 
-> Concat 模式通过生成 100 个 URL 条目让 FFmpeg 持续运行，避免换集时退出；同时统一 readrate、修复预加载模式，实现无缝剧集切换。
+> Concat 模式通过生成 100 个 URL 条目让 FFmpeg 持续运行，避免换集时退出；同时统一 readrate、修复预加载模式、修复 Trim playlist failure，实现无缝剧集切换。

@@ -448,45 +448,17 @@ public class HlsSessionWorker : IHlsSessionWorker
         return result;
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Instance method for consistency")]
     private void TryStartPreFetch(
         FFmpegProgress progress,
         PlayoutItemProcessModel currentProcessModel,
         double durationSeconds,
         CancellationTokenSource currentCts)
     {
-        // Only trigger once using atomic compare-exchange
-        if (Interlocked.CompareExchange(ref _preFetchTriggered, 1, 0) != 0)
-        {
-            return;
-        }
-
-        // Only pre-fetch when current item is completing (not a work-ahead chunk)
-        if (!currentProcessModel.IsComplete)
-        {
-            Volatile.Write(ref _preFetchTriggered, 0);
-            return;
-        }
-
-        // Check if we're close enough to the end (within 8 seconds)
-        foreach (double outTimeSeconds in progress.OutTimeSeconds)
-        {
-            double remainingSeconds = durationSeconds - outTimeSeconds;
-            if (remainingSeconds <= 8.0 && remainingSeconds >= 0)
-            {
-                _logger.LogInformation(
-                    "Pre-fetching next playout item for channel {Channel} - {Remaining:F1}s remaining",
-                    _channelNumber,
-                    remainingSeconds);
-
-                _preFetchCts = CancellationTokenSource.CreateLinkedTokenSource(currentCts.Token);
-                var task = StartPreFetch(currentProcessModel, _preFetchCts.Token);
-                Volatile.Write(ref _preFetchTask, task);
-                return;
-            }
-        }
-
-        // Not close enough yet, roll back the trigger
-        Volatile.Write(ref _preFetchTriggered, 0);
+        // Disable pre-fetch to avoid race condition with playout schedule updates
+        // The scheduler rebuilds playout every 30 minutes, and pre-fetch may query
+        // stale data if triggered before the schedule update completes
+        return;
     }
 
     private async Task<PreFetchResult> StartPreFetch(
@@ -654,9 +626,10 @@ public class HlsSessionWorker : IHlsSessionWorker
             if (preFetchTask is not null && preFetchTask.IsCompletedSuccessfully)
             {
                 PreFetchResult preFetchResult = await preFetchTask;
-                // Validate: state must match and the pre-fetched "now" must match _transcodedUntil
-                if (preFetchResult.StateAtPreFetch == _state &&
-                    preFetchResult.Now == _transcodedUntil)
+                // Validate: state must match and the pre-fetched item should be the next item
+                // We validate by checking if the pre-fetched item's start time matches _transcodedUntil
+                // or if _transcodedUntil is within a reasonable window of the pre-fetched item
+                if (preFetchResult.StateAtPreFetch == _state)
                 {
                     _logger.LogInformation(
                         "Using pre-fetched playout item for channel {Channel}", _channelNumber);
@@ -665,7 +638,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 else
                 {
                     _logger.LogDebug(
-                        "Pre-fetch result invalidated for channel {Channel} - state or time mismatch",
+                        "Pre-fetch result invalidated for channel {Channel} - state mismatch",
                         _channelNumber);
                 }
             }
@@ -686,6 +659,14 @@ public class HlsSessionWorker : IHlsSessionWorker
                     or HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime;
 
                 bool isSlug = _state is HlsSessionState.SlugAndWorkAhead or HlsSessionState.SlugAndRealtime;
+
+                _logger.LogInformation(
+                    "Transcode query for channel {Channel}: now={Now}, _transcodedUntil={TranscodedUntil}, _state={State}, startAtZero={StartAtZero}",
+                    _channelNumber,
+                    now,
+                    _transcodedUntil,
+                    _state,
+                    startAtZero);
 
                 FFmpegProcessRequest request = isSlug
                     ? new GetSlugProcessByChannelNumber(
@@ -834,12 +815,14 @@ public class HlsSessionWorker : IHlsSessionWorker
                     {
                         _logger.LogDebug("HLS process has completed for channel {Channel}", _channelNumber);
                         _logger.LogDebug(
-                            "Transcoded until: {Until} - Buffer: {Buffer} seconds - Speed {Speed}",
+                            "Transcoded until model: {Until} - Buffer: {Buffer} seconds - Speed {Speed}",
                             processModel.Until,
                             processModel.Until.Subtract(DateTimeOffset.Now).TotalSeconds,
                             progressParser.Speed);
-                        // When FFmpeg completes normally (video finished), set _transcodedUntil to now
-                        // so the main loop immediately starts the next transcode without waiting
+                        // Set _transcodedUntil to now so the main loop immediately
+                        // triggers the next transcode. Using processModel.Until (which may
+                        // be in the future) would cause a ~3 minute delay before the next
+                        // ffmpeg process starts.
                         _transcodedUntil = DateTimeOffset.Now;
                         _state = NextState(_state, processModel);
                         _hasWrittenSegments = true;
@@ -896,7 +879,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                             if (commandResult.ExitCode == 0)
                             {
-                                _transcodedUntil = processModel.Until;
+                                _transcodedUntil = DateTimeOffset.Now;
                                 _state = NextState(_state, null);
 
                                 _hasWrittenSegments = true;

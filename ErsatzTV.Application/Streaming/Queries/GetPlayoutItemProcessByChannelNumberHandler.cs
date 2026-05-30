@@ -280,9 +280,21 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             DateTimeOffset finish = playoutItemWithPath.PlayoutItem.FinishOffset;
             TimeSpan inPoint = playoutItemWithPath.PlayoutItem.InPoint;
             TimeSpan outPoint = playoutItemWithPath.PlayoutItem.OutPoint;
-            DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
+            // When StartAtZero is true but we've already progressed past the start,
+            // use the actual current time (now) to calculate the correct seek position
+            DateTimeOffset effectiveNow = request.StartAtZero && now <= start ? start : now;
             TimeSpan duration = finish - effectiveNow;
             TimeSpan originalDuration = duration;
+
+            _logger.LogInformation(
+                "GetPlayoutItemProcess: channel={Channel}, now={Now}, start={Start}, finish={Finish}, effectiveNow={EffectiveNow}, duration={Duration}, startAtZero={StartAtZero}",
+                channel.Number,
+                now,
+                start,
+                finish,
+                effectiveNow,
+                duration,
+                request.StartAtZero);
 
             bool isComplete = true;
 
