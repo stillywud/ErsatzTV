@@ -132,6 +132,55 @@ if (!_fileSystem.File.Exists(playlistPath))
 }
 ```
 
+### 3.7 修复 7：HlsConcatSessionWorker 重启时保留目录（HlsConcatSessionWorker.cs）
+
+**问题**：
+- FFmpeg 进程重启时，`EmptyFolder` 会清空工作目录
+- 导致播放列表中断，客户端看到 discontinuity
+
+**修复**：
+```csharp
+// 第一次运行时创建目录，后续重启时不清空
+if (isFirstRun)
+{
+    _localFileSystem.EnsureFolderExists(_workingDirectory);
+    _localFileSystem.EmptyFolder(_workingDirectory);
+}
+```
+
+### 3.8 修复 8：禁用预取避免竞争条件（HlsSessionWorker.cs）
+
+**问题**：
+- `TryStartPreFetch` 在剧集快结束时预取下一集
+- 但 playout 每 30 分钟重建一次，预取可能获取到旧数据
+- 导致时间戳不匹配，播放错乱
+
+**修复**：
+```csharp
+// 禁用预取，避免与 playout 重建竞争
+private void TryStartPreFetch(...)
+{
+    return; // 禁用预取
+}
+```
+
+### 3.9 修复 9：TranscodeCleanupService 误删活跃频道目录（TranscodeCleanupService.cs）
+
+**问题**：
+- 清理服务仅根据目录修改时间判断是否活跃
+- 某些情况下会误删正在播放的频道目录
+- 导致播放中断
+
+**修复**：
+```csharp
+// 同时检查是否有 FFmpeg 进程在写入该目录
+bool hasActiveFFmpeg = HasActiveFFmpegProcess(dirName);
+if (dirInfo.LastWriteTimeUtc > DateTime.UtcNow.AddMinutes(-5) || hasActiveFFmpeg)
+{
+    // 目录最近有修改或有活跃 FFmpeg，不清理
+}
+```
+
 ---
 
 ## 4. 踩过的坑
@@ -284,7 +333,9 @@ ps aux | grep ffmpeg | grep -v grep | wc -l
 | 2026-05-25 | Fix channel preloading for concat mode | 29da9ac0 |
 | 2026-05-25 | Increase concat entries from 2 to 100 | 29da9ac0 |
 | 2026-05-25 | Remove 2s delay in HlsConcatSessionWorker | 29da9ac0 |
-| 2026-05-30 | Fix Trim playlist failure | 待提交 |
+| 2026-05-30 | Fix Trim playlist failure | 8ae870bb |
+| 2026-05-30 | Disable pre-fetch to avoid race condition | 8ae870bb |
+| 2026-05-30 | Fix TranscodeCleanupService deleting active channels | 8ae870bb |
 
 ---
 
