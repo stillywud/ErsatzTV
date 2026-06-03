@@ -120,6 +120,22 @@ public class HlsConcatSessionWorker : IHlsSessionWorker
         {
             // Only ensure directory exists; don't empty it on restart to preserve playlist continuity
             _localFileSystem.EnsureFolderExists(_workingDirectory);
+
+            // Pre-warm the stream endpoint to ensure the source FFmpeg process is running
+            // This prevents concat process from hanging when source process has crashed
+            try
+            {
+                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                var response = await httpClient.GetAsync(
+                    $"http://localhost:{Settings.StreamingPort}/ffmpeg/stream/{_channelNumber}?mode=ts-legacy",
+                    cancellationToken);
+                _logger.LogDebug("Pre-warmed stream endpoint for channel {Channel}: {Status}", _channelNumber, response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to pre-warm stream endpoint for channel {Channel}", _channelNumber);
+            }
+
             using var scope = _serviceScopeFactory.CreateScope();
             var channelRepository = scope.ServiceProvider.GetRequiredService<IChannelRepository>();
             var ffmpegProcessService = scope.ServiceProvider.GetRequiredService<IFFmpegProcessService>();

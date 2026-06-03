@@ -17,7 +17,8 @@ public class ConcatInputFormat : IInputOption
         "-reconnect", "1",
         "-reconnect_on_http_error", "1",
         "-reconnect_on_network_error", "1",
-        "-reconnect_delay_max", "5"
+        "-reconnect_delay_max", "5",
+        "-rw_timeout", "10000000"  // 10 seconds read timeout in microseconds
     ];
 
     public string[] FilterOptions => [];
