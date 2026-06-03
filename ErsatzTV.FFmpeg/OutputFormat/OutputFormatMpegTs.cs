@@ -14,8 +14,8 @@ public class OutputFormatMpegTs : IPipelineStep
     public string[] FilterOptions => Array.Empty<string>();
 
     public string[] OutputOptions => _initialDiscontinuity
-        ? new[] { "-f", "mpegts", "-mpegts_flags", "+initial_discontinuity" }
-        : new[] { "-f", "mpegts" };
+        ? new[] { "-f", "mpegts", "-mpegts_flags", "+initial_discontinuity", "-copyts" }
+        : new[] { "-f", "mpegts", "-copyts" };
 
     public FrameState NextState(FrameState currentState) => currentState;
 }

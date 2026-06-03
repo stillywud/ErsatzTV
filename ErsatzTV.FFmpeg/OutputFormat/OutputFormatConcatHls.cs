@@ -42,7 +42,7 @@ public class OutputFormatConcatHls : IPipelineStep
                 "-hls_list_size", "25", // burst of 45 means ~12 segments, so allow that plus a handful
                 "-segment_list_flags", "+live",
                 "-hls_segment_filename", _segmentTemplate,
-                "-hls_flags", "delete_segments+program_date_time+omit_endlist+independent_segments",
+                "-hls_flags", "delete_segments+program_date_time+omit_endlist+discont_start+independent_segments+append_list",
                 "-master_pl_name", "playlist.m3u8",
                 _playlistPath
             ];

@@ -100,7 +100,12 @@ public class HlsConcatSessionWorker : IHlsSessionWorker
         {
             try
             {
-                _localFileSystem.EmptyFolder(_workingDirectory);
+                // Don't empty folder on normal exit to preserve playlist continuity
+                // Only empty folder when the session is actually being stopped
+                if (_cancellationTokenSource?.IsCancellationRequested == true)
+                {
+                    _localFileSystem.EmptyFolder(_workingDirectory);
+                }
             }
             catch
             {

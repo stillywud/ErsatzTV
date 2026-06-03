@@ -13,7 +13,11 @@ public class ConcatInputFormat : IInputOption
         "-f", "concat",
         "-safe", "0",
         "-protocol_whitelist", "file,http,tcp,https,tcp,tls",
-        "-probesize", "32"
+        "-probesize", "32",
+        "-reconnect", "1",
+        "-reconnect_on_http_error", "1",
+        "-reconnect_on_network_error", "1",
+        "-reconnect_delay_max", "5"
     ];
 
     public string[] FilterOptions => [];

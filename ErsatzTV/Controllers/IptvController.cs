@@ -197,11 +197,18 @@ public class IptvController : StreamingControllerBase
             return NotFound();
         }
 
-        // if mode is "unspecified" - find the configured mode and set it or redirect
-        if (string.IsNullOrWhiteSpace(mode) || mode == "mixed")
+        // Always check channel's configured streaming mode and use it
+        // This ensures the channel always uses its configured mode regardless of URL parameter
+        foreach (ChannelViewModel channel in maybeChannel)
         {
-            foreach (ChannelViewModel channel in maybeChannel)
+            if (channel.StreamingMode == StreamingMode.HttpLiveStreamingConcat)
             {
+                // Force concat mode for channels configured with HttpLiveStreamingConcat
+                mode = "segmenter-concat";
+            }
+            else if (string.IsNullOrWhiteSpace(mode) || mode == "mixed")
+            {
+                // if mode is "unspecified" - find the configured mode and set it or redirect
                 switch (channel.StreamingMode)
                 {
                     case StreamingMode.HttpLiveStreamingDirect:
@@ -209,9 +216,6 @@ public class IptvController : StreamingControllerBase
                         break;
                     case StreamingMode.HttpLiveStreamingSegmenter:
                         mode = "segmenter";
-                        break;
-                    case StreamingMode.HttpLiveStreamingConcat:
-                        mode = "segmenter-concat";
                         break;
                     default:
                         return Redirect($"~/iptv/channel/{channelNumber}.ts{AccessTokenQuery()}");
